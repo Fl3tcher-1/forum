@@ -68,42 +68,42 @@ errors that have been identified and need to be accounted for:
     login and registration errors
 
 
-# Forum type
+### Forum type
 
 student blog?
 health and fitness?
 
-# categories
+### categories
 
-# filters
+### filters
 
-# password requirements
+### password requirements
 will use industry standard password requirements but no special characters
 
 
-# colour scheme
+### colour scheme
 primary colour
 secondary colour
 tertiary colour
 
-# layouts
+### layouts
 the user will be greeted with a log in sctreen with options to log in, register or visit as guest
 
-# User Profile
+### User Profile
 there is no specification here but at the minimum there will be 
     user name, and real name?
     user photo, selectable from stock photos for now
     a place to view all posts, comments, likes and dislkies. could they be viewed individually instead of all in one tab?
     like all likes, all dislkies etc
 
-# special features 
+### special features 
 here all the the ideas and or features we likeda bout different websites not all will be implemented
 
 1. user to have ability to change colour scheme e.g. background colour and text colour or all 3 colours if 3 used?
 2. look at tumblr--- where text is uploaded as an image?
 3. voice messaging aka voice memos
 
- ## Credits
+ ### Credits
     Karolis Milius
     Morayo
     Klaudia
