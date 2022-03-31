@@ -103,7 +103,7 @@ here all the the ideas and or features we likeda bout different websites not all
 2. look at tumblr--- where text is uploaded as an image?
 3. voice messaging aka voice memos
 
- ### Credits
+ # Credits
     Karolis Milius
     Morayo
     Klaudia
