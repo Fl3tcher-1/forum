@@ -7,6 +7,11 @@ import (
 	"text/template"
 )
 
+type user struct{
+	name	string
+	password string
+}
+
 var login *template.Template
 var home *template.Template
 var categories *template.Template
@@ -41,6 +46,8 @@ func main() {
 
 	mux := http.NewServeMux()
 
+	mux.HandleFunc("/stylesheet", cssHandler)
+
 	mux.HandleFunc("/login", loginWeb)
 	mux.HandleFunc("/home", homePage)
 	mux.HandleFunc("/categories", categoriesList)
@@ -65,16 +72,41 @@ func main() {
 	fmt.Println("hi")
 }
 
+func cssHandler(writer http.ResponseWriter, request *http.Request) {
+	http.ServeFile(writer, request, "./templates/stylesheet.css")
+}
+
 func loginWeb(writer http.ResponseWriter, request *http.Request) {
+
 	writer.WriteHeader(http.StatusOK)
-	writer.Header().Set("Content-Type", "text/html")
+	if err := request.ParseForm(); err != nil {
+		http.Error(writer, "500 Internal Server Error", 500)
+		return
+	}
+
 	login.Execute(writer, nil)
 
 }
 func homePage(writer http.ResponseWriter, request *http.Request) {
-	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
-	home.Execute(writer, nil)
+
+	if err := request.ParseForm(); err != nil {
+		http.Error(writer, "500 Internal Server Error", 500)
+		return
+	}
+
+	user := "test"
+	pw := "1234"
+
+	
+	if request.FormValue("username") == user && request.FormValue("password") == pw {
+		writer.WriteHeader(http.StatusOK)
+		home.Execute(writer, nil)
+	}
+
+	writer.WriteHeader(http.StatusBadRequest)
+	login.Execute(writer, nil)
+
 }
 func categoriesList(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
