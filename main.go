@@ -12,6 +12,16 @@ type user struct{
 	password string
 }
 
+type usrProfile struct{
+	photo 	string
+	posts 	[]string
+	comments []string
+	likes []string
+	shares []string
+	userinfo map[string]string
+	custom 	string
+}
+
 var login *template.Template
 var home *template.Template
 var categories *template.Template
