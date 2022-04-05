@@ -62,6 +62,7 @@ func main() {
 	mux.HandleFunc("/shares", userShares)
 	mux.HandleFunc("/info", userInfo)
 	mux.HandleFunc("/custom", customization)
+	mux.HandleFunc("/cat", catHandler)
 
 	fmt.Printf("Starting server at port 8080\n\t -----------\nhttp://localhost:8080/login\n")
 
@@ -74,6 +75,9 @@ func main() {
 
 func cssHandler(writer http.ResponseWriter, request *http.Request) {
 	http.ServeFile(writer, request, "./templates/stylesheet.css")
+}
+func catHandler(w http.ResponseWriter, r *http.Request){
+	http.ServeFile(w, r ,"./templates/cat.jpg")
 }
 
 func loginWeb(writer http.ResponseWriter, request *http.Request) {

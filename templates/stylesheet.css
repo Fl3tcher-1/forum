@@ -30,3 +30,12 @@ input[type="submit"]:hover{
 textarea{
    vertical-align: middle;
 }
+
+.image{
+  height: auto;
+  display: block;
+  margin-left:auto;
+  margin-right: auto;
+  text-align: center;
+  width: 50%;
+}
