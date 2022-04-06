@@ -12,7 +12,7 @@ type User struct {
 	password string
 }
 
-// could it be used to store data for userprofile and use a single template execution???
+// could it be used to store data for userprofile and use a single template execution??? 
 type usrProfile struct { 
 	photo    string
 	posts    []string
@@ -60,7 +60,7 @@ func main() {
 	mux := http.NewServeMux()
 	//create server handlers
 	mux.HandleFunc("/stylesheet", cssHandler)
-
+	
 	mux.HandleFunc("/login", loginWeb)
 	mux.HandleFunc("/home", homePage)
 	mux.HandleFunc("/categories", categoriesList)
@@ -115,7 +115,7 @@ func homePage(writer http.ResponseWriter, request *http.Request) {
 		http.Error(writer, "500 Internal Server Error", 500)
 		return
 	}
-
+	// 🐈 
 	var users User
 
 	users.name = "test"
