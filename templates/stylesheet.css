@@ -51,12 +51,12 @@ textarea{
   /* Explicit grid */
   grid-template-areas:
     'a  b  c  d  e'
-    'l  i  i  i  f'
+    'i  i  i  i  i'
     'k  🌟 🌟 g  g'
     'j  🌟 🌟 g  g';
     
 
-  grid-template-rows: repeat(4, 15% 30% 30% 30%);
+  grid-template-rows: repeat(4, 15% 25% 40% 20%);
   grid-template-columns: 240px auto auto 240px; 
   /* the autos are used to automaticaaly adjust size based on viewport */
 
