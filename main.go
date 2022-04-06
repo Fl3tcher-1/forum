@@ -7,21 +7,23 @@ import (
 	"text/template"
 )
 
-type user struct{
-	name	string
+type User struct {
+	name     string
 	password string
 }
 
-type usrProfile struct{
-	photo 	string
-	posts 	[]string
+// could it be used to store data for userprofile and use a single template execution???
+type usrProfile struct { 
+	photo    string
+	posts    []string
 	comments []string
-	likes []string
-	shares []string
+	likes    []string
+	shares   []string
 	userinfo map[string]string
-	custom 	string
+	custom   string
 }
-
+// creates all needed templates
+// will need to be reduced as there is too many at the moment
 var login *template.Template
 var home *template.Template
 var categories *template.Template
@@ -39,6 +41,7 @@ var custom *template.Template
 
 func main() {
 
+	//parses files for all templates allowing them to be called
 	login = template.Must(template.ParseFiles("./templates/login.html"))
 	home = template.Must(template.ParseFiles("./templates/home.html"))
 	categories = template.Must(template.ParseFiles("./templates/categories.html"))
@@ -55,7 +58,7 @@ func main() {
 	custom = template.Must(template.ParseFiles("./templates/customize.html"))
 
 	mux := http.NewServeMux()
-
+	//create server handlers
 	mux.HandleFunc("/stylesheet", cssHandler)
 
 	mux.HandleFunc("/login", loginWeb)
@@ -83,13 +86,16 @@ func main() {
 	fmt.Println("hi")
 }
 
+//handles css
 func cssHandler(writer http.ResponseWriter, request *http.Request) {
 	http.ServeFile(writer, request, "./templates/stylesheet.css")
 }
-func catHandler(w http.ResponseWriter, r *http.Request){
-	http.ServeFile(w, r ,"./templates/cat.jpg")
+// handles cat picture
+func catHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "./templates/cat.jpg")
 }
 
+// login page
 func loginWeb(writer http.ResponseWriter, request *http.Request) {
 
 	writer.WriteHeader(http.StatusOK)
@@ -101,25 +107,42 @@ func loginWeb(writer http.ResponseWriter, request *http.Request) {
 	login.Execute(writer, nil)
 
 }
+// home page
 func homePage(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "text/html")
 
-	if err := request.ParseForm(); err != nil {
+	if err := request.ParseForm(); err != nil { // checks for errors parsing form
 		http.Error(writer, "500 Internal Server Error", 500)
 		return
 	}
 
+	var users User
+
+	users.name = "test"
+	users.password = "1234" // does not work ranging through this at the moment
+
+	guest := false
 	user := "test"
 	pw := "1234"
 
-	
-	if request.FormValue("username") == user && request.FormValue("password") == pw {
+	// check parsed form username and password fields and check if they match what is stored
+	if request.FormValue("username") == user && request.FormValue("password") == pw { 
+		// if matched takes you to home page
+		writer.WriteHeader(http.StatusOK)
+		fmt.Println(guest)
+		home.Execute(writer, nil)
+	} else if request.FormValue("username") == "" && request.FormValue("password") == "" {
+		// if fields empty and user clicks continue as guest then it will set guest status to true and takes you to homepage
+		guest = true
+		fmt.Println(guest)
 		writer.WriteHeader(http.StatusOK)
 		home.Execute(writer, nil)
-	}
 
-	writer.WriteHeader(http.StatusBadRequest)
-	login.Execute(writer, nil)
+	} else {
+		// if person tries to login with incorrect details then it takes them back to login page
+		writer.WriteHeader(http.StatusBadRequest)
+		login.Execute(writer, nil)
+	}
 
 }
 func categoriesList(writer http.ResponseWriter, request *http.Request) {
