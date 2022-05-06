@@ -16,22 +16,28 @@ type User struct {
 // could it be used to store data for userprofile and use a single template execution???
 
 //holds details of user session-- used for cookies
-type session struct{
-	Id	int
-	Uuid	string // random value to be stored at the browser
-	Email 	string
+type session struct {
+	Id    int
+	Uuid  string // random value to be stored at the browser
+	Email string
 
-	UserId	int
+	UserId int
 	// CreatedAt	time.Time
 }
 type usrProfile struct {
-	photo    string
-	posts    []string
-	comments []string
-	likes    []string
-	shares   []string
-	userinfo map[string]string
-	custom   string
+	Name string
+	// image    *os.Open
+	Info     string
+	Photo    string
+	Gender	 string
+	Age      int
+	Location string
+	Posts    []string
+	Comments []string
+	Likes    []string
+	Shares   []string
+	Userinfo map[string]string
+	// custom   string
 }
 
 type Post struct {
@@ -151,11 +157,11 @@ func pandaHandler(w http.ResponseWriter, r *http.Request) {
 func sharkHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "./templates/images/shark.jpg")
 }
-func dogeHandler(w http.ResponseWriter, r *http.Request){
-	http.ServeFile(w,r, "./templates/images/doge.jpg")
+func dogeHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "./templates/images/doge.jpg")
 }
-func questionFunc(w http.ResponseWriter, r *http.Request){
-	http.ServeFile(w,r, "./templates/images/question.jpg")
+func questionFunc(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "./templates/images/question.jpg")
 }
 
 // login page
@@ -189,7 +195,7 @@ func homePage(writer http.ResponseWriter, request *http.Request) {
 
 	var postInfo Post
 	postInfo.Title = "testing"
-	postInfo.Content = "this is a completely empty comment"
+	postInfo.Content = "this is a completely empty post"
 	postInfo.Comments = 2
 	postInfo.Date = "11/11/11"
 
@@ -238,8 +244,15 @@ func userProfile(writer http.ResponseWriter, request *http.Request) {
 
 	users.Name = "test"
 
+	var usrInfo usrProfile
 
-	profile.Execute(writer, users)
+	usrInfo.Name = "Panda"
+	usrInfo.Info = "Hello my name is panda and I like to sleep and eat bamboo--- nom"
+	usrInfo.Gender = "Panda"
+	usrInfo.Age = 7
+	usrInfo.Location = "Bamboo Forest"
+
+	profile.Execute(writer, usrInfo)
 }
 
 func threads(w http.ResponseWriter, r *http.Request) {
@@ -257,7 +270,7 @@ func aboutFunc(w http.ResponseWriter, r *http.Request) {
 	about.Execute(w, nil)
 }
 
-func contactUs(w http.ResponseWriter, r *http.Request){
+func contactUs(w http.ResponseWriter, r *http.Request) {
 	contact.Execute(w, nil)
 }
 func userPhoto(writer http.ResponseWriter, request *http.Request) {
@@ -310,7 +323,7 @@ func customization(writer http.ResponseWriter, request *http.Request) {
 // 		}
 // 		http.SetCookie(w, &cookie) // adds cookie to response header
 // 		http.Redirect(w,r, "/", 302)
-	
+
 // 	} else{
 // 		http.Redirect(w,r, "/login", 302)
 // 	}
@@ -318,7 +331,7 @@ func customization(writer http.ResponseWriter, request *http.Request) {
 
 // // session checks if user is logged in
 // func session(w http.ResponseWriter, r *http.Request)(sess data.session, err error){
-// 	cookie, err := r.Cookie("_cookie") 
+// 	cookie, err := r.Cookie("_cookie")
 // 	// retrieves cookie from request, if cookie doesnt exist then user has not logged in
 // 	// if cookie exists, perform second check and check database to see if sessions unique id exists using data.session
 // if err == nil{

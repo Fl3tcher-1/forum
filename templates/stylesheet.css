@@ -1,11 +1,48 @@
+/* light theme */
+@media (prefers-color-scheme: light){
+  :root{
+    --background-color: aqua;
+    --border-color: black;
+    --border-color-lighter: rgb(48, 46, 46);
+    --body-color: rgb(255, 255, 255);
+    --text-color: rgb(0, 0, 0);
+    --rights-color: rgb(0, 2, 95);
+    --button-color: rgb(255, 255, 255);
+    --button-text: rgb(0, 0, 0);
+
+  }
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+     --background-color: aqua;
+    --border-color: rgb(0, 0, 0);
+    --border-color-lighter: rgb(48, 46, 46);
+    --body-color: rgb(0, 0, 0);
+    --text-color: rgb(255, 255, 255);
+    --rights-color: rgb(60, 63, 224);
+    --button-color: rgb(0, 0, 0);
+    --button-text: rgb(255, 255, 255);
+  }
+}
+
 body {
+  box-sizing: border-box;
+  width: 100%;
   margin-top: 100px;
-  background-color: rgb(255, 255, 255);
+  background-color: var(--body-color);
   margin: 10px;
+  color: var(--text-color);
+  
+}
+
+body > .dark-mode{
+  background-color: black;
+  color:antiquewhite;
 }
 a{
+  color: var(--text-color);
   text-decoration: none;
-  color: black;
 }
 
 a:hover{
@@ -13,7 +50,7 @@ a:hover{
 }
 
 h3 {
-  color: rgb(0, 0, 0);
+  color: var(--text-color);
   margin-left: 20px;
 }
 textarea{
@@ -21,6 +58,7 @@ textarea{
    vertical-align: middle;
    width: 80%;
    height: 80px;
+   color: var(--text-color);
 
 }
 ol{
@@ -30,7 +68,7 @@ li{
   margin:0;
 }
 .grid >div{
-  background-color: aqua;
+  background-color: var(--background-color);
   padding: 1em;
   display: block;
   text-align: center;
@@ -68,14 +106,19 @@ li{
 
 }
 .head{
+    border: var(--border-color) 5px solid;
   display: flex;
-  background-color: black;
+  background-color: var(--border-color-lighter);
   margin: 10;
   padding: 0 50px;
   gap: 50px;
   position: sticky;
   top: 0;
   width: 100%;
+}
+.head > h4{
+  border: var(--border-color);
+  color: var(--text-color);
 }
 
 .header{
@@ -88,13 +131,18 @@ li{
 }
 
 input[type=submit]{
+  background-color: var(--button-color);
+  color: var(--button-text);
   font-size: 15px;
   height: 50px;
   width: 250px;
 }
+
 input:hover[type=submit]{
-  background-color:deepskyblue;
-  opacity: .75;
+  background-color:var(--background-color);
+  color: var(--button-text);
+  opacity: .9;
+  font-size:115%;
 }
 
 .banner{
@@ -120,29 +168,35 @@ h2{
   margin: 0;
 }
 .title{
+  color: var(--text-color);
   display: inline;
   margin: 0;
 }
 .bottom {
+  color: var(--text-color);
   display: flex;
     margin: 0;
 }
 .timestamp{
   padding-right: 10px;
 }
-.post{}
 
 h4{
   margin: 0;
+  color: var(--text-color);
 }
 p{
   padding: 1rem;
   margin: 5px 0;
+    color: var(--text-color);
 }
 p1{
   margin: 0;
+    color: var(--text-color);
+
 }
 .form{
+  width: 350px;
   margin: 10;
 }
 
@@ -156,22 +210,16 @@ p1{
   margin: 0;
 }
 
-/* .category-grid > div{
-  text-align: center;
-  display: grid;
-  padding: 1rem;
-  margin:  0;
-  gap: 15px;
-}  */
-
 .category{
+  color: var(--text-color);
   display: grid;
   text-align: center;
-  padding: 1rem;
+  padding: 10px;
   margin: 0;
-  gap: 20px;
-width: 250px;
-height: 250px;
+  gap: 10px;
+  width: 250px;
+  height: 250px;
+  overflow: hidden;
 }
 
 .category > .image{
@@ -187,30 +235,54 @@ height: 100%;
 object-fit: cover;
 }
 
-.profile-grid{
-  display: grid;
-  justify-content: center;
-  grid-template-columns: 300px 300px;
-  grid-template-rows: auto auto auto auto;
-  gap: 10px;
-  padding: 1rem;
+.profilenav{
+  display: flex;
+  grid-template-columns: 300px 500px;
   margin: 0;
+}
+.profilenav > .profile-grid{
+  display: flex;
+  text-align: center;
+  padding: 5px;
+  margin-left: 25%;
+  border: rgb(151, 8, 8) 4px dashed;
+}
 
+.profilenav > .profile-grid > .about{
+  width: 50px;
+}
+
+.profilenav > .profile-grid > .user >.image{
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.user{
+  width: 400px;
+  font-size: 18px;
 }
 .text{
+    color: var(--text-color);
   width: 250px;
   display: flex;
   justify-content: center;
   align-items: center;
-text-align: center;
+  text-align: center;
 }
 p{
+    color: var(--text-color);
   text-align: center;
   margin: 25px 450px;
   padding: 10px;
   font-size: 20px;
 }
-
+p1{
+    color: var(--text-color);
+  margin: 10px 5px;
+  padding: 5px;
+}
 
 .contact{
   text-align: center;
@@ -221,15 +293,18 @@ p{
   text-align: center;
   margin: 0;
   padding: 1rem;
+  position: relative;
+  bottom: 0;
 }
 h5{
   font-size: 25px;
   margin: 20px;
+    color: var(--text-color);
 }
 h6{
   font-size: 12px;
-  color: rgb(0, 2, 95);
   margin: 10px;
+    color: var(--rights-color);
 }
 
 .imageq{
@@ -240,4 +315,10 @@ h6{
  text-align: center;
   width: 75%;
   padding: 1rem;
+}
+
+.header > .comments{
+  margin: 5px 5px;
+  padding: 5px;
+    color: var(--text-color);
 }

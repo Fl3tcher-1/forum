@@ -6,7 +6,7 @@
                 <link rel="stylesheet" href ="stylesheet" type ="text/css">
 
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>profile--- {{.Name}}</title>
+        <title>{{.Name}}</title>
 </head>
 <body>
          <div class="head">
@@ -44,54 +44,60 @@
     </div>
     <br>
 
-<form action = "photo">
-        <input type="submit" value=" Photo"/>
-    </form>  
-    <br>
-<form action = "posts">
-        <input type="submit" value=" posts"/>
-    </form>
-    <br>
-
-    <form action = "comments">
-        <input type="submit" value=" comments"/>
-    </form>
-    <br>
-
-<form action = "likes">
-        <input type="submit" value=" likes and dislikes"/>
-    </form>
-    <br>
-
-    <form action = "shares">
-        <input type="submit" value=" Shares"/>
-    </form>
-    <br>
-
-<form action = "info">
-        <input type="submit" value=" user info"/>
-    </form>
-        <br>
-
-<form action = "custom">
-        <input type="submit" value=" custom time"/>
-    </form>
-        <br>
-
-    <form action = "home">
-        <input type="submit" value=" Back"/>
-    </form>
-
-    <section class="profile-grid">
-        <div class="user"> "panda"
-         <div class="image">
-            <img src="panda"> 
-            </div>
-            <div class="about">Hello my name is panda and i like to sleep and eat bamboo--- nom</div>
+    <section class="profilenav">
+<div class="profileButtons">
+    <form action = "photo">
+            <input type="submit" value=" Photo"/>
+        </form>  
+        <form action = "posts">
+                <input type="submit" value=" posts"/>
+            </form>
+        
+            <form action = "comments">
+                <input type="submit" value=" comments"/>
+            </form>
+        
+        <form action = "likes">
+                <input type="submit" value=" likes and dislikes"/>
+            </form>
+        
+            <form action = "shares">
+                <input type="submit" value=" Shares"/>
+            </form>
+        
+        <form action = "info">
+                <input type="submit" value=" user info"/>
+            </form>
+        
+        <form action = "custom">
+                <input type="submit" value=" custom time"/>
+            </form>
+        
+            <form action = "home">
+                <input type="submit" value=" Back"/>
+            </form>
+</div>
+<div class="profile-grid">
+    <div class="user"> {{.Name}}
+        <br><br>
+     <div class="image">
+        <img src="panda"> 
+        </div><br>
+        <div class="about">
+            {{.Info}}
         </div>
-    </section>
+        <br>
+        <div class="gender">Gender: {{.Gender}}</div>
+        <div class="age">Age: {{.Age}}</div>
+        <div class="location">Location: {{.Location}}</div>
+        <br>
+    </div>
+</div>
+</section>
+<br>
+
+
     <div class="rights">
-            <br>
             <h6>Content Policy||Privacy Policy||User Agreement</h6>
             <h7>© DogeCo, inc, All rights reserved </h7>
         </div>

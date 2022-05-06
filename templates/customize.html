@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+     <link rel="stylesheet" href ="stylesheet" type ="text/css">
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,10 +9,32 @@
 </head>
 <body>
         <title>custom</title>
+
+  <input id="dark-mode" class="dark-mode-checkbox hidden" type="checkbox">
+
+<div class="checkbox-container">
+  <label class="dark-mode-label" for="dark-mode">
+    Enable dark mode
+  </label>
+        
+        <div class="wrapper">
+            
+        </div>
+        
+    </div>
     <h2> customize your browsing experience here</h2>
-    <h3> click for dark mode</h3> <br>
+    <h3> click for dark mode</h3> 
+ <button onclick="myFunction()">Toggle dark mode</button><br>
     <h3> click for light mode</h3> <br>
     <h3> click to get random theme</h3>
+
+
+    <script>
+function myFunction() {
+   var element = document.body;
+   element.classList.toggle("dark-mode");
+}
+</script>
         <form action = "profile">
         <input type="submit" value=" Back"/>
     </form>
