@@ -3,13 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href ="stylesheet" type ="text/css">
     <title>Document</title>
 </head>
 <body>
     <title>photo</title>
-    <h2> select photo </h2>
-        <form action = "profile">
+            <div class="form-popup" id="myForm">
+            <form action ="profile" class="form-container">
+                <h1>Select Profile Picture</h1>
+                <div class="photo-grid">
+                    <div class="img-cell">
+                        <img src="panda">
+                    </div>
+                        <div class="img-cell">
+                            <img src="cat">
+                            <input type="checkbox" id="cat">
+                            <label for="cat"></label>
+                    </div> <div class="img-cell">
+                        <img src="panda">
+                    </div> <div class="img-cell">
+                        <img src="chicken">
+                    </div> <div class="img-cell">
+                        <img src="cow">
+                    </div> <div class="img-cell">
+                        <img src="doge">
+                    </div> <div class="img-cell">
+                        <img src="panda">
+                    </div> <div class="img-cell">
+                        <img src="owl">
+                    </div> <div class="img-cell">
+                        <img src="panda">
+                    </div>
+                     <div class="img-cell">
+                        <img src="shark">
+                    </div>
+                </div>
+                <button type="submit" class="btn">Confirm</button>
+            </form>
+        </div>
+        <br>
         <input type="submit" value=" Back"/>
     </form>
 </body>

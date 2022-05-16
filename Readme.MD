@@ -70,8 +70,7 @@ errors that have been identified and need to be accounted for:
 
 ### Forum type
 
-student blog?
-health and fitness?
+no set type
 
 ### categories
 
@@ -82,6 +81,9 @@ will use industry standard password requirements but no special characters
 
 
 ### colour scheme
+
+light & dark modes based on system theme
+
 primary colour
 secondary colour
 tertiary colour
@@ -107,3 +109,57 @@ here all the the ideas and or features we likeda bout different websites not all
     Karolis Milius
     Morayo
     Klaudia
+
+
+
+ouststanding
+
+user log out
+forgot password
+database
+
+
+advanced features
+
+notifications--- likes and dislikes, comments
+edit/delete posts and comments
+
+authenitction
+
+login in with google and github
+
+image upload
+upload image into a post
+sizes
+format
+where stored?
+
+moderation
+Guests
+
+    These are unregistered-users that can neither post, comment, like or dislike a post. They only have the permission to see those posts, comments, likes or dislikes.
+
+Users
+
+    These are the users that will be able to create, comment, like or dislike posts.
+
+Moderators
+
+    Moderators, as explained above, are users that have a granted access to special functions :
+        They should be able to monitor the content in the forum by deleting or reporting post to the admin
+    To create a moderator the user should request an admin for that role
+
+Administrators
+
+    Users that manage the technical details required for running the forum. This user must be able to :
+        Promote or demote a normal user to, or from a moderator user.
+        Receive reports from moderators. If the admin receives a report from a moderator, he can respond to that report
+        Delete posts and comments
+        Manage the categories, by being able to create and delete them.
+
+
+authentication
+
+https
+bcrypt 
+uuid

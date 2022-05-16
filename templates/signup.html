@@ -1,20 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
+   <style>
+      .rn { color: red;} 
+    </style>
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+   <pre class="rn">{{.}}</pre>
+   <meta charset="UTF-8" />
+   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <link rel="stylesheet" href ="stylesheet" type ="text/css">
+
+   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+   <!-- <meta http-equiv="refresh" content="0; URL=/homepage.html" /> -->
+   <title>Sign-up</title>
+   <h1>Sign up</h1>
+   <ul>
+      <li>usernames must contain only letters or numbers</li>
+      <li>usernames must be longer than 4 characters but shorter than 51</li>
+      <li>passwords must contain a uppercase letter, lowercase letter, number, and special character</li>
+      <li>passwords must be greater than 11 characters but less than 60</li>
+   </ul>
+   <hr /><br>
+   
+   
+      <div class="container">
+      <form action="/sign-up-form" method="POST">
+         <label for=" "><b>What's your email?</b></label>
+         <input type="text" name="email" placeholder="Enter your email." required autofocus/><br><br>
+         
+         <label for="password"><b>Create a password</b></label>
+         <input type="password" name="password" placeholder="Create a password" required/><br><br>
+
+      
+         <label for="username"><b>What should we call you?</b></label>
+         <input type="text"  name="username" placeholder="Enter a profile name." required/><br><br>
+
+
+         <div class="clearfix">
+           <button class="signupbtn" type="submit">Sign-up</button>
+         </div><br><br>
+         
+         <a href="/login">Back</a>
+      </div>
+   </form>
+   <!-- <br><br>
+   {{if .}}
+       {{.}}
+   {{end}} -->
 </head>
-<body>
-    <title>register</title>
-    <h3> enter username: </h3>
-    <h3> enter password: </h3>
-    <h3> enter e-mail :</h3>
-    <br><br>
-    <h3> sign up</h3>
-    <form action = "login">
-        <input type="submit" value=" confirm details"/>
-    </form>
-</body>
+
+<body></body>
+
 </html>
