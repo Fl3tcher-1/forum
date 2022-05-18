@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -81,7 +82,19 @@ func handler(w http.ResponseWriter, r *http.Request) {
 func main() {
 
 	database.UserDatabase()
-	// database.Feed()
+
+	posts, err := sql.Open("sqlite3", "./database/feed.db")
+	if err != nil {
+		database.CheckErr(err)
+	}
+	feed := database.Feed(posts)
+
+	// feed.Add(database.PostFeed{
+	// 	Content: "the monkeys are taking control",
+	// })
+
+	items :=feed.Get()
+	fmt.Println(items)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", handler)

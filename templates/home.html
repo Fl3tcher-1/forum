@@ -43,7 +43,8 @@
     </div>
 
     <div class="featured"><h3> featured/trending posts</h3>
-        <ol>
+        <ol> 
+            {{range . }}
             <li class = "row">
                 <h4 class="title">
                     <a href ="thread">
@@ -56,45 +57,45 @@
                 </div>
                 <div class ="bottom">
                     <p1 class="timestamp">
-                        <a href ="thread">{{.Date}}</a>
-                        
+                        <a href ="thread">{{.Created}}</a> 
                     </p1>
-                    <p1 class ="comment-count">
-                        <a href ="thread">{{.Comments}} Comments</a>
+                    <p1 class ="Likes">
+                        <a href ="thread">{{.Likes}} Likes</a>
                     </p1>
                     </div>
-            </li>
-                <li class = "row">
-                <a href ="thread">
-                <h4 class="title">
-                    Thread 2
-                </h4>
-                <div class ="bottom">
+                </li>
+                <!-- <li class = "row">
+                    <a href ="thread">
+                        <h4 class="title">
+                            {{.Title}}
+                        </h4> -->
+                        <!-- <div class ="bottom">
                     <p1 class="timestamp">
                         11/04/2022
                     </p1>
                     <p1 class ="comment-count">
                         50 comments
-                    </p1>
-      </div>
-                    </a>
-            </li>
+                    </p1> -->
+                    <!-- </div> -->
+                    <!-- </a>
+                </li>
                 <li class = "row">
-                <a href ="thread">
+                    <a href ="thread">
                 <h4 class="title">
                     Thread 3
-                </h4>
-                <div class ="bottom">
+                </h4> -->
+                <!-- <div class ="bottom">
                     <p1 class="timestamp">
                         11/04/2022
                     </p1>
                     <p1 class ="comment-count">
-                        0 comments
-                    </p1>
-                    </div>
-                    </a>
-            </li>
-        </ol>
+                        0 comments -->
+                        <!-- </p1> -->
+                        <!-- </div> -->
+                        <!-- </a> -->
+                    <!-- </li> -->
+                    {{end}}
+                </ol>
   </div>
   <form>
     <div class="post"><h3> Create a post</h3>

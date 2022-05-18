@@ -252,6 +252,21 @@ func HomePage(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	// 🐈
+	database.UserDatabase()
+
+	posts, err := sql.Open("sqlite3", "./database/feed.db")
+	if err != nil {
+		database.CheckErr(err)
+	}
+	feed := database.Feed(posts)
+
+	// feed.Add(database.PostFeed{
+	// 	Content: "the monkeys are taking control",
+	// })
+
+	items :=feed.Get()
+	fmt.Println(items)
+
 	var users User
 
 	users.Username = "test"
@@ -261,11 +276,11 @@ func HomePage(writer http.ResponseWriter, request *http.Request) {
 	user := "test"
 	pw := "1234"
 
-	var postInfo Post
-	postInfo.Title = "testing"
-	postInfo.Content = "this is a completely empty post"
-	postInfo.Comments = 2
-	postInfo.Date = "11/11/11"
+	// var postInfo Post
+	// postInfo.Title = "testing"
+	// postInfo.Content = "this is a completely empty post"
+	// postInfo.Comments = 2
+	// postInfo.Date = "11/11/11"
 
 	// check parsed form username and password fields and check if they match what is stored
 	if request.FormValue("username") == user && request.FormValue("password") == pw {
@@ -275,7 +290,7 @@ func HomePage(writer http.ResponseWriter, request *http.Request) {
 			fmt.Printf("%s = %s\n", key, value)
 		}
 		fmt.Println(guest)
-		tpl.ExecuteTemplate(writer, "home.html", postInfo)
+		tpl.ExecuteTemplate(writer, "home.html", items)
 
 	} else if request.FormValue("username") == "" && request.FormValue("password") == "" {
 		// if fields empty and user clicks continue as guest then it will set guest status to true and takes you to homepage
@@ -283,7 +298,7 @@ func HomePage(writer http.ResponseWriter, request *http.Request) {
 		fmt.Println(guest)
 		writer.WriteHeader(http.StatusOK)
 
-		tpl.ExecuteTemplate(writer, "home.html", postInfo)
+		tpl.ExecuteTemplate(writer, "home.html", items)
 
 	} else {
 		// if person tries to login with incorrect details then it takes them back to login page

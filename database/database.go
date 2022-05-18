@@ -2,50 +2,97 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 
 	_ "github.com/mattn/go-sqlite3" // sqlite3 driver connects go with sql
 )
+
+type NewsFeed struct {
+	DB *sql.DB
+}
 
 var DB *sql.DB
 
 func UserDatabase() {
 	db, err := sql.Open("sqlite3", "./database/userdata.db")
 	if err != nil {
-		checkErr(err)
+		CheckErr(err)
 	}
 
 	statement, err := db.Prepare("CREATE TABLE IF NOT EXISTS people (id INTEGER PRIMARY KEY, username TEXT, email TEXT, passwordHASH TEXT)")
 	statement.Exec()
 
 	if err != nil {
-		checkErr(err)
+		CheckErr(err)
 	}
 
 	DB = db
 }
 
-func checkErr(err error) {
-	log.Fatal(err)
+func Feed(db *sql.DB) *NewsFeed {
+	db, err := sql.Open("sqlite3", "./database/feed.db")
+	if err != nil {
+		CheckErr(err)
+	}
+
+	stmt, err := db.Prepare("CREATE TABLE IF NOT EXISTS feed (iD INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, title TEXT, content	TEXT, likes INTEGER, created TEXT, category TEXT)")
+	stmt.Exec()
+	if err != nil {
+		CheckErr(err)
+	}
+	return &NewsFeed{
+		DB: db,
+	}
 }
 
-// func Feed() {
-// 	db, err := sql.Open("sqlite3", "./database/feed.db")
-// 	if err != nil {
-// 		checkErr(err)
-// 	}
+func (feed *NewsFeed) Get() []PostFeed {
+	posts := []PostFeed{}
+	rows, err := feed.DB.Query("SELECT * FROM feed")
 
-// 	stmt, err := db.Prepare(`CREATE TABLE "feed" (
-// 	"iD"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-// 	"title"	TEXT,
-// 	"content"	TEXT,
-// 	"comments"	TEXT,
-// 	"likes"	INTEGER,
-// 	"created"	TEXT,
-// 	"category"	TEXT
-// );`)
-// 	stmt.Exec()
-// 	if err != nil {
-// 		checkErr(err)
-// 	}
-// }
+	var id int
+	var title string
+	var content string
+	// var comments []string
+	var likes int
+	var created string
+	var category string
+
+	for rows.Next() {
+		rows.Scan(&id, &title, &content, &likes, &created, &category)
+		newPost := PostFeed{ //explicit values
+			ID:      id,
+			Title:   title,
+			Content: content,
+			Likes:    likes,
+			Created: created,
+			// Comments: comments,
+			Category: category,
+		}
+
+		posts = append(posts, newPost)
+	}
+
+	if err != nil {
+		CheckErr(err)
+	}
+
+	return posts
+}
+
+func (feed *NewsFeed) Add(item PostFeed) {
+	stmt, err := feed.DB.Prepare(`
+		INSERT INTO feed (Content) values(?)
+	`)
+
+	if err != nil {
+		CheckErr(err)
+	}
+
+	stmt.Exec(item.Content)
+}
+
+func CheckErr(err error) {
+	fmt.Println(err)
+	log.Fatal(err)
+}
