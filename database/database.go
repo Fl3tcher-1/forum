@@ -10,17 +10,17 @@ import (
 var DB *sql.DB
 
 func UserDatabase() {
-	db, _ := sql.Open("sqlite3", "userdata.db")
-	// if err != nil {
-	// 	checkErr(err)
-	// }
+	db, err := sql.Open("sqlite3", "./database/userdata.db")
+	if err != nil {
+		checkErr(err)
+	}
 
-	statement, _ := db.Prepare("CREATE TABLE IF NOT EXISTS people (id INTEGER PRIMARY KEY, username TEXT, email TEXT)")
+	statement, err := db.Prepare("CREATE TABLE IF NOT EXISTS people (id INTEGER PRIMARY KEY, username TEXT, email TEXT, passwordHASH TEXT)")
 	statement.Exec()
 
-	// if err != nil {
-	// 	checkErr(err)
-	// }
+	if err != nil {
+		checkErr(err)
+	}
 
 	DB = db
 }
@@ -28,3 +28,24 @@ func UserDatabase() {
 func checkErr(err error) {
 	log.Fatal(err)
 }
+
+// func Feed() {
+// 	db, err := sql.Open("sqlite3", "./database/feed.db")
+// 	if err != nil {
+// 		checkErr(err)
+// 	}
+
+// 	stmt, err := db.Prepare(`CREATE TABLE "feed" (
+// 	"iD"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+// 	"title"	TEXT,
+// 	"content"	TEXT,
+// 	"comments"	TEXT,
+// 	"likes"	INTEGER,
+// 	"created"	TEXT,
+// 	"category"	TEXT
+// );`)
+// 	stmt.Exec()
+// 	if err != nil {
+// 		checkErr(err)
+// 	}
+// }

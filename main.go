@@ -81,6 +81,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 func main() {
 
 	database.UserDatabase()
+	// database.Feed()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", handler)

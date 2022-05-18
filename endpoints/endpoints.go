@@ -8,6 +8,9 @@ import (
 	"strings"
 	"unicode"
 	"v2/Forum/database"
+
+	uuid "github.com/satori/go.uuid"
+	"golang.org/x/crypto/bcrypt"
 	// uuid "v2/go/pkg/mod/github.com/satori/go.uuid@v1.2.0"
 	// "v2/go/pkg/mod/golang.org/x/crypto@v0.0.0-20200622213623-75b288015ac9/bcrypt"
 )
@@ -65,45 +68,45 @@ func init() {
 // login page
 func LoginWeb(w http.ResponseWriter, r *http.Request) {
 
-	// cookie, err := r.Cookie("session")
-	// if err != nil {
-	// 	// id := uuid.NewV4()
-	// 	cookie = &http.Cookie{
-	// 		Name: "session",
-	// 		// Value:    id.String(),
-	// 		Secure:   true,
-	// 		HttpOnly: true,
-	// 	}
-	// 	http.SetCookie(w, cookie)
+	cookie, err := r.Cookie("session")
+	if err != nil {
+		id := uuid.NewV4()
+		cookie = &http.Cookie{
+			Name:     "session",
+			Value:    id.String(),
+			Secure:   true,
+			HttpOnly: true,
+		}
+		http.SetCookie(w, cookie)
 
-	// 	var user User
+		var user User
 
-	// 	r.ParseForm()
+		r.ParseForm()
 
-	// 	user.Username = r.FormValue("username")
-	// 	user.Password = r.FormValue("password")
+		user.Username = r.FormValue("username")
+		user.Password = r.FormValue("password")
 
-	// 	var passwordHash string
+		var passwordHash string
 
-	// 	stmt := "SELECT passwordHash FROM people WHERE Username = ?"
-	// 	row := database.DB.QueryRow(stmt, user.Username)
-	// 	err = row.Scan(&passwordHash)
+		stmt := "SELECT passwordHash FROM people WHERE Username = ?"
+		row := database.DB.QueryRow(stmt, user.Username)
+		err = row.Scan(&passwordHash)
 
-	// 	if err != nil {
-	// 		tpl.ExecuteTemplate(w, "login.html", "check username and password")
-	// 		return
-	// 	}
-	// 	// err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(user.Password))
-	// 	// returns nill on succcess
-	// 	if err == nil {
-	// 		//tpl.ExecuteTemplate(w, "homepage.html",  nil)
-	// 		http.Redirect(w, r, "/homepage.html", 302)
-	// 		return
-	// 	}
+		if err != nil {
+			tpl.ExecuteTemplate(w, "login.html", "check username and password")
+			return
+		}
+		err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(user.Password))
+		// returns nill on succcess
+		if err == nil {
+			tpl.ExecuteTemplate(w, "home.html", nil)
+			http.Redirect(w, r, "/home.html", 302)
+			return
+		}
 
-	// 	fmt.Println("incorrect password")
-	// 	tpl.ExecuteTemplate(w, "login.html", "check username and password")
-	// }
+		fmt.Println("incorrect password")
+		tpl.ExecuteTemplate(w, "login.html", "check username and password")
+	}
 
 	w.WriteHeader(http.StatusOK)
 	if err := r.ParseForm(); err != nil {
@@ -156,7 +159,7 @@ func SignUpUser(w http.ResponseWriter, r *http.Request) {
 	user.Password = r.FormValue("password")
 
 	fmt.Println(user)
-	var pwLower, pwUpper, pwNumber, pwSpecial, pwSpace, pwLength bool
+	var pwLower, pwUpper, pwNumber, pwSpace, pwLength bool
 	pwSpace = false
 
 	for _, char := range user.Password {
@@ -167,8 +170,8 @@ func SignUpUser(w http.ResponseWriter, r *http.Request) {
 			pwUpper = true
 		case unicode.IsNumber(char):
 			pwNumber = true
-		case unicode.IsPunct(char) || unicode.IsSymbol(char):
-			pwSpecial = true
+		// case unicode.IsPunct(char) || unicode.IsSymbol(char):
+		// 	pwSpecial = true
 		case unicode.IsSpace(int32(char)):
 			pwSpace = true
 		}
@@ -181,7 +184,7 @@ func SignUpUser(w http.ResponseWriter, r *http.Request) {
 		pwLength = true
 	}
 
-	if !pwLower || !pwUpper || !pwNumber || !pwSpecial || !pwLength || pwSpace || !isAlphaNumeric || !nameLength {
+	if !pwLower || !pwUpper || !pwNumber || !pwLength || pwSpace || !isAlphaNumeric || !nameLength {
 		tpl.ExecuteTemplate(w, "signup.html", "please check usrname and/or password criteria")
 		return
 	}
@@ -208,16 +211,16 @@ func SignUpUser(w http.ResponseWriter, r *http.Request) {
 		tpl.ExecuteTemplate(w, "signup.html", "e-mail in use")
 	}
 
-	// var passwordHash []byte
+	var passwordHash []byte
 
-	// passwordHash, err = bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-	// if err != nil {
-	// 	tpl.ExecuteTemplate(w, "signup.html", "there was an error registering account")
-	// 	return
-	// }
+	passwordHash, err = bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		tpl.ExecuteTemplate(w, "signup.html", "there was an error registering account")
+		return
+	}
 
 	var insertStmt *sql.Stmt
-	insertStmt, err = database.DB.Prepare("INSERT INTO people (username, email) VALUES (?, ?);")
+	insertStmt, err = database.DB.Prepare("INSERT INTO people (username, email, passwordHASH) VALUES (?, ?, ?);")
 	if err != nil {
 		tpl.ExecuteTemplate(w, "signup.html", "there was an error registering account")
 		return
@@ -225,7 +228,7 @@ func SignUpUser(w http.ResponseWriter, r *http.Request) {
 	defer insertStmt.Close()
 
 	var result sql.Result
-	result, err = insertStmt.Exec(user.Username, user.Email)
+	result, err = insertStmt.Exec(user.Username, user.Email, passwordHash)
 	rowsAff, _ := result.RowsAffected()
 	lastIns, _ := result.LastInsertId()
 	fmt.Println("rowsAff:", rowsAff)
