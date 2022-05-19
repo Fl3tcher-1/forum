@@ -23,7 +23,7 @@ type User struct {
 
 // could it be used to store data for userprofile and use a single template execution???
 
-//holds details of user session-- used for cookies
+// holds details of user session-- used for cookies
 type session struct {
 	Id    int
 	Uuid  string // random value to be stored at the browser
@@ -32,6 +32,7 @@ type session struct {
 	UserId int
 	// CreatedAt	time.Time
 }
+
 type usrProfile struct {
 	Name string
 	// image    *os.Open
@@ -60,16 +61,17 @@ type Post struct {
 
 var tpl *template.Template
 
-//parses files for all templates allowing them to be called
+// parses files for all templates allowing them to be called
 func init() {
 	tpl = template.Must(template.ParseGlob("templates/*"))
 }
 
 // login page
 func LoginWeb(w http.ResponseWriter, r *http.Request) {
-
 	cookie, err := r.Cookie("session")
 	if err != nil {
+		fmt.Printf("LoginWeb error:  %+v/n", err)
+	} else if err == nil {
 		id := uuid.NewV4()
 		cookie = &http.Cookie{
 			Name:     "session",
@@ -111,16 +113,16 @@ func LoginWeb(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "500 Internal Server Error", 500)
+		fmt.Printf("LoginWeb(writeheader) error:  %+v/n", err)
 	}
 	tpl.ExecuteTemplate(w, "login.html", nil)
-
 }
 
 func GetSignupPage(w http.ResponseWriter, r *http.Request) {
 	tpl.ExecuteTemplate(w, "signup.html", nil)
 }
 
-/*  1. chceck e-mail criteria
+/*  1. check e-mail criteria
     2. check u.username criteria
 	 3. check password criteria
 	 4. check if u.username is already exists in database
@@ -128,34 +130,33 @@ func GetSignupPage(w http.ResponseWriter, r *http.Request) {
 	 6. insert u.username and password hash in database
 */
 func SignUpUser(w http.ResponseWriter, r *http.Request) {
-
 	var user User
 
-	r.ParseForm() //parses sign up form to fetch needed information
+	r.ParseForm() // parses sign up form to fetch needed information
 
 	user.Email = r.FormValue("email")
-	//check if e-mail is valid format
-	var isValidEmail = true
+	// check if e-mail is valid format
+	isValidEmail := true
 
 	if isValidEmail != strings.Contains(user.Email, "@") || isValidEmail != strings.Contains(user.Email, ".") { // checks if e-mail is valid by checking if it contains "@"
 		isValidEmail = false
 	}
 
 	user.Username = r.FormValue("username")
-	//check if only alphanumerical numbers
-	var isAlphaNumeric = true
+	// check if only alphanumerical numbers
+	isAlphaNumeric := true
 
 	for _, char := range user.Username {
-		if unicode.IsLetter(char) == false && unicode.IsNumber(char) == false { //checks if character not a special character
+		if unicode.IsLetter(char) == false && unicode.IsNumber(char) == false { // checks if character not a special character
 			isAlphaNumeric = false
 		}
 	}
-	//checks if name length meets criteria
+	// checks if name length meets criteria
 	nameLength := (5 <= len(user.Username) && len(user.Username) <= 50)
 
 	fmt.Println(nameLength)
 
-	//check pw criteria
+	// check pw criteria
 	user.Password = r.FormValue("password")
 
 	fmt.Println(user)
@@ -216,6 +217,7 @@ func SignUpUser(w http.ResponseWriter, r *http.Request) {
 	passwordHash, err = bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		tpl.ExecuteTemplate(w, "signup.html", "there was an error registering account")
+		fmt.Printf("Register Account (passwordHash) error:  %+v/n", err)
 		return
 	}
 
@@ -223,24 +225,29 @@ func SignUpUser(w http.ResponseWriter, r *http.Request) {
 	insertStmt, err = database.DB.Prepare("INSERT INTO people (username, email, passwordHASH) VALUES (?, ?, ?);")
 	if err != nil {
 		tpl.ExecuteTemplate(w, "signup.html", "there was an error registering account")
+		fmt.Printf("Register Account (insertStmt) error:  %+v/n", err)
+
 		return
 	}
 	defer insertStmt.Close()
 
 	var result sql.Result
 	result, err = insertStmt.Exec(user.Username, user.Email, passwordHash)
-	rowsAff, _ := result.RowsAffected()
-	lastIns, _ := result.LastInsertId()
-	fmt.Println("rowsAff:", rowsAff)
-	fmt.Println("lastIns:", lastIns)
-	fmt.Println("err:", err)
+	rowsAff, err1 := result.RowsAffected()
+	if err1 != nil {
+		fmt.Printf("rowsAff: %+v9 error:  %+v/n", rowsAff, err1)
+	}
+	lastIns, err2 := result.LastInsertId()
+	if err1 != nil {
+		fmt.Printf("lastIns: %+v error:  %+v/n", lastIns, err2)
+	}
 	if err != nil {
 		tpl.ExecuteTemplate(w, "signup.html", "there was an error registering account")
+		fmt.Printf("Register Account (result) error:  %+v/n", err)
 		return
 	} else {
 		http.Redirect(w, r, "/login", 302)
 	}
-
 }
 
 // home page
@@ -249,6 +256,7 @@ func HomePage(writer http.ResponseWriter, request *http.Request) {
 
 	if err := request.ParseForm(); err != nil { // checks for errors parsing form
 		http.Error(writer, "500 Internal Server Error", 500)
+		fmt.Printf("ParseForm (HomePage) error:  %+v/n", err)
 		return
 	}
 	// 🐈
@@ -264,7 +272,7 @@ func HomePage(writer http.ResponseWriter, request *http.Request) {
 	// 	Content: "the monkeys are taking control",
 	// })
 
-	items :=feed.Get()
+	items := feed.Get()
 	fmt.Println(items)
 
 	var users User
@@ -305,13 +313,14 @@ func HomePage(writer http.ResponseWriter, request *http.Request) {
 		writer.WriteHeader(http.StatusBadRequest)
 		tpl.ExecuteTemplate(writer, "login.html", nil)
 	}
-
 }
+
 func CategoriesList(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	tpl.ExecuteTemplate(writer, "categories.html", nil)
 }
+
 func PwReset(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
@@ -348,6 +357,7 @@ func Threads(w http.ResponseWriter, r *http.Request) {
 	fmt.Print(postInfo)
 	tpl.ExecuteTemplate(w, "thread.html", postInfo)
 }
+
 func AboutFunc(w http.ResponseWriter, r *http.Request) {
 	tpl.ExecuteTemplate(w, "about.html", nil)
 }
@@ -355,42 +365,47 @@ func AboutFunc(w http.ResponseWriter, r *http.Request) {
 func ContactUs(w http.ResponseWriter, r *http.Request) {
 	tpl.ExecuteTemplate(w, "contact-us.html", nil)
 }
-func UserPhoto(writer http.ResponseWriter, request *http.Request) {
 
+func UserPhoto(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	tpl.ExecuteTemplate(writer, "photo.html", nil)
 }
+
 func UserPosts(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	tpl.ExecuteTemplate(writer, "posts.html", nil)
 }
+
 func UserComments(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	tpl.ExecuteTemplate(writer, "comments.html", nil)
 }
+
 func UserLikes(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	tpl.ExecuteTemplate(writer, "likes.html", nil)
 }
+
 func UserShares(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	tpl.ExecuteTemplate(writer, "shares.html", nil)
 }
+
 func UserInfo(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	tpl.ExecuteTemplate(writer, "userinfo.html", nil)
 }
+
 func Customization(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	tpl.ExecuteTemplate(writer, "customize.html", nil)
-
 }
 
 func CheckErr(err error) {
@@ -403,7 +418,7 @@ func CheckErr(err error) {
 
 // func logOut(){
 
-//close session
-//log user out
-//clear cookie
+// close session
+// log user out
+// clear cookie
 // }

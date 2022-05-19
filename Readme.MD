@@ -109,6 +109,8 @@ here all the the ideas and or features we likeda bout different websites not all
     Karolis Milius
     Morayo
     Klaudia
+    Rachel
+    Cassidy
 
 
 
