@@ -47,7 +47,9 @@ func Feed(db *sql.DB) *NewsFeed {
 }
 
 func (feed *NewsFeed) Get() []PostFeed {
+
 	posts := []PostFeed{}
+	
 	rows, err := feed.DB.Query("SELECT * FROM feed")
 
 	var id int
