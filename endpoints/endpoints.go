@@ -3,11 +3,11 @@ package endpoints
 import (
 	"database/sql"
 	"fmt"
+	"forum/database"
 	"html/template"
 	"net/http"
 	"strings"
 	"unicode"
-	"v2/Forum/database"
 
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -70,8 +70,6 @@ func init() {
 func LoginWeb(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("session")
 	if err != nil {
-		fmt.Printf("LoginWeb error:  %+v/n", err)
-	} else if err == nil {
 		id := uuid.NewV4()
 		cookie = &http.Cookie{
 			Name:     "session",
@@ -102,7 +100,7 @@ func LoginWeb(w http.ResponseWriter, r *http.Request) {
 		// returns nill on succcess
 		if err == nil {
 			tpl.ExecuteTemplate(w, "home.html", nil)
-			http.Redirect(w, r, "/home.html", 302)
+			http.Redirect(w, r, "/home.html", http.StatusFound)
 			return
 		}
 
@@ -113,7 +111,7 @@ func LoginWeb(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "500 Internal Server Error", 500)
-		fmt.Printf("LoginWeb(writeheader) error:  %+v/n", err)
+		fmt.Printf("LoginWeb(writeheader) error:  %+v\n", err)
 	}
 	tpl.ExecuteTemplate(w, "login.html", nil)
 }
@@ -147,7 +145,7 @@ func SignUpUser(w http.ResponseWriter, r *http.Request) {
 	isAlphaNumeric := true
 
 	for _, char := range user.Username {
-		if unicode.IsLetter(char) == false && unicode.IsNumber(char) == false { // checks if character not a special character
+		if unicode.IsLetter(char) && unicode.IsNumber(char) { // checks if character not a special character
 			isAlphaNumeric = false
 		}
 	}
@@ -199,6 +197,7 @@ func SignUpUser(w http.ResponseWriter, r *http.Request) {
 	if err != sql.ErrNoRows {
 		// fmt.Println("user exists", err)
 		tpl.ExecuteTemplate(w, "sign-up.html", "username taken")
+		fmt.Printf("sql scan row id error: %+v\n", err)
 		return
 	}
 	stmt = "SELECT id FROM people where email =?"
@@ -208,7 +207,7 @@ func SignUpUser(w http.ResponseWriter, r *http.Request) {
 	var userEmail string
 	err = row.Scan(&userEmail)
 	if err != sql.ErrNoRows {
-		// fmt.Println("email is taken", err)
+		fmt.Printf("sql scan row email error: %+v\n", err)
 		tpl.ExecuteTemplate(w, "signup.html", "e-mail in use")
 	}
 
@@ -217,7 +216,7 @@ func SignUpUser(w http.ResponseWriter, r *http.Request) {
 	passwordHash, err = bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		tpl.ExecuteTemplate(w, "signup.html", "there was an error registering account")
-		fmt.Printf("Register Account (passwordHash) error:  %+v/n", err)
+		fmt.Printf("Register Account (passwordHash) error:  %+v\n", err)
 		return
 	}
 
@@ -225,7 +224,7 @@ func SignUpUser(w http.ResponseWriter, r *http.Request) {
 	insertStmt, err = database.DB.Prepare("INSERT INTO people (username, email, passwordHASH) VALUES (?, ?, ?);")
 	if err != nil {
 		tpl.ExecuteTemplate(w, "signup.html", "there was an error registering account")
-		fmt.Printf("Register Account (insertStmt) error:  %+v/n", err)
+		fmt.Printf("Register Account (insertStmt) error:  %+v\n", err)
 
 		return
 	}
@@ -235,18 +234,18 @@ func SignUpUser(w http.ResponseWriter, r *http.Request) {
 	result, err = insertStmt.Exec(user.Username, user.Email, passwordHash)
 	rowsAff, err1 := result.RowsAffected()
 	if err1 != nil {
-		fmt.Printf("rowsAff: %+v9 error:  %+v/n", rowsAff, err1)
+		fmt.Printf("rowsAff: %+v error:  %+v\n", rowsAff, err1)
 	}
 	lastIns, err2 := result.LastInsertId()
-	if err1 != nil {
-		fmt.Printf("lastIns: %+v error:  %+v/n", lastIns, err2)
+	if err2 != nil {
+		fmt.Printf("lastIns: %+v error:  %+v\n", lastIns, err2)
 	}
 	if err != nil {
 		tpl.ExecuteTemplate(w, "signup.html", "there was an error registering account")
-		fmt.Printf("Register Account (result) error:  %+v/n", err)
+		fmt.Printf("Register Account (result) error:  %+v\n", err)
 		return
 	} else {
-		http.Redirect(w, r, "/login", 302)
+		http.Redirect(w, r, "/login", http.StatusFound)
 	}
 }
 
@@ -256,7 +255,7 @@ func HomePage(writer http.ResponseWriter, request *http.Request) {
 
 	if err := request.ParseForm(); err != nil { // checks for errors parsing form
 		http.Error(writer, "500 Internal Server Error", 500)
-		fmt.Printf("ParseForm (HomePage) error:  %+v/n", err)
+		fmt.Printf("ParseForm (HomePage) error:  %+v\n", err)
 		return
 	}
 	// 🐈
@@ -264,7 +263,7 @@ func HomePage(writer http.ResponseWriter, request *http.Request) {
 
 	posts, err := sql.Open("sqlite3", "./database/feed.db")
 	if err != nil {
-		database.CheckErr(err)
+		fmt.Printf("posts sql.Open (HomePage) error:  %+v\n", err)
 	}
 	feed := database.Feed(posts)
 
@@ -359,60 +358,79 @@ func Threads(w http.ResponseWriter, r *http.Request) {
 }
 
 func AboutFunc(w http.ResponseWriter, r *http.Request) {
-	tpl.ExecuteTemplate(w, "about.html", nil)
+	err := tpl.ExecuteTemplate(w, "about.html", nil)
+	if err != nil {
+		fmt.Printf("AboutFunc Execute.Template error: %+v\n", err)
+	}
 }
 
 func ContactUs(w http.ResponseWriter, r *http.Request) {
-	tpl.ExecuteTemplate(w, "contact-us.html", nil)
+	err := tpl.ExecuteTemplate(w, "contact-us.html", nil)
+	if err != nil {
+		fmt.Printf("ContactUs Execute.Template error: %+v\n", err)
+	}
 }
 
 func UserPhoto(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
-	tpl.ExecuteTemplate(writer, "photo.html", nil)
+	err := tpl.ExecuteTemplate(writer, "photo.html", nil)
+	if err != nil {
+		fmt.Printf("UserPhoto Execute.Template error: %+v\n", err)
+	}
 }
 
 func UserPosts(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
-	tpl.ExecuteTemplate(writer, "posts.html", nil)
+	err := tpl.ExecuteTemplate(writer, "posts.html", nil)
+	if err != nil {
+		fmt.Printf("UserPosts Execute.Template error: %+v\n", err)
+	}
 }
 
 func UserComments(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
-	tpl.ExecuteTemplate(writer, "comments.html", nil)
+	err := tpl.ExecuteTemplate(writer, "comments.html", nil)
+	if err != nil {
+		fmt.Printf("UserComments Execute.Template error: %+v\n", err)
+	}
 }
 
 func UserLikes(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
-	tpl.ExecuteTemplate(writer, "likes.html", nil)
+	err := tpl.ExecuteTemplate(writer, "likes.html", nil)
+	if err != nil {
+		fmt.Printf("UserLikes Execute.Template error: %+v\n", err)
+	}
 }
 
 func UserShares(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
-	tpl.ExecuteTemplate(writer, "shares.html", nil)
+	err := tpl.ExecuteTemplate(writer, "shares.html", nil)
+	if err != nil {
+		fmt.Printf("UserShares Execute.Template error: %+v\n", err)
+	}
 }
 
 func UserInfo(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
-	tpl.ExecuteTemplate(writer, "userinfo.html", nil)
+	err := tpl.ExecuteTemplate(writer, "userinfo.html", nil)
+	if err != nil {
+		fmt.Printf("UserInfo Execute.Template error: %+v\n", err)
+	}
 }
 
 func Customization(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
-	tpl.ExecuteTemplate(writer, "customize.html", nil)
-}
-
-func CheckErr(err error) {
+	err := tpl.ExecuteTemplate(writer, "customize.html", nil)
 	if err != nil {
-		fmt.Errorf("error:: %+v", err)
-		// panic(err)
-		return
+		fmt.Printf("Customization Execute.Template error: %+v\n", err)
 	}
 }
 
