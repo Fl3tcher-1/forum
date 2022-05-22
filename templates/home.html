@@ -70,7 +70,7 @@
   <form>
     <div class="post"><h3> Create a post</h3>
         <div class="post">
-        <!-- < action ="about" method = "post" id="usrpost" >  -->
+        <form action ="/postsubmit" method = "POST" id="usrpost" > 
                 <label for="category"></label><br> <t></t>
                 <select id="category" name="category">
                     <option value="category1">Category 1</option>
@@ -81,12 +81,13 @@
                     <option value="category1">Category 6</option>
                 </select>
                 <label form="content">Content</label>
-                <input type="submit">
+                <input type="submit" a href ="/post">
                 <br>
+                <textarea name="content" form="usrpost" placeholder="enter text here"></textarea>
             </form>
-            <textarea name="content" form="usrpost" placeholder="enter text here"></textarea>
         </div>
     </div>
+    
         <div class="activity"><a href= "profile"><h3>your recent activity, likes, posts, comments etc</h3> </a>
             </div>
                 
