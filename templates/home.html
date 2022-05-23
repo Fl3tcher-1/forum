@@ -42,6 +42,7 @@
         </form>
     </div>
     <form>
+        <div class="homeLayout">
       <div class="post"><h3> Create a post</h3>
           <!-- <div class="post"> -->
           <form method = "POST" action="/home" id="usrpost"> 
@@ -54,7 +55,7 @@
                       <option value="category 5">Category 5</option>
                       <option value="category 6">Category 6</option>
                   </select>  <br>
-                      <label for="title">Post Title:</label>
+                      <label for="title">Post Title:</label> <br>
                       <input type="text" id="title" name="title" >
   
                   <!-- <label form="content">Content</label> -->
@@ -64,13 +65,13 @@
                   <input type="submit" a href ="/post">
               </form>
           <!-- </div> -->
-      </div>
-
+          
+        </div>
     <div class="featured"><h3> featured/trending posts</h3>
         <ol> 
             {{range . }}
             <li class = "row">
-                <h4 class="title">
+                <h4 class="title2">
                     <a href ="thread">
                         {{.Title}}
                     </a>
@@ -93,9 +94,10 @@
                     {{end}}
                 </ol>
   </div>
+  </div>
+  <div class="activity"><a href= "profile"><h3>your recent activity, likes, posts, comments etc</h3> </a>
+      </div>
     
-        <div class="activity"><a href= "profile"><h3>your recent activity, likes, posts, comments etc</h3> </a>
-            </div>
                 
     <div class="rights">
             <br>
