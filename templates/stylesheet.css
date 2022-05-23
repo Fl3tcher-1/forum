@@ -124,6 +124,8 @@ li{
   color: var(--text-color);
 }
 
+
+
 .header{
   display: inline;
   margin: 0;
@@ -290,7 +292,7 @@ p{
   font-size: 20px;
 }
 p1{
-    color: var(--text-color);
+  color: var(--text-color);
   margin: 10px 5px;
   padding: 5px;
 }
@@ -368,7 +370,6 @@ h6{
   border: var(--border-color ) solid 3px;
   overflow: hidden;
   
-  
 }
 
 .btn{
@@ -379,4 +380,16 @@ h6{
 
 .btn:hover{
   transform:scale(1.2)
+}
+
+.post{
+  display: block;
+  margin: 0;
+  gap: 1rem;
+  padding: 20px;
+}
+
+ .title{
+    color: red;
+
 }

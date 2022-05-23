@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"net/http"
 	"strings"
+	"time"
 	"unicode"
 	"v2/Forum/database"
 
@@ -268,10 +269,45 @@ func HomePage(writer http.ResponseWriter, request *http.Request) {
 	// fmt.Println(items)
 	poststuff := request.ParseForm()
 
-	fmt.Println(poststuff)
+		fmt.Println(poststuff)
+	
+		postCategory := request.FormValue("category")
+		// fmt.Println("category " , postCategory)
+	
+		postTitle := request.FormValue("title")
+	
+		postContent := request.FormValue("content")
+		postLikes := 0
+		time := time.Now()
+		postCreated := time.Format("01-02-2006 15:04")
 
-	test := request.FormValue("category")
-	fmt.Println(test)
+		// fmt.Println("title: ",postTitle)
+		
+		// fmt.Println("content: ",postContent)
+		// fmt.Println("likes: ",postLikes)
+		// fmt.Println("created: ",postCreated)
+	
+
+		//check to see if title, content and category has been provided to stop making empty posts
+if postTitle !="" ||  postContent !="" || postCategory !=""{
+	//add values into database
+	feed.Add(database.PostFeed{
+		Title: postTitle,
+		Content: postContent,
+		Likes: postLikes,
+		Created: postCreated,
+		Category: postCategory,
+	})
+
+	//resets values to empty string to stop re-populating database with same post
+	postTitle =""
+	postContent =""
+	postCategory =""
+
+	tpl.ExecuteTemplate(writer, "./home", items)
+}
+
+
 
 	// var users User
 
@@ -281,7 +317,6 @@ func HomePage(writer http.ResponseWriter, request *http.Request) {
 	// guest := false
 	// user := "test"
 	// pw := "1234"
-
 
 	// var postInfo Post
 	// postInfo.Title = "testing"
@@ -312,7 +347,8 @@ func HomePage(writer http.ResponseWriter, request *http.Request) {
 	// 	writer.WriteHeader(http.StatusBadRequest)
 	// 	tpl.ExecuteTemplate(writer, "login.html", nil)
 	// }
-	tpl.ExecuteTemplate(writer, "home.html", items)
+
+ tpl.ExecuteTemplate(writer, "home.html", items)
 
 }
 func CategoriesList(writer http.ResponseWriter, request *http.Request) {

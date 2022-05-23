@@ -41,6 +41,30 @@
             <input type="submit" value=" Click here to login"/>
         </form>
     </div>
+    <form>
+      <div class="post"><h3> Create a post</h3>
+          <!-- <div class="post"> -->
+          <form method = "POST" action="/home" id="usrpost"> 
+                  <label for="category"> Please choose a category</label><br> <t></t>
+                  <select id="category" name="category">
+                      <option value="category 1">Category 1</option>
+                      <option value="category 2">Category 2</option>
+                      <option value="category 3">Category 3</option>
+                      <option value="category 4">Category 4</option>
+                      <option value="category 5">Category 5</option>
+                      <option value="category 6">Category 6</option>
+                  </select>  <br>
+                      <label for="title">Post Title:</label>
+                      <input type="text" id="title" name="title" >
+  
+                  <!-- <label form="content">Content</label> -->
+                  <br>
+                  <textarea name="content" id="postcontent" placeholder="Please enter post content here" required></textarea>
+                  <br>
+                  <input type="submit" a href ="/post">
+              </form>
+          <!-- </div> -->
+      </div>
 
     <div class="featured"><h3> featured/trending posts</h3>
         <ol> 
@@ -54,6 +78,8 @@
                 <div class="content">
                     <a href ="thread">
                     <p1>{{.Content}}</p1> </a>
+                    <br> <br>
+                    <p1>Category: {{.Category}}</p1>
                 </div>
                 <div class ="bottom">
                     <p1 class="timestamp">
@@ -67,26 +93,6 @@
                     {{end}}
                 </ol>
   </div>
-  <form>
-    <div class="post"><h3> Create a post</h3>
-        <div class="post">
-        <form action ="/postsubmit" method = "POST" id="usrpost" > 
-                <label for="category"></label><br> <t></t>
-                <select id="category" name="category">
-                    <option value="category1">Category 1</option>
-                    <option value="category1">Category 2</option>
-                    <option value="category1">Category 3</option>
-                    <option value="category1">Category 4</option>
-                    <option value="category1">Category 5</option>
-                    <option value="category1">Category 6</option>
-                </select>
-                <label form="content">Content</label>
-                <input type="submit" a href ="/post">
-                <br>
-                <textarea name="content" form="usrpost" placeholder="enter text here"></textarea>
-            </form>
-        </div>
-    </div>
     
         <div class="activity"><a href= "profile"><h3>your recent activity, likes, posts, comments etc</h3> </a>
             </div>

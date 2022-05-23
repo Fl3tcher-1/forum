@@ -83,15 +83,15 @@ func (feed *NewsFeed) Get() []PostFeed {
 }
 
 func (feed *NewsFeed) Add(item PostFeed) {
-	stmt, err := feed.DB.Prepare(`
-		INSERT INTO feed (Content) values(?)
-	`)
-
+	stmt, err := feed.DB.Prepare("INSERT INTO feed (title, content, likes, created, category) VALUES (?, ?, ?, ?, ?);")
 	if err != nil {
 		CheckErr(err)
 	}
+	stmt.QueryRow(stmt, item.Title, item.Content, item.Category)
 
-	stmt.Exec(item.Content)
+	stmt.Exec(item.Title, item.Content, item.Likes, item.Created, item.Category)
+
+	defer stmt.Close()
 }
 
 func CheckErr(err error) {
