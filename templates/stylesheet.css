@@ -3,8 +3,8 @@
   :root{
     --heading-color: rgb(4, 29, 139) ;
     --background-color: aqua;
-    --border-color: black;
-    --border-color-lighter: rgb(48, 46, 46);
+    --border-color: rgb(216, 216, 216);
+    --border-color-lighter: rgb(192, 189, 189);
     --body-color: rgb(255, 255, 255);
     --text-color: rgb(0, 0, 0);
     --rights-color: rgb(0, 2, 95);
@@ -59,7 +59,7 @@ textarea{
   margin: 20 0;
    vertical-align: middle;
    width: 80%;
-   height: 80px;
+   height: 0px;
    color: black;
    
 
@@ -403,7 +403,7 @@ h6{
   align-items: center;
   /* justify-content: center; */
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
   /* display: grid;
   grid-template-columns: 200px;
   grid-template-rows: 100px; 
