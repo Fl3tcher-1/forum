@@ -58,11 +58,10 @@ h3 {
 textarea{
   margin: 20 0;
    vertical-align: middle;
-   width: 80%;
-   height: 0px;
+   width: 82%;
+   height: 80px;
    color: black;
    
-
 }
 ol{
   margin: 0;
@@ -118,14 +117,12 @@ li{
   position: sticky;
   top: 0;
   width: 100%;
+  z-index: 1000;
 }
 .head > h4{
   border: var(--border-color);
   color: var(--text-color);
 }
-
-
-
 .header{
   display: inline;
   margin: 0;
@@ -159,20 +156,19 @@ background-image: linear-gradient(red, crimson);}
 .banner:hover{
   background-image: linear-gradient(crimson, red);
 }
-h2{
-  
-}
+
 .featured{
   color: var(--heading-color);
    text-align: left; 
   padding-right: 125px;
   margin:0;
   padding: 0;
-
 }
 .content{
   /* text-align: right; */
-  margin: 5px 0;
+  color: var(--heading-color);
+  margin: 3px 0;
+  gap: 0;
   margin: 0;
 }
 .title{
@@ -180,14 +176,13 @@ h2{
   display: inline;
   margin: 0;
 }
- .title2{
-    color: red;
 
-}
 .bottom {
   color: var(--text-color);
+  scale: 90%;
   display: flex;
-    margin: 0;
+  margin: 0;
+  padding: 0;
 }
 .timestamp{
   padding-right: 10px;
@@ -202,9 +197,9 @@ h2{
 }
 h4{
   margin: 0;
-  color: var(--text-color);
+  color: var(--heading-color);
 }
-p{
+/* p{
   padding: 1rem;
   margin: 5px 0;
     color: var(--text-color);
@@ -213,7 +208,7 @@ p1{
   margin: 0;
     color: var(--text-color);
 
-}
+} */
 .form{
   width: 350px;
   margin: 10;
@@ -388,10 +383,6 @@ h6{
   transform:scale(1.2)
 }
 
-/* .post{
- 
-} */
-
 .homeLayout{
   display: flex;
   grid-template-columns: 30 40 30;
@@ -401,15 +392,9 @@ h6{
 .homeLayout > .post{
   display: flex;
   align-items: center;
-  /* justify-content: center; */
   flex-direction: column;
   gap: 2px;
-  /* display: grid;
-  grid-template-columns: 200px;
-  grid-template-rows: 100px; 
-  text-align: center;
-  justify-content: center; 
-  margin: 10px;
-  gap: 1px;
-  padding: 10px; */
+  position: sticky;
+  align-self: flex-start;
+ top: 75px;
 }

@@ -18,7 +18,7 @@
                 <input type="submit" value=" Categories"/>
             </form> 
         </h4>
-            <h4> <form action = "groups">
+            <h4> <form action = "home">
                 <input type="submit" value=" Groups"/>
             </form> 
         </h4>
@@ -62,7 +62,7 @@
                   <br>
                   <textarea name="content" id="postcontent" placeholder="Please enter post content here" required></textarea>
                   <br>
-                  <input type="submit" value="Post" a href ="/post">
+                  <input type="submit" value="Post" a href ="/post" onclick="clear()" value="reset form">
               </form>
           <!-- </div> -->
           
@@ -84,7 +84,7 @@
                 </div>
                 <div class ="bottom">
                     <p1 class="timestamp">
-                        <a href ="thread">{{.Created}}</a> 
+                        <a href ="thread"> posted: {{.Created}}</a> 
                     </p1>
                     <p1 class ="Likes">
                         <a href ="thread">{{.Likes}} Likes</a>
@@ -104,5 +104,11 @@
             <h6>Content Policy||Privacy Policy||User Agreement</h6>
             <h7>© DogeCo, inc, All rights reserved </h7>
         </div>
+
+        <script>
+            function Clear(){
+                document.getElementById("usrpost").reset();
+            }
+        </script>
 </body>
 </html>
