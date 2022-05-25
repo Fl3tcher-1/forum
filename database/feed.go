@@ -6,6 +6,7 @@ type PostFeed struct {
 	Content string
 	// Comments []string
 	Likes    int
+	Dislikes int
 	Created  string
 	Category string
 }

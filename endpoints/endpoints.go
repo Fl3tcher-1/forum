@@ -45,6 +45,7 @@ type usrProfile struct {
 	Posts    []string
 	Comments []string
 	Likes    []string
+	Dislikes []string
 	Shares   []string
 	Userinfo map[string]string
 	// custom   string
@@ -98,7 +99,7 @@ func LoginWeb(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(user.Password))
-		// returns nill on succcess
+		// returns nil on succcess
 		if err == nil {
 			tpl.ExecuteTemplate(w, "home.html", nil)
 			http.Redirect(w, r, "/home.html", http.StatusFound)
@@ -270,33 +271,31 @@ func HomePage(writer http.ResponseWriter, request *http.Request) {
 
 	items := feed.Get()
 	postStuff := request.ParseForm()
-		fmt.Println(postStuff)
-	
-		postCategory := request.FormValue("category")
-		postTitle := request.FormValue("title")
-		postContent := request.FormValue("content")
-		postLikes := 0
-		time := time.Now()
-		postCreated := time.Format("01-02-2006 15:04")
+	fmt.Println(postStuff)
 
-		//check to see if title, content and category has been provided to stop making empty posts
-if postTitle !="" ||  postContent !="" || postCategory !=""{
-	
-	//add values into database
-	feed.Add(database.PostFeed{
-		Title: postTitle,
-		Content: postContent,
-		Likes: postLikes,
-		Created: postCreated,
-		Category: postCategory,
-	})
+	postCategory := request.FormValue("category")
+	postTitle := request.FormValue("title")
+	postContent := request.FormValue("content")
+	postLikes := 0
+	time := time.Now()
+	postCreated := time.Format("01-02-2006 15:04")
 
-	tpl.ExecuteTemplate(writer, "./home", items)
-}
+	// check to see if title, content and category has been provided to stop making empty posts
+	if postTitle != "" || postContent != "" || postCategory != "" {
 
+		// add values into database
+		feed.Add(database.PostFeed{
+			Title:    postTitle,
+			Content:  postContent,
+			Likes:    postLikes,
+			Created:  postCreated,
+			Category: postCategory,
+		})
 
- tpl.ExecuteTemplate(writer, "home.html", items)
+		tpl.ExecuteTemplate(writer, "./home", items)
+	}
 
+	tpl.ExecuteTemplate(writer, "home.html", items)
 }
 
 func CategoriesList(writer http.ResponseWriter, request *http.Request) {

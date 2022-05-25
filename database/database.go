@@ -1,4 +1,4 @@
-ackage database
+package database
 
 import (
 	"database/sql"
@@ -88,14 +88,14 @@ func (feed *NewsFeed) Get() []PostFeed {
 
 	// scan rows in database, update variable using memory addresses and link to struct
 	for rows.Next() {
-		rows.Scan(&id, &title, &content, &likes, & dislikes, &created, &category)
+		rows.Scan(&id, &title, &content, &likes, &dislikes, &created, &category)
 		newPost := PostFeed{ // explicit values
-			ID:      id,
-			Title:   title,
-			Content: content,
-			Likes:   likes,
+			ID:       id,
+			Title:    title,
+			Content:  content,
+			Likes:    likes,
 			Dislikes: dislikes,
-			Created: created,
+			Created:  created,
 			// Comments: comments,
 			Category: category,
 		}
@@ -116,7 +116,6 @@ func (feed *CommentFeed) GetComments() []PostFeed {
 	var category string
 
 	posts := []PostFeed{}
-
 	rows, err := feed.DB2.Query("SELECT * FROM comments")
 	if err != nil {
 		fmt.Printf("Comments Feed DB Query error: %+v\n", err)
@@ -126,16 +125,15 @@ func (feed *CommentFeed) GetComments() []PostFeed {
 	for rows.Next() {
 		rows.Scan(&id, &title, &content, &likes, &dislikes, &created, &category)
 		newComment := PostFeed{ // explicit values
-			ID:      id,
-			Title:   title,
-			Content: content,
-			Likes:   likes,
+			ID:       id,
+			Title:    title,
+			Content:  content,
+			Likes:    likes,
 			Dislikes: dislikes,
-			Created: created,
+			Created:  created,
 			// Comments: comments,
 			Category: category,
 		}
-
 		posts = append(posts, newComment)
 	}
 	return posts
@@ -148,16 +146,9 @@ func (feed *NewsFeed) Add(item PostFeed) {
 		fmt.Printf("feed DB Prepare error: %+v\n", err)
 	}
 	// stmt.QueryRow(stmt, item.Title, item.Content, item.Category)
-
 	stmt.Exec(item.Title, item.Content, item.Likes, item.Dislikes, item.Created, item.Category)
-
 	defer stmt.Close()
 }
-
-// func CheckErr(err error) {
-// 	fmt.Println(err)
-// 	log.Fatal(err)
-// }
 
 // Add(adds an item into a table)
 func (feed *CommentFeed) AddComment(item PostFeed) {
@@ -167,9 +158,5 @@ func (feed *CommentFeed) AddComment(item PostFeed) {
 	}
 	// stmt.QueryRow(stmt, item.Title, item.Content, item.Category)
 	stmt.Exec(item.Title, item.Content, item.Likes, item.Dislikes, item.Created, item.Category)
-	defer stmt.Close()
-}
-
-	stmt.Exec(item.Title, item.Content, item.Likes, item.Created, item.Category)
 	defer stmt.Close()
 }
