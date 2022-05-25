@@ -9,7 +9,6 @@ import (
 	"v2/Forum/endpoints"
 
 	_ "github.com/mattn/go-sqlite3"
-	// "v2/go/pkg/mod/golang.org/x/text@v0.3.7/date"
 )
 
 // handles possible web directories
@@ -83,18 +82,35 @@ func main() {
 
 	database.UserDatabase()
 
-	posts, err := sql.Open("sqlite3", "./database/feed.db")
-	if err != nil {
-		database.CheckErr(err)
-	}
-	feed := database.Feed(posts)
+	// posts, err := sql.Open("sqlite3", "./database/feed.db")
+	// if err != nil {
+	// 	database.CheckErr(err)
+	// }
+	// feed := database.Feed(posts)
 
 	// feed.Add(database.PostFeed{
 	// 	Content: "the monkeys are taking control",
 	// })
 
-	items :=feed.Get()
-	fmt.Println(items)
+	// items :=feed.Get()
+	// fmt.Println(items)
+
+	commentDB, _ :=sql.Open("sqlite3", "./database/comments.db")
+	
+	comments := database.Comments(commentDB)
+	
+	// comments.AddComment(database.PostFeed{
+	// 	Title: "monke",
+	// 	Content: "monkeys are taking control",
+	// 	Likes: 3,
+	// 	Created: "now",
+	// 	Category: "",
+	// })
+
+	c:=comments.GetComments()
+	fmt.Println(c)
+	
+	fmt.Println(comments)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", handler)

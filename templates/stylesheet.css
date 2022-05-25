@@ -3,8 +3,8 @@
   :root{
     --heading-color: rgb(4, 29, 139) ;
     --background-color: aqua;
-    --border-color: black;
-    --border-color-lighter: rgb(48, 46, 46);
+    --border-color: rgb(216, 216, 216);
+    --border-color-lighter: rgb(192, 189, 189);
     --body-color: rgb(255, 255, 255);
     --text-color: rgb(0, 0, 0);
     --rights-color: rgb(0, 2, 95);
@@ -20,7 +20,7 @@
     --background-color: aqua;
     --border-color: rgb(122, 120, 120);
     --border-color-lighter: rgb(48, 46, 46);
-    --body-color: rgb(0, 0, 0);
+    --body-color: rgb(11, 0, 32);
     --text-color: rgb(255, 255, 255);
     --rights-color: rgb(60, 63, 224);
     --button-color: rgb(0, 0, 0);
@@ -58,11 +58,10 @@ h3 {
 textarea{
   margin: 20 0;
    vertical-align: middle;
-   width: 80%;
+   width: 82%;
    height: 80px;
    color: black;
    
-
 }
 ol{
   margin: 0;
@@ -118,12 +117,12 @@ li{
   position: sticky;
   top: 0;
   width: 100%;
+  z-index: 1000;
 }
 .head > h4{
   border: var(--border-color);
   color: var(--text-color);
 }
-
 .header{
   display: inline;
   margin: 0;
@@ -157,17 +156,19 @@ background-image: linear-gradient(red, crimson);}
 .banner:hover{
   background-image: linear-gradient(crimson, red);
 }
-h2{
-  
-}
+
 .featured{
-  /* background-color: blanchedalmond; */
-  /* text-align: right;
-  padding-right: 125px; */
+  color: var(--heading-color);
+   text-align: left; 
+  padding-right: 125px;
+  margin:0;
+  padding: 0;
 }
 .content{
   /* text-align: right; */
-  margin: 5px 0;
+  color: var(--heading-color);
+  margin: 3px 0;
+  gap: 0;
   margin: 0;
 }
 .title{
@@ -175,10 +176,13 @@ h2{
   display: inline;
   margin: 0;
 }
+
 .bottom {
   color: var(--text-color);
+  scale: 90%;
   display: flex;
-    margin: 0;
+  margin: 0;
+  padding: 0;
 }
 .timestamp{
   padding-right: 10px;
@@ -189,14 +193,13 @@ h2{
   height: 100px;
   padding: 0;
   margin: 0;
-  margin-left: 15px;
   
 }
 h4{
   margin: 0;
-  color: var(--text-color);
+  color: var(--heading-color);
 }
-p{
+/* p{
   padding: 1rem;
   margin: 5px 0;
     color: var(--text-color);
@@ -205,7 +208,7 @@ p1{
   margin: 0;
     color: var(--text-color);
 
-}
+} */
 .form{
   width: 350px;
   margin: 10;
@@ -290,7 +293,7 @@ p{
   font-size: 20px;
 }
 p1{
-    color: var(--text-color);
+  color: var(--text-color);
   margin: 10px 5px;
   padding: 5px;
 }
@@ -368,7 +371,6 @@ h6{
   border: var(--border-color ) solid 3px;
   overflow: hidden;
   
-  
 }
 
 .btn{
@@ -379,4 +381,20 @@ h6{
 
 .btn:hover{
   transform:scale(1.2)
+}
+
+.homeLayout{
+  display: flex;
+  grid-template-columns: 30 40 30;
+  gap: 10px;
+}
+
+.homeLayout > .post{
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 2px;
+  position: sticky;
+  align-self: flex-start;
+ top: 75px;
 }

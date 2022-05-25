@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"net/http"
 	"strings"
+	"time"
 	"unicode"
 	"v2/Forum/database"
 
@@ -180,7 +181,7 @@ func SignUpUser(w http.ResponseWriter, r *http.Request) {
 	minPwLength := 8
 	maxPwLength := 30
 
-	if minPwLength < len(user.Password) && len(user.Password) < maxPwLength {
+	if minPwLength <= len(user.Password) && len(user.Password) <= maxPwLength {
 		pwLength = true
 	}
 
@@ -260,51 +261,37 @@ func HomePage(writer http.ResponseWriter, request *http.Request) {
 	}
 	feed := database.Feed(posts)
 
-	// feed.Add(database.PostFeed{
-	// 	Content: "the monkeys are taking control",
-	// })
+	items := feed.Get()
+	poststuff := request.ParseForm()
 
-	items :=feed.Get()
-	fmt.Println(items)
+		fmt.Println(poststuff)
+	
+		postCategory := request.FormValue("category")
+	
+		postTitle := request.FormValue("title")
+	
+		postContent := request.FormValue("content")
+		postLikes := 0
+		time := time.Now()
+		postCreated := time.Format("01-02-2006 15:04")
 
-	var users User
+		//check to see if title, content and category has been provided to stop making empty posts
+if postTitle !="" ||  postContent !="" || postCategory !=""{
+	
+	//add values into database
+	feed.Add(database.PostFeed{
+		Title: postTitle,
+		Content: postContent,
+		Likes: postLikes,
+		Created: postCreated,
+		Category: postCategory,
+	})
 
-	users.Username = "test"
-	users.Password = "1234" // does not work ranging through this at the moment
+	tpl.ExecuteTemplate(writer, "./home", items)
+}
 
-	guest := false
-	user := "test"
-	pw := "1234"
 
-	// var postInfo Post
-	// postInfo.Title = "testing"
-	// postInfo.Content = "this is a completely empty post"
-	// postInfo.Comments = 2
-	// postInfo.Date = "11/11/11"
-
-	// check parsed form username and password fields and check if they match what is stored
-	if request.FormValue("username") == user && request.FormValue("password") == pw {
-		// if matched takes you to home page
-		writer.WriteHeader(http.StatusOK)
-		for key, value := range request.Form {
-			fmt.Printf("%s = %s\n", key, value)
-		}
-		fmt.Println(guest)
-		tpl.ExecuteTemplate(writer, "home.html", items)
-
-	} else if request.FormValue("username") == "" && request.FormValue("password") == "" {
-		// if fields empty and user clicks continue as guest then it will set guest status to true and takes you to homepage
-		guest = true
-		fmt.Println(guest)
-		writer.WriteHeader(http.StatusOK)
-
-		tpl.ExecuteTemplate(writer, "home.html", items)
-
-	} else {
-		// if person tries to login with incorrect details then it takes them back to login page
-		writer.WriteHeader(http.StatusBadRequest)
-		tpl.ExecuteTemplate(writer, "login.html", nil)
-	}
+ tpl.ExecuteTemplate(writer, "home.html", items)
 
 }
 func CategoriesList(writer http.ResponseWriter, request *http.Request) {
