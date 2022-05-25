@@ -277,7 +277,8 @@ func HomePage(writer http.ResponseWriter, request *http.Request) {
 	postTitle := request.FormValue("title")
 	postContent := request.FormValue("content")
 	postLikes := 0
-	postDislikes :=0
+	// fetch from database and add one to likes and dislikes
+	postDislikes := 0
 	time := time.Now()
 	postCreated := time.Format("01-02-2006 15:04")
 
