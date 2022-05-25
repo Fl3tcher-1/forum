@@ -50,18 +50,15 @@ func (forum *Forum) CreateSession(session Session){
 	}
 	stmt.Exec(session.Id, session.Uuid)
 	defer stmt.Close()
-
-
-
 }
 
 func (forum *Forum) CreatePost(post PostFeed) {
 
-	stmt, err := forum.DB.Prepare("INSERT INTO post (postID, authID, title, content, likes, dislikes, category, dateCreated,) VALUES (?, ?, ?, ?, ?, ?, ?, ?);")
+	stmt, err := forum.DB.Prepare("INSERT INTO post (authID, title, content, likes, dislikes, category, dateCreated) VALUES (?, ?, ?, ?, ?, ?, ?);")
 	if err != nil {
 		CheckErr(err)
 	}
-	stmt.Exec(post.PostID, post.Uuid, post.Title, post.Content, post.Likes, post.Dislikes, post.Category, post.CreatedAt)
+	stmt.Exec(post.Uuid, post.Title, post.Content, post.Likes, post.Dislikes, post.Category, post.CreatedAt)
 	defer stmt.Close()
 }
 
@@ -74,8 +71,6 @@ func (forum *Forum) CreateComment(comment Comment){
 	}
 	stmt.Exec(comment.CommentID, comment.Uuid, comment.PostID, comment.Content, comment.CreatedAt)
 	defer stmt.Close()
-
-
 
 }
 
@@ -140,7 +135,7 @@ func commentTable(db *sql.DB) {
 		fmt.Println(err)
 	}
 	stmt.Exec()
-
+	
 }
 
 func Connect(db *sql.DB) *Forum {
@@ -148,28 +143,47 @@ func Connect(db *sql.DB) *Forum {
 	sessionTable(db)
 	postTabe(db)
 	commentTable(db)
-
+	
 	return &Forum{
 		DB: db,
 	}
 }
 
+func (forum *Forum) GetPost() []PostFeed {
+	// variable init
+	var id int
+	var title string
+	var content string
+	// var comments []string
+	var likes int
+	var created string
+	var category string
 
-// func Comments(db2 *sql.DB) *CommentFeed {
-// 	db, err := sql.Open("sqlite3", "./database/comments.db")
-// 	if err != nil {
-// 		fmt.Printf("Comments Feed sql.Open error: %+v\n", err)
-// 	}
+	posts := []PostFeed{}
 
-// 	stmt, err := db.Prepare("CREATE TABLE IF NOT EXISTS comments (iD INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, title TEXT, content	TEXT, likes INTEGER, created TEXT, category TEXT)")
-// 	stmt.Exec()
-// 	if err != nil {
-// 		fmt.Printf("Comments stmt db.Prepare error: %+v\n", err)
-// 	}
-// 	return &CommentFeed{
-// 		DB2: db,
-// 	}
-// }
+	rows, err := DB.Query("SELECT * FROM comments")
+	if err != nil {
+		fmt.Printf("Comments Feed DB Query error: %+v\n", err)
+	}
+
+	//scan rows in database, update variable using memory addresses and link to struct
+	for rows.Next() {
+		rows.Scan(&id, &title, &content, &likes, &created, &category)
+		newComment := PostFeed{ // explicit values
+			PostID:    id,
+			Title:     title,
+			Content:   content,
+			Likes:     likes,
+			CreatedAt: created,
+			// Comments: comments,
+			Category: category,
+		}
+
+		posts = append(posts, newComment)
+	}
+	return posts
+}
+
 
 // Get() dumps all values from a selected table
 // func (feed *Forum) Get() []PostFeed {
@@ -206,66 +220,16 @@ func Connect(db *sql.DB) *Forum {
 // 	return posts
 // }
 
-// func (feed *Forum) GetComments() []PostFeed {
-// 	// variable init
-// 	var id int
-// 	var title string
-// 	var content string
-// 	// var comments []string
-// 	var likes int
-// 	var created string
-// 	var category string
 
-// 	posts := []PostFeed{}
-
-// 	rows, err := feed.DB2.Query("SELECT * FROM comments")
+// Add(adds an item into a table)
+// func (feed *Forum) Add(item PostFeed) {
+// 	stmt, err := feed.DB.Prepare("INSERT INTO feed (title, content, likes, created, category) VALUES (?, ?, ?, ?, ?);")
 // 	if err != nil {
-// 		fmt.Printf("Comments Feed DB Query error: %+v\n", err)
+// 		fmt.Printf("feed DB Prepare error: %+v\n", err)
 // 	}
+// 	// stmt.QueryRow(stmt, item.Title, item.Content, item.Category)
 
-	// scan rows in database, update variable using memory addresses and link to struct
-// 	for rows.Next() {
-// 		rows.Scan(&id, &title, &content, &likes, &created, &category)
-// 		newComment := PostFeed{ // explicit values
-// 			PostID:    id,
-// 			Title:     title,
-// 			Content:   content,
-// 			Likes:     likes,
-// 			CreatedAt: created,
-// 			// Comments: comments,
-// 			Category: category,
-// 		}
+// 	stmt.Exec(item.Title, item.Content, item.Likes, item.CreatedAt, item.Category)
 
-// 		posts = append(posts, newComment)
-// 	}
-// 	return posts
+// 	defer stmt.Close()
 // }
-
-// Add(adds an item into a table)
-func (feed *Forum) Add(item PostFeed) {
-	stmt, err := feed.DB.Prepare("INSERT INTO feed (title, content, likes, created, category) VALUES (?, ?, ?, ?, ?);")
-	if err != nil {
-		fmt.Printf("feed DB Prepare error: %+v\n", err)
-	}
-	// stmt.QueryRow(stmt, item.Title, item.Content, item.Category)
-
-	stmt.Exec(item.Title, item.Content, item.Likes, item.CreatedAt, item.Category)
-
-	defer stmt.Close()
-}
-
-// func CheckErr(err error) {
-// 	fmt.Println(err)
-// 	log.Fatal(err)
-// }
-
-// Add(adds an item into a table)
-func (feed *Forum) AddComment(item PostFeed) {
-	stmt, err := feed.DB.Prepare("INSERT INTO comments (title, content, likes, created, category) VALUES (?, ?, ?, ?, ?);")
-	if err != nil {
-		fmt.Printf("AddComment DB Prepare error: %+v\n", err)
-	}
-	// stmt.QueryRow(stmt, item.Title, item.Content, item.Category)
-	stmt.Exec(item.Title, item.Content, item.Likes, item.CreatedAt, item.Category)
-	defer stmt.Close()
-}

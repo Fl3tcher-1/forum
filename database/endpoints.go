@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	"html/template"
 	"net/http"
@@ -11,17 +12,7 @@ import (
 
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
-	// uuid "v2/go/pkg/mod/github.com/satori/go.uuid@v1.2.0"
-	// "v2/go/pkg/mod/golang.org/x/crypto@v0.0.0-20200622213623-75b288015ac9/bcrypt"
 )
-
-// type User struct {
-// 	Username string
-// 	Password string
-// 	Email    string
-// }
-
-// could it be used to store data for userprofile and use a single template execution???
 
 // holds details of user session-- used for cookies
 type session struct {
@@ -68,51 +59,51 @@ func init() {
 
 // login page
 func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
-	
+
 	var cookie *http.Cookie
-		var user User
 
-		r.ParseForm()
+	fmt.Println("*****loginUser is running********")
 
-		user.Username = r.FormValue("username")
-		user.Password = r.FormValue("password")
+	var user User
 
-		var passwordHash string
+	r.ParseForm()
 
-		stmt := "SELECT passwordHash FROM people WHERE Username = ?"
-		row := DB.QueryRow(stmt, user.Username)
-		err := row.Scan(&passwordHash)
+	user.Username = r.FormValue("username")
+	user.Password = r.FormValue("password")
 
-		if err != nil {
-			tpl.ExecuteTemplate(w, "login.html", "check username and password")
-			return
-		}
-		err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(user.Password))
-		// returns nill on succcess
-		if err == nil {
-			tpl.ExecuteTemplate(w, "home.html", nil)
-			http.Redirect(w, r, "/home.html", http.StatusFound)
-			return
-		}
+	var passwordHash string
 
-		fmt.Println("incorrect password")
+	row := data.DB.QueryRow("SELECT passwordHash FROM people WHERE Username = ?", user.Username)
+	err := row.Scan(&passwordHash)
+
+	if err != nil {
 		tpl.ExecuteTemplate(w, "login.html", "check username and password")
+		return
+	}
 
+	err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(user.Password))
+	// returns nill on succcess
+	if err == nil {
+		//tpl.ExecuteTemplate(w, "home.html", nil)
+		http.Redirect(w, r, "/home.html", http.StatusFound)
+		return
+	}
 
-		cookie, err = r.Cookie("session")
-		if err != nil {
-			id := uuid.NewV4()
-			//fmt.Println("cookie was not found")
-			cookie = &http.Cookie{
-				Name:     "session",
-				Value:    id.String(),
-				Secure:   true,
-				HttpOnly: true,
-			}
-			http.SetCookie(w, cookie)
+	fmt.Println("incorrect password")
+	tpl.ExecuteTemplate(w, "login.html", "check username and password")
+
+	cookie, err = r.Cookie("session")
+	if err != nil {
+		id := uuid.NewV4()
+		//fmt.Println("cookie was not found")
+		cookie = &http.Cookie{
+			Name:     "session",
+			Value:    id.String(),
+			Secure:   true,
+			HttpOnly: true,
 		}
-	
-
+		http.SetCookie(w, cookie)
+	}
 
 	w.WriteHeader(http.StatusOK)
 	if err := r.ParseForm(); err != nil {
@@ -134,10 +125,12 @@ func (data *Forum) GetSignupPage(w http.ResponseWriter, r *http.Request) {
 	 6. insert u.username and password hash in database
 */
 func (data *Forum) SignUpUser(w http.ResponseWriter, r *http.Request) {
-	
-	var user User
 
 	r.ParseForm() // parses sign up form to fetch needed information
+
+	fmt.Println("****Sign-up new user is running ")
+
+	var user User
 
 	user.Email = r.FormValue("email")
 	// check if e-mail is valid format
@@ -221,9 +214,9 @@ func (data *Forum) SignUpUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sessionID := uuid.NewV4()
-	
+
 	data.CreateUser(User{
-		Uuid: sessionID.String(),
+		Uuid:     sessionID.String(),
 		Username: user.Username,
 		Email:    user.Email,
 		Password: string(passwordHash),
@@ -232,12 +225,9 @@ func (data *Forum) SignUpUser(w http.ResponseWriter, r *http.Request) {
 		tpl.ExecuteTemplate(w, "signup.html", "there was an error registering account")
 		//fmt.Printf("Register Account (insertStmt) error:  %+v\n", err)
 		//defer data.Close()
-		
 		return
-
-
 	} else {
-		http.Redirect(w, r, "/login", http.StatusFound)
+		http.Redirect(w, r, "/login", 302)
 	}
 }
 
@@ -250,48 +240,44 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 		fmt.Printf("ParseForm (HomePage) error:  %+v\n", err)
 		return
 	}
+
 	// 🐈
-//	UserDatabase()
 
-	// posts, err := sql.Open("sqlite3", "./database/feed.db")
-	// if err != nil {
-	// 	fmt.Printf("posts sql.Open (HomePage) error:  %+v\n", err)
-	// }
-	// //feed := Feed(posts)
+	postCategory := request.FormValue("category")
 
-	// items := feed.Get()
-	// poststuff := request.ParseForm()
+	postTitle := request.FormValue("title")
 
-	// fmt.Println(poststuff)
+	postContent := request.FormValue("content")
+	postLikes := 0
+	postDislikes := 1
+	time := time.Now()
+	postCreated := time.Format("01-02-2006 15:04")
+	
+	sessionID := uuid.NewV4()
 
-	// postCategory := request.FormValue("category")
-
-	// postTitle := request.FormValue("title")
-
-	// postContent := request.FormValue("content")
-	// postLikes := 0
-	// time := time.Now()
-	// postCreated := time.Format("01-02-2006 15:04")
 
 	//check to see if title, content and category has been provided to stop making empty posts
-	// if postTitle != "" || postContent != "" || postCategory != "" {
+	if postTitle != "" || postContent != "" || postCategory != "" {
 
-	// 	//add values into database
-	// 	feed.Add(PostFeed{
-	// 		Title:     postTitle,
-	// 		Content:   postContent,
-	// 		Likes:     postLikes,
-	// 		CreatedAt: postCreated,
-	// 		Category:  postCategory,
-	// 	})
 
-	// 	tpl.ExecuteTemplate(writer, "./home", items)
-	// }
+
+		data.CreatePost(PostFeed{
+			Uuid: sessionID.String(),
+			Title:     postTitle,
+			Content:   postContent,
+			Likes:     postLikes,
+			Dislikes: postDislikes,
+			Category:  postCategory,
+			CreatedAt: postCreated,
+		})
+
+	
+		tpl.ExecuteTemplate(writer, "./home", data)
+	}
 
 	tpl.ExecuteTemplate(writer, "home.html", nil)
 
 }
-
 
 func (data *Forum) CategoriesList(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
