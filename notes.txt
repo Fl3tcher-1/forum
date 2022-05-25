@@ -1,6 +1,0 @@
-- likes and dislikes for posts/comments *
-- https: user certificates *
-- user rights: must registered to interact
-- mulit categories tags per posts
-- all post from one category
-- all likes/posts/comments from single user
