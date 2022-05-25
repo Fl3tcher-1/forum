@@ -269,14 +269,11 @@ func HomePage(writer http.ResponseWriter, request *http.Request) {
 	feed := database.Feed(posts)
 
 	items := feed.Get()
-	poststuff := request.ParseForm()
-
-		fmt.Println(poststuff)
+	postStuff := request.ParseForm()
+		fmt.Println(postStuff)
 	
 		postCategory := request.FormValue("category")
-	
 		postTitle := request.FormValue("title")
-	
 		postContent := request.FormValue("content")
 		postLikes := 0
 		time := time.Now()
@@ -389,9 +386,18 @@ func UserComments(writer http.ResponseWriter, request *http.Request) {
 func UserLikes(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
-	err := tpl.ExecuteTemplate(writer, "likes.html", nil)
+	err := tpl.ExecuteTemplate(writer, "likesanddislikes.html", nil)
 	if err != nil {
 		fmt.Printf("UserLikes Execute.Template error: %+v\n", err)
+	}
+}
+
+func UserDislikes(writer http.ResponseWriter, request *http.Request) {
+	writer.WriteHeader(http.StatusOK)
+	writer.Header().Set("Content-Type", "text/html")
+	err := tpl.ExecuteTemplate(writer, "likesanddislikes.html", nil)
+	if err != nil {
+		fmt.Printf("UserDislikes Execute.Template error: %+v\n", err)
 	}
 }
 
