@@ -1,11 +1,11 @@
 # Forum Features
 
-communication between users
+communication between users:
     posting
     liking
     commenting
-putting posts into categories
-post filters
+    putting posts into categories
+    post filters
 
 ## SQLite database
 stores web content
@@ -109,6 +109,8 @@ here all the the ideas and or features we likeda bout different websites not all
     Karolis Milius
     Morayo
     Klaudia
+    Rachel
+    Cassidy
 
 
 
