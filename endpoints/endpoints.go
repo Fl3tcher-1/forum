@@ -268,45 +268,6 @@ func HomePage(writer http.ResponseWriter, request *http.Request) {
 	}
 	feed := database.Feed(posts)
 
-<<<<<<< HEAD
-	// feed.Add(database.PostFeed{
-	// 	Content: "the monkeys are taking control",
-	// })
-
-	items := feed.Get()
-	fmt.Println(items)
-
-	var users User
-
-	users.Username = "test"
-	users.Password = "1234" // does not work ranging through this at the moment
-
-	guest := false
-	user := "test"
-	pw := "1234"
-
-	// var postInfo Post
-	// postInfo.Title = "testing"
-	// postInfo.Content = "this is a completely empty post"
-	// postInfo.Comments = 2
-	// postInfo.Date = "11/11/11"
-
-	// check parsed form username and password fields and check if they match what is stored
-	if request.FormValue("username") == user && request.FormValue("password") == pw {
-		// if matched takes you to home page
-		writer.WriteHeader(http.StatusOK)
-		for key, value := range request.Form {
-			fmt.Printf("%s = %s\n", key, value)
-		}
-		fmt.Println(guest)
-		tpl.ExecuteTemplate(writer, "home.html", items)
-
-	} else if request.FormValue("username") == "" && request.FormValue("password") == "" {
-		// if fields empty and user clicks continue as guest then it will set guest status to true and takes you to homepage
-		guest = true
-		fmt.Println(guest)
-		writer.WriteHeader(http.StatusOK)
-=======
 	items := feed.Get()
 	poststuff := request.ParseForm()
 
@@ -335,19 +296,10 @@ if postTitle !="" ||  postContent !="" || postCategory !=""{
 
 	tpl.ExecuteTemplate(writer, "./home", items)
 }
->>>>>>> master
 
 
-<<<<<<< HEAD
-	} else {
-		// if person tries to login with incorrect details then it takes them back to login page
-		writer.WriteHeader(http.StatusBadRequest)
-		tpl.ExecuteTemplate(writer, "login.html", nil)
-	}
-=======
  tpl.ExecuteTemplate(writer, "home.html", items)
 
->>>>>>> master
 }
 
 func CategoriesList(writer http.ResponseWriter, request *http.Request) {
