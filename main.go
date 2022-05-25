@@ -3,10 +3,10 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"forum/database"
+	"forum/endpoints"
 	"log"
 	"net/http"
-	"v2/Forum/database"
-	"v2/Forum/endpoints"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -14,8 +14,8 @@ import (
 // handles possible web directories
 func handler(w http.ResponseWriter, r *http.Request) {
 	switch r.URL.Path {
-	//page handlers
-	case "/stylesheet": //handle css
+	// page handlers
+	case "/stylesheet": // handle css
 		http.ServeFile(w, r, "./templates/stylesheet.css")
 	case "/":
 		endpoints.LoginWeb(w, r)
@@ -79,12 +79,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-
 	database.UserDatabase()
 
 	// posts, err := sql.Open("sqlite3", "./database/feed.db")
 	// if err != nil {
-	// 	database.CheckErr(err)
+	// 	fmt.Printf("main Database sql.Open error: %+v\n", err)
 	// }
 	// feed := database.Feed(posts)
 
@@ -95,7 +94,10 @@ func main() {
 	// items :=feed.Get()
 	// fmt.Println(items)
 
-	commentDB, _ :=sql.Open("sqlite3", "./database/comments.db")
+	commentDB, err :=sql.Open("sqlite3", "./database/comments.db")
+	if err != nil {
+			fmt.Printf("comments Database sql.Open error: %+v\n", err)
+		}
 	
 	comments := database.Comments(commentDB)
 	
@@ -115,11 +117,12 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", handler)
 
-	fmt.Printf("Starting server at port 8080\n\t -----------\nhttp://localhost:8080/login\n")
+	fmt.Println("Starting server at port 8080: http://localhost:8080/login")
 
 	if err := http.ListenAndServe(":8080", mux); err != nil {
-		log.Fatal(500, "500 Internal server error", err)
+		log.Fatal(500, "500 Internal server error:", err)
+		fmt.Printf("main ListenAndServe error: %+v\n", err)
 	}
 
-	// fmt.Println("hi")
+	fmt.Println("hi")
 }

@@ -3,7 +3,6 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"log"
 
 	_ "github.com/mattn/go-sqlite3" // sqlite3 driver connects go with sql
 )
@@ -12,69 +11,65 @@ type NewsFeed struct {
 	DB *sql.DB
 }
 
-type CommentFeed struct{
+type CommentFeed struct {
 	DB2 *sql.DB
 }
 
-var DB *sql.DB
-var DB2 *sql.DB
+var (
+	DB  *sql.DB
+	DB2 *sql.DB
+)
 
-//opens database and checks if table exists, if not makes one
+// opens database and checks if table exists, if not makes one
 func UserDatabase() {
 	db, err := sql.Open("sqlite3", "./database/userdata.db")
 	if err != nil {
-		CheckErr(err)
+		fmt.Printf("UserDatabase db sql.Open error: %+v\n", err)
 	}
-
 	statement, err := db.Prepare("CREATE TABLE IF NOT EXISTS people (id INTEGER PRIMARY KEY, username TEXT, email TEXT, passwordHASH TEXT)")
 	statement.Exec()
-
 	if err != nil {
-		CheckErr(err)
+		fmt.Printf("UserDatabase statement sql.Open error: %+v\n", err)
 	}
-
 	DB = db
 }
-//opens and creates a different database
+
+// opens and creates a different database
 func Feed(db *sql.DB) *NewsFeed {
 	db, err := sql.Open("sqlite3", "./database/feed.db")
 	if err != nil {
-		CheckErr(err)
+		fmt.Printf("Feed db sql.Open error: %+v\n", err)
 	}
 
 	stmt, err := db.Prepare("CREATE TABLE IF NOT EXISTS feed (iD INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, title TEXT, content	TEXT, likes INTEGER, created TEXT, category TEXT)")
 	stmt.Exec()
 	if err != nil {
-		CheckErr(err)
+		fmt.Printf("Feed stmt sql.Open error: %+v\n", err)
 	}
 	return &NewsFeed{
 		DB: db,
 	}
 }
+
 func Comments(db2 *sql.DB) *CommentFeed {
 	db, err := sql.Open("sqlite3", "./database/comments.db")
 	if err != nil {
-		CheckErr(err)
+		fmt.Printf("Comments Feed sql.Open error: %+v\n", err)
 	}
 
 	stmt, err := db.Prepare("CREATE TABLE IF NOT EXISTS comments (iD INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, title TEXT, content	TEXT, likes INTEGER, created TEXT, category TEXT)")
 	stmt.Exec()
 	if err != nil {
-		CheckErr(err)
+		fmt.Printf("Comments stmt db.Prepare error: %+v\n", err)
 	}
 	return &CommentFeed{
 		DB2: db,
 	}
 }
 
-//Get() dumps all values from a selected table 
+// Get() dumps all values from a selected table
 func (feed *NewsFeed) Get() []PostFeed {
-
-	posts := []PostFeed{}
-	
-	rows, err := feed.DB.Query("SELECT * FROM feed")
-
-	//variable init
+	// variable init
 	var id int
 	var title string
 	var content string
@@ -83,36 +78,32 @@ func (feed *NewsFeed) Get() []PostFeed {
 	var created string
 	var category string
 
-	//scan rows in database, update variable using memory addresses and link to struct 
+	posts := []PostFeed{}
+
+	rows, err := feed.DB.Query("SELECT * FROM feed")
+	if err != nil {
+		fmt.Printf("Feed DB Query error: %+v\n", err)
+	}
+
+	// scan rows in database, update variable using memory addresses and link to struct
 	for rows.Next() {
 		rows.Scan(&id, &title, &content, &likes, &created, &category)
-		newPost := PostFeed{ //explicit values
+		newPost := PostFeed{ // explicit values
 			ID:      id,
 			Title:   title,
 			Content: content,
-			Likes:    likes,
+			Likes:   likes,
 			Created: created,
 			// Comments: comments,
 			Category: category,
 		}
-
 		posts = append(posts, newPost)
 	}
-
-	if err != nil {
-		CheckErr(err)
-	}
-
 	return posts
 }
 
 func (feed *CommentFeed) GetComments() []PostFeed {
-
-	posts := []PostFeed{}
-	
-	rows, err := feed.DB2.Query("SELECT * FROM comments")
-
-	//variable init
+	// variable init
 	var id int
 	var title string
 	var content string
@@ -121,14 +112,21 @@ func (feed *CommentFeed) GetComments() []PostFeed {
 	var created string
 	var category string
 
-	//scan rows in database, update variable using memory addresses and link to struct 
+	posts := []PostFeed{}
+
+	rows, err := feed.DB2.Query("SELECT * FROM comments")
+	if err != nil {
+		fmt.Printf("Comments Feed DB Query error: %+v\n", err)
+	}
+
+	// scan rows in database, update variable using memory addresses and link to struct
 	for rows.Next() {
 		rows.Scan(&id, &title, &content, &likes, &created, &category)
-		newComment := PostFeed{ //explicit values
+		newComment := PostFeed{ // explicit values
 			ID:      id,
 			Title:   title,
 			Content: content,
-			Likes:    likes,
+			Likes:   likes,
 			Created: created,
 			// Comments: comments,
 			Category: category,
@@ -136,19 +134,14 @@ func (feed *CommentFeed) GetComments() []PostFeed {
 
 		posts = append(posts, newComment)
 	}
-
-	if err != nil {
-		CheckErr(err)
-	}
-
 	return posts
 }
 
-//Add(adds an item into a table)
+// Add(adds an item into a table)
 func (feed *NewsFeed) Add(item PostFeed) {
 	stmt, err := feed.DB.Prepare("INSERT INTO feed (title, content, likes, created, category) VALUES (?, ?, ?, ?, ?);")
 	if err != nil {
-		CheckErr(err)
+		fmt.Printf("feed DB Prepare error: %+v\n", err)
 	}
 	// stmt.QueryRow(stmt, item.Title, item.Content, item.Category)
 
@@ -157,21 +150,18 @@ func (feed *NewsFeed) Add(item PostFeed) {
 	defer stmt.Close()
 }
 
-func CheckErr(err error) {
-	fmt.Println(err)
-	log.Fatal(err)
-}
+// func CheckErr(err error) {
+// 	fmt.Println(err)
+// 	log.Fatal(err)
+// }
 
-//Add(adds an item into a table)
+// Add(adds an item into a table)
 func (feed *CommentFeed) AddComment(item PostFeed) {
 	stmt, err := feed.DB2.Prepare("INSERT INTO comments (title, content, likes, created, category) VALUES (?, ?, ?, ?, ?);")
 	if err != nil {
-		CheckErr(err)
+		fmt.Printf("AddComment DB Prepare error: %+v\n", err)
 	}
 	// stmt.QueryRow(stmt, item.Title, item.Content, item.Category)
-
 	stmt.Exec(item.Title, item.Content, item.Likes, item.Created, item.Category)
-
 	defer stmt.Close()
 }
-

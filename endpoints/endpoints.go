@@ -3,12 +3,12 @@ package endpoints
 import (
 	"database/sql"
 	"fmt"
+	"forum/database"
 	"html/template"
 	"net/http"
 	"strings"
 	"time"
 	"unicode"
-	"v2/Forum/database"
 
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -24,7 +24,7 @@ type User struct {
 
 // could it be used to store data for userprofile and use a single template execution???
 
-//holds details of user session-- used for cookies
+// holds details of user session-- used for cookies
 type session struct {
 	Id    int
 	Uuid  string // random value to be stored at the browser
@@ -33,6 +33,7 @@ type session struct {
 	UserId int
 	// CreatedAt	time.Time
 }
+
 type usrProfile struct {
 	Name string
 	// image    *os.Open
@@ -61,14 +62,13 @@ type Post struct {
 
 var tpl *template.Template
 
-//parses files for all templates allowing them to be called
+// parses files for all templates allowing them to be called
 func init() {
 	tpl = template.Must(template.ParseGlob("templates/*"))
 }
 
 // login page
 func LoginWeb(w http.ResponseWriter, r *http.Request) {
-
 	cookie, err := r.Cookie("session")
 	if err != nil {
 		id := uuid.NewV4()
@@ -101,7 +101,7 @@ func LoginWeb(w http.ResponseWriter, r *http.Request) {
 		// returns nill on succcess
 		if err == nil {
 			tpl.ExecuteTemplate(w, "home.html", nil)
-			http.Redirect(w, r, "/home.html", 302)
+			http.Redirect(w, r, "/home.html", http.StatusFound)
 			return
 		}
 
@@ -112,16 +112,16 @@ func LoginWeb(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "500 Internal Server Error", 500)
+		fmt.Printf("LoginWeb(writeheader) error:  %+v\n", err)
 	}
 	tpl.ExecuteTemplate(w, "login.html", nil)
-
 }
 
 func GetSignupPage(w http.ResponseWriter, r *http.Request) {
 	tpl.ExecuteTemplate(w, "signup.html", nil)
 }
 
-/*  1. chceck e-mail criteria
+/*  1. check e-mail criteria
     2. check u.username criteria
 	 3. check password criteria
 	 4. check if u.username is already exists in database
@@ -129,34 +129,33 @@ func GetSignupPage(w http.ResponseWriter, r *http.Request) {
 	 6. insert u.username and password hash in database
 */
 func SignUpUser(w http.ResponseWriter, r *http.Request) {
-
 	var user User
 
-	r.ParseForm() //parses sign up form to fetch needed information
+	r.ParseForm() // parses sign up form to fetch needed information
 
 	user.Email = r.FormValue("email")
-	//check if e-mail is valid format
-	var isValidEmail = true
+	// check if e-mail is valid format
+	isValidEmail := true
 
 	if isValidEmail != strings.Contains(user.Email, "@") || isValidEmail != strings.Contains(user.Email, ".") { // checks if e-mail is valid by checking if it contains "@"
 		isValidEmail = false
 	}
 
 	user.Username = r.FormValue("username")
-	//check if only alphanumerical numbers
-	var isAlphaNumeric = true
+	// check if only alphanumerical numbers
+	isAlphaNumeric := true
 
 	for _, char := range user.Username {
-		if unicode.IsLetter(char) == false && unicode.IsNumber(char) == false { //checks if character not a special character
+		if unicode.IsLetter(char) && unicode.IsNumber(char) { // checks if character not a special character
 			isAlphaNumeric = false
 		}
 	}
-	//checks if name length meets criteria
+	// checks if name length meets criteria
 	nameLength := (5 <= len(user.Username) && len(user.Username) <= 50)
 
 	fmt.Println(nameLength)
 
-	//check pw criteria
+	// check pw criteria
 	user.Password = r.FormValue("password")
 
 	fmt.Println(user)
@@ -199,6 +198,7 @@ func SignUpUser(w http.ResponseWriter, r *http.Request) {
 	if err != sql.ErrNoRows {
 		// fmt.Println("user exists", err)
 		tpl.ExecuteTemplate(w, "sign-up.html", "username taken")
+		fmt.Printf("sql scan row id error: %+v\n", err)
 		return
 	}
 	stmt = "SELECT id FROM people where email =?"
@@ -208,7 +208,7 @@ func SignUpUser(w http.ResponseWriter, r *http.Request) {
 	var userEmail string
 	err = row.Scan(&userEmail)
 	if err != sql.ErrNoRows {
-		// fmt.Println("email is taken", err)
+		fmt.Printf("sql scan row email error: %+v\n", err)
 		tpl.ExecuteTemplate(w, "signup.html", "e-mail in use")
 	}
 
@@ -217,6 +217,7 @@ func SignUpUser(w http.ResponseWriter, r *http.Request) {
 	passwordHash, err = bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		tpl.ExecuteTemplate(w, "signup.html", "there was an error registering account")
+		fmt.Printf("Register Account (passwordHash) error:  %+v\n", err)
 		return
 	}
 
@@ -224,24 +225,29 @@ func SignUpUser(w http.ResponseWriter, r *http.Request) {
 	insertStmt, err = database.DB.Prepare("INSERT INTO people (username, email, passwordHASH) VALUES (?, ?, ?);")
 	if err != nil {
 		tpl.ExecuteTemplate(w, "signup.html", "there was an error registering account")
+		fmt.Printf("Register Account (insertStmt) error:  %+v\n", err)
+
 		return
 	}
 	defer insertStmt.Close()
 
 	var result sql.Result
 	result, err = insertStmt.Exec(user.Username, user.Email, passwordHash)
-	rowsAff, _ := result.RowsAffected()
-	lastIns, _ := result.LastInsertId()
-	fmt.Println("rowsAff:", rowsAff)
-	fmt.Println("lastIns:", lastIns)
-	fmt.Println("err:", err)
+	rowsAff, err1 := result.RowsAffected()
+	if err1 != nil {
+		fmt.Printf("rowsAff: %+v error:  %+v\n", rowsAff, err1)
+	}
+	lastIns, err2 := result.LastInsertId()
+	if err2 != nil {
+		fmt.Printf("lastIns: %+v error:  %+v\n", lastIns, err2)
+	}
 	if err != nil {
 		tpl.ExecuteTemplate(w, "signup.html", "there was an error registering account")
+		fmt.Printf("Register Account (result) error:  %+v\n", err)
 		return
 	} else {
-		http.Redirect(w, r, "/login", 302)
+		http.Redirect(w, r, "/login", http.StatusFound)
 	}
-
 }
 
 // home page
@@ -250,6 +256,7 @@ func HomePage(writer http.ResponseWriter, request *http.Request) {
 
 	if err := request.ParseForm(); err != nil { // checks for errors parsing form
 		http.Error(writer, "500 Internal Server Error", 500)
+		fmt.Printf("ParseForm (HomePage) error:  %+v\n", err)
 		return
 	}
 	// 🐈
@@ -257,7 +264,7 @@ func HomePage(writer http.ResponseWriter, request *http.Request) {
 
 	posts, err := sql.Open("sqlite3", "./database/feed.db")
 	if err != nil {
-		database.CheckErr(err)
+		fmt.Printf("posts sql.Open (HomePage) error:  %+v\n", err)
 	}
 	feed := database.Feed(posts)
 
@@ -294,11 +301,13 @@ if postTitle !="" ||  postContent !="" || postCategory !=""{
  tpl.ExecuteTemplate(writer, "home.html", items)
 
 }
+
 func CategoriesList(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	tpl.ExecuteTemplate(writer, "categories.html", nil)
 }
+
 func PwReset(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
@@ -335,62 +344,87 @@ func Threads(w http.ResponseWriter, r *http.Request) {
 	fmt.Print(postInfo)
 	tpl.ExecuteTemplate(w, "thread.html", postInfo)
 }
+
 func AboutFunc(w http.ResponseWriter, r *http.Request) {
-	tpl.ExecuteTemplate(w, "about.html", nil)
+	err := tpl.ExecuteTemplate(w, "about.html", nil)
+	if err != nil {
+		fmt.Printf("AboutFunc Execute.Template error: %+v\n", err)
+	}
 }
 
 func ContactUs(w http.ResponseWriter, r *http.Request) {
-	tpl.ExecuteTemplate(w, "contact-us.html", nil)
+	err := tpl.ExecuteTemplate(w, "contact-us.html", nil)
+	if err != nil {
+		fmt.Printf("ContactUs Execute.Template error: %+v\n", err)
+	}
 }
-func UserPhoto(writer http.ResponseWriter, request *http.Request) {
 
+func UserPhoto(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
-	tpl.ExecuteTemplate(writer, "photo.html", nil)
+	err := tpl.ExecuteTemplate(writer, "photo.html", nil)
+	if err != nil {
+		fmt.Printf("UserPhoto Execute.Template error: %+v\n", err)
+	}
 }
+
 func UserPosts(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
-	tpl.ExecuteTemplate(writer, "posts.html", nil)
+	err := tpl.ExecuteTemplate(writer, "posts.html", nil)
+	if err != nil {
+		fmt.Printf("UserPosts Execute.Template error: %+v\n", err)
+	}
 }
+
 func UserComments(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
-	tpl.ExecuteTemplate(writer, "comments.html", nil)
+	err := tpl.ExecuteTemplate(writer, "comments.html", nil)
+	if err != nil {
+		fmt.Printf("UserComments Execute.Template error: %+v\n", err)
+	}
 }
+
 func UserLikes(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
-	tpl.ExecuteTemplate(writer, "likes.html", nil)
+	err := tpl.ExecuteTemplate(writer, "likes.html", nil)
+	if err != nil {
+		fmt.Printf("UserLikes Execute.Template error: %+v\n", err)
+	}
 }
+
 func UserShares(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
-	tpl.ExecuteTemplate(writer, "shares.html", nil)
+	err := tpl.ExecuteTemplate(writer, "shares.html", nil)
+	if err != nil {
+		fmt.Printf("UserShares Execute.Template error: %+v\n", err)
+	}
 }
+
 func UserInfo(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
-	tpl.ExecuteTemplate(writer, "userinfo.html", nil)
+	err := tpl.ExecuteTemplate(writer, "userinfo.html", nil)
+	if err != nil {
+		fmt.Printf("UserInfo Execute.Template error: %+v\n", err)
+	}
 }
+
 func Customization(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
-	tpl.ExecuteTemplate(writer, "customize.html", nil)
-
-}
-
-func CheckErr(err error) {
+	err := tpl.ExecuteTemplate(writer, "customize.html", nil)
 	if err != nil {
-		fmt.Errorf("error:: %+v", err)
-		// panic(err)
-		return
+		fmt.Printf("Customization Execute.Template error: %+v\n", err)
 	}
 }
 
 // func logOut(){
 
-//close session
-//log user out
-//clear cookie
+// close session
+// log user out
+// clear cookie
 // }
