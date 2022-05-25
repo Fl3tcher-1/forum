@@ -65,8 +65,8 @@ func getUser(w http.ResponseWriter, req *http.Request) User {
 	return u
 }
 
-func alreadyLoggedIn(w http.ResponseWriter, req *http.Request) bool {
-	c, err := req.Cookie("session")
+func alreadyLoggedIn(w http.ResponseWriter, r *http.Request) bool {
+	c, err := r.Cookie("session")
 	if err != nil {
 		return false
 	}
@@ -232,12 +232,12 @@ func login(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func logout(w http.ResponseWriter, req *http.Request) {
-	if !alreadyLoggedIn(w, req) {
-		http.Redirect(w, req, "/", http.StatusSeeOther)
+func logout(w http.ResponseWriter, r *http.Request) {
+	if !alreadyLoggedIn(w, r) {
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
-	c, _ := req.Cookie("session")
+	c, _ := r.Cookie("session")
 	// delete the session
 	delete(dbSessions, c.Value)
 	// remove the cookie
@@ -253,5 +253,5 @@ func logout(w http.ResponseWriter, req *http.Request) {
 		go cleanSessions()
 	}
 
-	http.Redirect(w, req, "/login", http.StatusSeeOther)
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }

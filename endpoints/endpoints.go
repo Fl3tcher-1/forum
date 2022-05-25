@@ -64,6 +64,11 @@ type Post struct {
 // will need to be reduced as there is too many at the moment
 
 var tpl *template.Template
+dbSessions        = map[string]session{}
+dbSessionsCleaned time.Time
+dbUsers           = map[string]User{} 
+const sessionLength int = 30
+
 
 // parses files for all templates allowing them to be called
 func init() {
@@ -72,7 +77,6 @@ func init() {
 
 // login page
 func LoginWeb(w http.ResponseWriter, r *http.Request) {
-
 	var Roles []string
 
 	Roles = append(Roles, "guest", "user", "moderator", "admin")
@@ -101,7 +105,6 @@ func LoginWeb(w http.ResponseWriter, r *http.Request) {
 	stmt := "SELECT passwordHash FROM people WHERE Username = ?"
 	row := database.DB.QueryRow(stmt, user.Username)
 	err := row.Scan(&passwordHash)
-
 	if err != nil {
 		tpl.ExecuteTemplate(w, "login.html", "check username and password")
 		return
@@ -311,10 +314,10 @@ func HomePage(writer http.ResponseWriter, request *http.Request) {
 	time := time.Now()
 	postCreated := time.Format("01-02-2006 15:04")
 
-	//check to see if title, content and category has been provided to stop making empty posts
+	// check to see if title, content and category has been provided to stop making empty posts
 	if postTitle != "" || postContent != "" || postCategory != "" {
 
-		//add values into database
+		// add values into database
 		feed.Add(database.PostFeed{
 			Title:    postTitle,
 			Content:  postContent,
@@ -330,7 +333,6 @@ func HomePage(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	tpl.ExecuteTemplate(writer, "home.html", items)
-
 }
 
 func CategoriesList(writer http.ResponseWriter, request *http.Request) {
@@ -459,3 +461,43 @@ func Customization(writer http.ResponseWriter, request *http.Request) {
 // log user out
 // clear cookie
 // }
+func alreadyLoggedIn(w http.ResponseWriter, r *http.Request) bool {
+	c, err := r.Cookie("session")
+	if err != nil {
+		return false
+	}
+	s, ok := dbSessions[c.Value]
+	if ok {
+		s.lastActivity = time.Now()
+		dbSessions[c.Value] = s
+	}
+	_, ok = dbUsers[s.un]
+	// refresh session
+	c.MaxAge = sessionLength
+	http.SetCookie(w, c)
+	return ok
+}
+
+func logout(w http.ResponseWriter, r *http.Request) {
+	if !alreadyLoggedIn(w, r) {
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+	c, _ := r.Cookie("session")
+	// delete the session
+	delete(dbSessions, c.Value)
+	// remove the cookie
+	c = &http.Cookie{
+		Name:   "session",
+		Value:  "",
+		MaxAge: -1,
+	}
+	http.SetCookie(w, c)
+
+	// clean up dbSessions
+	if time.Since(dbSessionsCleaned) > (time.Second * 30) {
+		go cleanSessions()
+	}
+
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
+}
