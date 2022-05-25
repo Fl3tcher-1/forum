@@ -1,13 +1,12 @@
-package endpoints
+package database
 
 import (
 	"database/sql"
 	"fmt"
-	"forum/database"
+
 	"html/template"
 	"net/http"
 	"strings"
-	"time"
 	"unicode"
 
 	uuid "github.com/satori/go.uuid"
@@ -16,11 +15,11 @@ import (
 	// "v2/go/pkg/mod/golang.org/x/crypto@v0.0.0-20200622213623-75b288015ac9/bcrypt"
 )
 
-type User struct {
-	Username string
-	Password string
-	Email    string
-}
+// type User struct {
+// 	Username string
+// 	Password string
+// 	Email    string
+// }
 
 // could it be used to store data for userprofile and use a single template execution???
 
@@ -68,18 +67,9 @@ func init() {
 }
 
 // login page
-func LoginWeb(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("session")
-	if err != nil {
-		id := uuid.NewV4()
-		cookie = &http.Cookie{
-			Name:     "session",
-			Value:    id.String(),
-			Secure:   true,
-			HttpOnly: true,
-		}
-		http.SetCookie(w, cookie)
-
+func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
+	
+	var cookie *http.Cookie
 		var user User
 
 		r.ParseForm()
@@ -90,8 +80,8 @@ func LoginWeb(w http.ResponseWriter, r *http.Request) {
 		var passwordHash string
 
 		stmt := "SELECT passwordHash FROM people WHERE Username = ?"
-		row := database.DB.QueryRow(stmt, user.Username)
-		err = row.Scan(&passwordHash)
+		row := DB.QueryRow(stmt, user.Username)
+		err := row.Scan(&passwordHash)
 
 		if err != nil {
 			tpl.ExecuteTemplate(w, "login.html", "check username and password")
@@ -107,7 +97,22 @@ func LoginWeb(w http.ResponseWriter, r *http.Request) {
 
 		fmt.Println("incorrect password")
 		tpl.ExecuteTemplate(w, "login.html", "check username and password")
-	}
+
+
+		cookie, err = r.Cookie("session")
+		if err != nil {
+			id := uuid.NewV4()
+			//fmt.Println("cookie was not found")
+			cookie = &http.Cookie{
+				Name:     "session",
+				Value:    id.String(),
+				Secure:   true,
+				HttpOnly: true,
+			}
+			http.SetCookie(w, cookie)
+		}
+	
+
 
 	w.WriteHeader(http.StatusOK)
 	if err := r.ParseForm(); err != nil {
@@ -117,7 +122,7 @@ func LoginWeb(w http.ResponseWriter, r *http.Request) {
 	tpl.ExecuteTemplate(w, "login.html", nil)
 }
 
-func GetSignupPage(w http.ResponseWriter, r *http.Request) {
+func (data *Forum) GetSignupPage(w http.ResponseWriter, r *http.Request) {
 	tpl.ExecuteTemplate(w, "signup.html", nil)
 }
 
@@ -128,7 +133,8 @@ func GetSignupPage(w http.ResponseWriter, r *http.Request) {
 	 5. create bcrypt hash from password
 	 6. insert u.username and password hash in database
 */
-func SignUpUser(w http.ResponseWriter, r *http.Request) {
+func (data *Forum) SignUpUser(w http.ResponseWriter, r *http.Request) {
+	
 	var user User
 
 	r.ParseForm() // parses sign up form to fetch needed information
@@ -176,7 +182,6 @@ func SignUpUser(w http.ResponseWriter, r *http.Request) {
 			pwSpace = true
 		}
 	}
-
 	minPwLength := 8
 	maxPwLength := 30
 
@@ -189,22 +194,16 @@ func SignUpUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	stmt := "SELECT id FROM people where username = ?"
-
-	row := database.DB.QueryRow(stmt, user.Username)
-
-	var id string
-	err := row.Scan(&id)
+	row := data.DB.QueryRow("SELECT uuid FROM people where username = ?", user.Username)
+	var username string
+	err := row.Scan(&username)
 	if err != sql.ErrNoRows {
 		// fmt.Println("user exists", err)
 		tpl.ExecuteTemplate(w, "sign-up.html", "username taken")
 		fmt.Printf("sql scan row id error: %+v\n", err)
 		return
 	}
-	stmt = "SELECT id FROM people where email =?"
-
-	row = database.DB.QueryRow(stmt, user.Username)
-
+	row = data.DB.QueryRow("SELECT uuid FROM people where email =?", user.Email)
 	var userEmail string
 	err = row.Scan(&userEmail)
 	if err != sql.ErrNoRows {
@@ -221,37 +220,29 @@ func SignUpUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var insertStmt *sql.Stmt
-	insertStmt, err = database.DB.Prepare("INSERT INTO people (username, email, passwordHASH) VALUES (?, ?, ?);")
+	sessionID := uuid.NewV4()
+	
+	data.CreateUser(User{
+		Uuid: sessionID.String(),
+		Username: user.Username,
+		Email:    user.Email,
+		Password: string(passwordHash),
+	})
 	if err != nil {
 		tpl.ExecuteTemplate(w, "signup.html", "there was an error registering account")
-		fmt.Printf("Register Account (insertStmt) error:  %+v\n", err)
-
+		//fmt.Printf("Register Account (insertStmt) error:  %+v\n", err)
+		//defer data.Close()
+		
 		return
-	}
-	defer insertStmt.Close()
 
-	var result sql.Result
-	result, err = insertStmt.Exec(user.Username, user.Email, passwordHash)
-	rowsAff, err1 := result.RowsAffected()
-	if err1 != nil {
-		fmt.Printf("rowsAff: %+v error:  %+v\n", rowsAff, err1)
-	}
-	lastIns, err2 := result.LastInsertId()
-	if err2 != nil {
-		fmt.Printf("lastIns: %+v error:  %+v\n", lastIns, err2)
-	}
-	if err != nil {
-		tpl.ExecuteTemplate(w, "signup.html", "there was an error registering account")
-		fmt.Printf("Register Account (result) error:  %+v\n", err)
-		return
+
 	} else {
 		http.Redirect(w, r, "/login", http.StatusFound)
 	}
 }
 
 // home page
-func HomePage(writer http.ResponseWriter, request *http.Request) {
+func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "text/html")
 
 	if err := request.ParseForm(); err != nil { // checks for errors parsing form
@@ -260,61 +251,61 @@ func HomePage(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	// 🐈
-	database.UserDatabase()
+//	UserDatabase()
 
-	posts, err := sql.Open("sqlite3", "./database/feed.db")
-	if err != nil {
-		fmt.Printf("posts sql.Open (HomePage) error:  %+v\n", err)
-	}
-	feed := database.Feed(posts)
+	// posts, err := sql.Open("sqlite3", "./database/feed.db")
+	// if err != nil {
+	// 	fmt.Printf("posts sql.Open (HomePage) error:  %+v\n", err)
+	// }
+	// //feed := Feed(posts)
 
-	items := feed.Get()
-	poststuff := request.ParseForm()
+	// items := feed.Get()
+	// poststuff := request.ParseForm()
 
-		fmt.Println(poststuff)
-	
-		postCategory := request.FormValue("category")
-	
-		postTitle := request.FormValue("title")
-	
-		postContent := request.FormValue("content")
-		postLikes := 0
-		time := time.Now()
-		postCreated := time.Format("01-02-2006 15:04")
+	// fmt.Println(poststuff)
 
-		//check to see if title, content and category has been provided to stop making empty posts
-if postTitle !="" ||  postContent !="" || postCategory !=""{
-	
-	//add values into database
-	feed.Add(database.PostFeed{
-		Title: postTitle,
-		Content: postContent,
-		Likes: postLikes,
-		Created: postCreated,
-		Category: postCategory,
-	})
+	// postCategory := request.FormValue("category")
 
-	tpl.ExecuteTemplate(writer, "./home", items)
+	// postTitle := request.FormValue("title")
+
+	// postContent := request.FormValue("content")
+	// postLikes := 0
+	// time := time.Now()
+	// postCreated := time.Format("01-02-2006 15:04")
+
+	//check to see if title, content and category has been provided to stop making empty posts
+	// if postTitle != "" || postContent != "" || postCategory != "" {
+
+	// 	//add values into database
+	// 	feed.Add(PostFeed{
+	// 		Title:     postTitle,
+	// 		Content:   postContent,
+	// 		Likes:     postLikes,
+	// 		CreatedAt: postCreated,
+	// 		Category:  postCategory,
+	// 	})
+
+	// 	tpl.ExecuteTemplate(writer, "./home", items)
+	// }
+
+	tpl.ExecuteTemplate(writer, "home.html", nil)
+
 }
 
 
- tpl.ExecuteTemplate(writer, "home.html", items)
-
-}
-
-func CategoriesList(writer http.ResponseWriter, request *http.Request) {
+func (data *Forum) CategoriesList(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	tpl.ExecuteTemplate(writer, "categories.html", nil)
 }
 
-func PwReset(writer http.ResponseWriter, request *http.Request) {
+func (data *Forum) PwReset(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	tpl.ExecuteTemplate(writer, "passwordReset.html", nil)
 }
 
-func UserProfile(writer http.ResponseWriter, request *http.Request) {
+func (data *Forum) UserProfile(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 
@@ -333,7 +324,7 @@ func UserProfile(writer http.ResponseWriter, request *http.Request) {
 	tpl.ExecuteTemplate(writer, "profile.html", usrInfo)
 }
 
-func Threads(w http.ResponseWriter, r *http.Request) {
+func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	var postInfo Post
 	postInfo.Title = "testing"
@@ -345,21 +336,21 @@ func Threads(w http.ResponseWriter, r *http.Request) {
 	tpl.ExecuteTemplate(w, "thread.html", postInfo)
 }
 
-func AboutFunc(w http.ResponseWriter, r *http.Request) {
+func (data *Forum) AboutFunc(w http.ResponseWriter, r *http.Request) {
 	err := tpl.ExecuteTemplate(w, "about.html", nil)
 	if err != nil {
 		fmt.Printf("AboutFunc Execute.Template error: %+v\n", err)
 	}
 }
 
-func ContactUs(w http.ResponseWriter, r *http.Request) {
+func (data *Forum) ContactUs(w http.ResponseWriter, r *http.Request) {
 	err := tpl.ExecuteTemplate(w, "contact-us.html", nil)
 	if err != nil {
 		fmt.Printf("ContactUs Execute.Template error: %+v\n", err)
 	}
 }
 
-func UserPhoto(writer http.ResponseWriter, request *http.Request) {
+func (data *Forum) UserPhoto(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	err := tpl.ExecuteTemplate(writer, "photo.html", nil)
@@ -368,7 +359,7 @@ func UserPhoto(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func UserPosts(writer http.ResponseWriter, request *http.Request) {
+func (data *Forum) UserPosts(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	err := tpl.ExecuteTemplate(writer, "posts.html", nil)
@@ -377,7 +368,7 @@ func UserPosts(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func UserComments(writer http.ResponseWriter, request *http.Request) {
+func (data *Forum) UserComments(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	err := tpl.ExecuteTemplate(writer, "comments.html", nil)
@@ -386,7 +377,7 @@ func UserComments(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func UserLikes(writer http.ResponseWriter, request *http.Request) {
+func (data *Forum) UserLikes(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	err := tpl.ExecuteTemplate(writer, "likes.html", nil)
@@ -395,7 +386,7 @@ func UserLikes(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func UserShares(writer http.ResponseWriter, request *http.Request) {
+func (data *Forum) UserShares(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	err := tpl.ExecuteTemplate(writer, "shares.html", nil)
@@ -404,7 +395,7 @@ func UserShares(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func UserInfo(writer http.ResponseWriter, request *http.Request) {
+func (data *Forum) UserInfo(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	err := tpl.ExecuteTemplate(writer, "userinfo.html", nil)
@@ -413,12 +404,78 @@ func UserInfo(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func Customization(writer http.ResponseWriter, request *http.Request) {
+func (data *Forum) Customization(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	err := tpl.ExecuteTemplate(writer, "customize.html", nil)
 	if err != nil {
 		fmt.Printf("Customization Execute.Template error: %+v\n", err)
+	}
+}
+
+func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
+	switch r.URL.Path {
+	// page handlers
+	case "/stylesheet": // handle css
+		http.ServeFile(w, r, "./templates/stylesheet.css")
+	case "/":
+		data.LoginWeb(w, r)
+	case "/login":
+		data.LoginWeb(w, r)
+	case "/home":
+		data.HomePage(w, r)
+	case "/categories":
+		data.CategoriesList(w, r)
+	case "/reset":
+		data.PwReset(w, r)
+	case "/signup":
+		data.GetSignupPage(w, r)
+	case "/sign-up-form":
+		data.SignUpUser(w, r)
+	case "/profile":
+		data.UserProfile(w, r)
+	case "/thread":
+		data.Threads(w, r)
+	case "/about":
+		data.AboutFunc(w, r)
+	case "/contact-us":
+		data.ContactUs(w, r)
+
+		// user handlers
+	case "/photo":
+		data.UserPhoto(w, r)
+	case "/posts":
+		data.UserPosts(w, r)
+	case "/comments":
+		data.UserComments(w, r)
+	case "/likes":
+		data.UserLikes(w, r)
+	case "/shares":
+		data.UserShares(w, r)
+	case "/info":
+		data.UserInfo(w, r)
+	case "/custom":
+		data.Customization(w, r)
+
+		// handles images
+	case "/cat":
+		http.ServeFile(w, r, "./images/cat.jpg")
+	case "/chicken":
+		http.ServeFile(w, r, "./images/chicken.jpeg")
+	case "/cow":
+		http.ServeFile(w, r, "./images/cow.jpg")
+	case "/hamster":
+		http.ServeFile(w, r, "./images/hamster.jpg")
+	case "/owl":
+		http.ServeFile(w, r, "./images/owl.jpg")
+	case "/panda":
+		http.ServeFile(w, r, "./images/panda.jpg")
+	case "/shark":
+		http.ServeFile(w, r, "./images/shark.jpg")
+	case "/doge":
+		http.ServeFile(w, r, "./images/doge.jpg")
+	case "/question":
+		http.ServeFile(w, r, "./images/question.jpg")
 	}
 }
 
