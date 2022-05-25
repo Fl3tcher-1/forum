@@ -16,6 +16,9 @@ import (
 	// "v2/go/pkg/mod/golang.org/x/crypto@v0.0.0-20200622213623-75b288015ac9/bcrypt"
 )
 
+type Log struct {
+	Loggedin bool
+}
 type User struct {
 	Username string
 	Password string
@@ -68,6 +71,64 @@ func init() {
 
 // login page
 func LoginWeb(w http.ResponseWriter, r *http.Request) {
+	var Roles []string
+
+	Roles = append(Roles, "guest", "user", "moderator", "admin")
+
+	var registered Log
+	registered.Loggedin = false
+
+	fmt.Println(registered.Loggedin)
+	fmt.Println(Roles)
+	var user User
+	user.Username = r.FormValue("username")
+	user.Password = r.FormValue("password")
+
+	fmt.Println(r.FormValue("username"))
+	fmt.Println(r.FormValue("username"))
+	// fmt.Println(user)
+
+	// fmt.Println(user.Username, user.Password)
+
+	// var user User
+
+	r.ParseForm()
+
+	var passwordHash string
+
+	stmt := "SELECT passwordHash FROM people WHERE Username = ?"
+	row := database.DB.QueryRow(stmt, user.Username)
+	err := row.Scan(&passwordHash)
+
+	if err != nil {
+		tpl.ExecuteTemplate(w, "login.html", "check username and password")
+		return
+	}
+	err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(user.Password))
+	// returns nill on succcess
+	if err == nil {
+		// posts, err := sql.Open("sqlite3", "./database/feed.db")
+		// if err != nil {
+		// 	database.CheckErr(err)
+		// }
+		// feed := database.Feed(posts)
+
+		// items := feed.Get()
+		registered.Loggedin = true
+		fmt.Println(registered)
+		// tpl.ExecuteTemplate(w, "home.html", items)
+		http.Redirect(w, r, "/home", 302)
+		return
+	}
+
+	// fmt.Println("incorrect password")
+	// tpl.ExecuteTemplate(w, "login.html", "check username and password")
+
+	w.WriteHeader(http.StatusOK)
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "500 Internal Server Error", 500)
+	}
+	tpl.ExecuteTemplate(w, "login.html", nil)
 
 	cookie, err := r.Cookie("session")
 	if err != nil {
@@ -79,42 +140,7 @@ func LoginWeb(w http.ResponseWriter, r *http.Request) {
 			HttpOnly: true,
 		}
 		http.SetCookie(w, cookie)
-
-		var user User
-
-		r.ParseForm()
-
-		user.Username = r.FormValue("username")
-		user.Password = r.FormValue("password")
-
-		var passwordHash string
-
-		stmt := "SELECT passwordHash FROM people WHERE Username = ?"
-		row := database.DB.QueryRow(stmt, user.Username)
-		err = row.Scan(&passwordHash)
-
-		if err != nil {
-			tpl.ExecuteTemplate(w, "login.html", "check username and password")
-			return
-		}
-		err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(user.Password))
-		// returns nill on succcess
-		if err == nil {
-			tpl.ExecuteTemplate(w, "home.html", nil)
-			http.Redirect(w, r, "/home.html", 302)
-			return
-		}
-
-		fmt.Println("incorrect password")
-		tpl.ExecuteTemplate(w, "login.html", "check username and password")
 	}
-
-	w.WriteHeader(http.StatusOK)
-	if err := r.ParseForm(); err != nil {
-		http.Error(w, "500 Internal Server Error", 500)
-	}
-	tpl.ExecuteTemplate(w, "login.html", nil)
-
 }
 
 func GetSignupPage(w http.ResponseWriter, r *http.Request) {
@@ -264,34 +290,36 @@ func HomePage(writer http.ResponseWriter, request *http.Request) {
 	items := feed.Get()
 	poststuff := request.ParseForm()
 
-		fmt.Println(poststuff)
-	
-		postCategory := request.FormValue("category")
-	
-		postTitle := request.FormValue("title")
-	
-		postContent := request.FormValue("content")
-		postLikes := 0
-		time := time.Now()
-		postCreated := time.Format("01-02-2006 15:04")
+	fmt.Println(poststuff)
 
-		//check to see if title, content and category has been provided to stop making empty posts
-if postTitle !="" ||  postContent !="" || postCategory !=""{
-	
-	//add values into database
-	feed.Add(database.PostFeed{
-		Title: postTitle,
-		Content: postContent,
-		Likes: postLikes,
-		Created: postCreated,
-		Category: postCategory,
-	})
+	postCategory := request.FormValue("category")
 
-	tpl.ExecuteTemplate(writer, "./home", items)
-}
+	postTitle := request.FormValue("title")
 
+	postContent := request.FormValue("content")
+	postLikes := 0
+	time := time.Now()
+	postCreated := time.Format("01-02-2006 15:04")
 
- tpl.ExecuteTemplate(writer, "home.html", items)
+	//check to see if title, content and category has been provided to stop making empty posts
+	if postTitle != "" || postContent != "" || postCategory != "" {
+
+		//add values into database
+		feed.Add(database.PostFeed{
+			Title:    postTitle,
+			Content:  postContent,
+			Likes:    postLikes,
+			Created:  postCreated,
+			Category: postCategory,
+		})
+
+		tpl.ExecuteTemplate(writer, "home.html", items)
+		http.Redirect(writer, request, "/home", 200)
+		return
+
+	}
+
+	tpl.ExecuteTemplate(writer, "home.html", items)
 
 }
 func CategoriesList(writer http.ResponseWriter, request *http.Request) {
