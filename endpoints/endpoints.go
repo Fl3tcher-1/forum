@@ -75,17 +75,13 @@ func LoginWeb(w http.ResponseWriter, r *http.Request) {
 
 	Roles = append(Roles, "guest", "user", "moderator", "admin")
 
-	var registered Log
-	registered.Loggedin = false
-
-	fmt.Println(registered.Loggedin)
 	fmt.Println(Roles)
 	var user User
 	user.Username = r.FormValue("username")
 	user.Password = r.FormValue("password")
 
-	fmt.Println(r.FormValue("username"))
-	fmt.Println(r.FormValue("username"))
+	// fmt.Println(r.FormValue("username"))
+	// fmt.Println(r.FormValue("username"))
 	// fmt.Println(user)
 
 	// fmt.Println(user.Username, user.Password)
@@ -114,10 +110,9 @@ func LoginWeb(w http.ResponseWriter, r *http.Request) {
 		// feed := database.Feed(posts)
 
 		// items := feed.Get()
-		registered.Loggedin = true
-		fmt.Println(registered)
+		
 		// tpl.ExecuteTemplate(w, "home.html", items)
-		http.Redirect(w, r, "/home", 302)
+		defer http.Redirect(w, r, "/home", 302)
 		return
 	}
 
