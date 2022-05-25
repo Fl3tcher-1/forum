@@ -141,7 +141,7 @@ func (feed *CommentFeed) GetComments() []PostFeed {
 
 // Add(adds an item into a table)
 func (feed *NewsFeed) Add(item PostFeed) {
-	stmt, err := feed.DB.Prepare("INSERT INTO feed (title, content, likes, dislikes, created, category) VALUES (?, ?, ?, ?, ?);")
+	stmt, err := feed.DB.Prepare("INSERT INTO feed (title, content, likes, dislikes, created, category) VALUES (?, ?, ?, ?, ?, ?);")
 	if err != nil {
 		fmt.Printf("feed DB Prepare error: %+v\n", err)
 	}
@@ -152,7 +152,7 @@ func (feed *NewsFeed) Add(item PostFeed) {
 
 // Add(adds an item into a table)
 func (feed *CommentFeed) AddComment(item PostFeed) {
-	stmt, err := feed.DB2.Prepare("INSERT INTO comments (title, content, likes, dislikes, created, category) VALUES (?, ?, ?, ?, ?);")
+	stmt, err := feed.DB2.Prepare("INSERT INTO comments (title, content, likes, dislikes, created, category) VALUES (?, ?, ?, ?, ?, ?);")
 	if err != nil {
 		fmt.Printf("AddComment DB Prepare error: %+v\n", err)
 	}

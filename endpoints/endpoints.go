@@ -277,6 +277,7 @@ func HomePage(writer http.ResponseWriter, request *http.Request) {
 	postTitle := request.FormValue("title")
 	postContent := request.FormValue("content")
 	postLikes := 0
+	postDislikes :=0
 	time := time.Now()
 	postCreated := time.Format("01-02-2006 15:04")
 
@@ -288,6 +289,7 @@ func HomePage(writer http.ResponseWriter, request *http.Request) {
 			Title:    postTitle,
 			Content:  postContent,
 			Likes:    postLikes,
+			Dislikes: postDislikes,
 			Created:  postCreated,
 			Category: postCategory,
 		})
