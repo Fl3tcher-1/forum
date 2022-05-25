@@ -1,117 +1,153 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-        <link rel="stylesheet" href ="stylesheet" type ="text/css">
+    <link rel="stylesheet" href="stylesheet" type="text/css">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
 </head>
+
 <body>
-         <div class="head">
-              <h4>
-                  <form action= "home">
-                <input type ="submit" value="Home"/>
-             </form>
-            </h4>
-              <h4><form action = "categories">
-                <input type="submit" value=" Categories"/>
-            </form> 
-        </h4>
-            <h4> <form action = "home">
-                <input type="submit" value=" Groups"/>
-            </form> 
-        </h4>
-            <h4> <form action = "about">
-                <input type="submit" value=" About"/>
-            </form> 
-        </h4>
-            <h4>   <form action = "profile">
-                <input type="submit" value=" Profile"/>
+    <div class="head">
+        <h4>
+            <form action="home">
+                <input type="submit" value="Home" />
             </form>
         </h4>
-            <h4>  <form action = "contact-us">
-                <input type="submit" value=" Contact Us"/>
+        <h4>
+            <form action="categories">
+                <input type="submit" value=" Categories" />
             </form>
         </h4>
-        </div>
-        
-     <div class="banner"><h2> YOU ARE NOT LOGGED IN, PLEASE LOG IN TO ACCESS ALL FEATURES</h2> 
-        <form action = "login">
-            <input type="submit" value=" Click here to login"/>
+        <h4>
+            <form action="home">
+                <input type="submit" value=" Groups" />
+            </form>
+        </h4>
+        <h4>
+            <form action="about">
+                <input type="submit" value=" About" />
+            </form>
+        </h4>
+        <h4>
+            <form action="profile">
+                <input type="submit" value=" Profile" />
+            </form>
+        </h4>
+        <h4>
+            <form action="contact-us">
+                <input type="submit" value=" Contact Us" />
+            </form>
+        </h4>
+    </div>
+
+    <div class="banner">
+        <h2> YOU ARE NOT LOGGED IN, PLEASE LOG IN TO ACCESS ALL FEATURES</h2>
+        <form action="login">
+            <input type="submit" value=" Click here to login" />
         </form>
     </div>
     <form>
         <div class="homeLayout">
-      <div class="post"><h3> Create a post</h3>
-          <!-- <div class="post"> -->
-          <form method = "POST" action="/home" id="usrpost"> 
-                  <label for="category"> Please choose a category</label><br> <t></t>
-                  <select id="category" name="category">
-                      <option value="category 1">Category 1</option>
-                      <option value="category 2">Category 2</option>
-                      <option value="category 3">Category 3</option>
-                      <option value="category 4">Category 4</option>
-                      <option value="category 5">Category 5</option>
-                      <option value="category 6">Category 6</option>
-                  </select>  <br>
-                      <label for="title"> Title:</label> <br>
-                      <input type="text" id="title" name="title" >
-  
-                  <!-- <label form="content">Content</label> -->
-                  <br>
-                  <textarea name="content" id="postcontent" placeholder="Please enter post content here" required></textarea>
-                  <br>
-                  <input type="submit" value="Post" a href ="/post" onclick="clear()" value="reset form">
-              </form>
-          <!-- </div> -->
-          
-        </div>
-    <div class="featured"><h3> Featured/trending posts</h3>
-        <ol> 
-            {{range . }}
-            <li class = "row">
-                <h4 class="title2">
-                    <a href ="thread">
-                        {{.Title}}
-                    </a>
-                </h4>
-                <div class="content">
-                    <a href ="thread">
-                    <p1>{{.Content}}</p1> </a>
-                    <br> <br>
-                    <p1>Category: {{.Category}}</p1>
-                </div>
-                <div class ="bottom">
-                    <p1 class="timestamp">
-                        <a href ="thread"> posted: {{.Created}}</a> 
-                    </p1>
-                    <p1 class ="Likes">
-                        <a href ="thread">{{.Likes}} Likes</a>
-                    </p1>
-                    <p1 class ="Dislikes">
-                        <a href ="thread">{{.Dislikes}} Dislikes</a>
-                    </p1>
-                    </div>
-                </li>
+            <div class="post">
+                <h3> Create a post</h3>
+                <!-- <div class="post"> -->
+                <form method="POST" action="/home" id="usrpost">
+                    <label for="category"> Please choose a category</label><br>
+                    <t></t>
+                    <select id="category" name="category">
+                        <option value="category 1">Category 1</option>
+                        <option value="category 2">Category 2</option>
+                        <option value="category 3">Category 3</option>
+                        <option value="category 4">Category 4</option>
+                        <option value="category 5">Category 5</option>
+                        <option value="category 6">Category 6</option>
+                    </select> <br>
+                    <label for="title"> Title:</label> <br>
+                    <input type="text" id="title" name="title">
+
+                    <!-- <label form="content">Content</label> -->
+                    <br>
+                    <textarea name="content" id="postcontent" placeholder="Please enter post content here"
+                        required></textarea>
+                    <br>
+                    <input type="submit" value="Post" a href="/post" onclick="clear()" value="reset form">
+                </form>
+                <!-- </div> -->
+
+            </div>
+            <div class="featured">
+                <h3> Featured/trending posts</h3>
+                <ol>
+                    {{range . }}
+                    <li class="row">
+                        <h4 class="title2">
+                            <a href="thread">
+                                {{.Title}}
+                            </a>
+                        </h4>
+                        <div class="content">
+                            <a href="thread">
+                                <p1>{{.Content}}</p1>
+                            </a>
+                            <br> <br>
+                            <p1>Category: {{.Category}}</p1>
+                        </div>
+                        <div class="bottom">
+                            <p1 class="timestamp">
+                                <a href="thread"> posted: {{.Created}}</a>
+                            </p1>
+                            <p1>
+                                <a onclick="like();" data-post-id="{{.ID}}" id="likes" href="#">{{.Likes}} Likes</a>
+                            </p1>
+                            <p1>
+                                <a onclick="dislike();" data-post-id="{{.ID}}" id="dislikes" href="#">{{.Dislikes}}</a>
+                                Dislikes
+                            </p1>
+                        </div>
+                    </li>
                     {{end}}
                 </ol>
-  </div>
-  </div>
-  <div class="activity"><a href= "profile"><h3>your recent activity, likes and dislikes, posts, comments, etc</h3> </a>
-      </div>
-    
-                
-    <div class="rights">
+            </div>
+        </div>
+        <div class="activity"><a href="profile">
+                <h3>your recent activity, likes, posts, comments, etc</h3>
+            </a>
+        </div>
+
+
+        <div class="rights">
             <br>
             <h6>Content Policy||Privacy Policy||User Agreement</h6>
             <h7>© DogeCo, inc, All rights reserved </h7>
         </div>
 
         <script>
-            function Clear(){
+            function Clear() {
                 document.getElementById("usrpost").reset();
+            }
+
+            const appURL = location.protocol + '//' + location.host;
+            const like = async () => {
+                const currLikes = document.getElementById("likes");
+
+                const likes = await fetch(appURL + '/like?id=' + currLikes.getAttribute("data-post-id"));
+                const likesJson = await likes.json();
+                newLikesCount = likesJson.likes + 1;
+                currLikes.innerHTML = newLikesCount + " Likes";
+
+                const response = await fetch(appURL + '/like?id=' + currLikes.getAttribute("data-post-id"), {
+                    method: 'POST',
+                });
+                const postResult = await response.json();
+                if (postResult.success != true) {
+                    const currLikesNum = currLikes.split(" ")[0] - 1;
+                    currLikes.value = currLikesNum + " Likes";
+                }
             }
         </script>
 </body>
+
 </html>

@@ -140,14 +140,33 @@ func (feed *CommentFeed) GetComments() []PostFeed {
 }
 
 // Add(adds an item into a table)
-func (feed *NewsFeed) Add(item PostFeed) {
+func (feed *NewsFeed) Add(item PostFeed) error {
 	stmt, err := feed.DB.Prepare("INSERT INTO feed (title, content, likes, dislikes, created, category) VALUES (?, ?, ?, ?, ?, ?);")
 	if err != nil {
-		fmt.Printf("feed DB Prepare error: %+v\n", err)
+		return fmt.Errorf("feed DB Prepare error: %+v\n", err)
 	}
-	// stmt.QueryRow(stmt, item.Title, item.Content, item.Category)
-	stmt.Exec(item.Title, item.Content, item.Likes, item.Dislikes, item.Created, item.Category)
 	defer stmt.Close()
+	// stmt.QueryRow(stmt, item.Title, item.Content, item.Category)
+	_, err = stmt.Exec(item.Title, item.Content, item.Likes, item.Dislikes, item.Created, item.Category)
+	if err != nil {
+		return fmt.Errorf("unable to insert item into feed: %w", err)
+	}
+	return err
+}
+
+// Update(Updates an item in a table)
+func (feed *NewsFeed) Update(item PostFeed) error {
+	stmt, err := feed.DB.Prepare("UPDATE feed SET title = ?, content = ?, likes = ?, dislikes = ?, category = ? WHERE id = ?;")
+	if err != nil {
+		return fmt.Errorf("feed DB Prepare error: %+v\n", err)
+	}
+	defer stmt.Close()
+	// stmt.QueryRow(stmt, item.Title, item.Content, item.Category)
+	_, err = stmt.Exec(item.Title, item.Content, item.Likes, item.Dislikes, item.Category, item.ID)
+	if err != nil {
+		return fmt.Errorf("unable to insert item into feed: %w", err)
+	}
+	return err
 }
 
 // Add(adds an item into a table)

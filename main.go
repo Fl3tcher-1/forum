@@ -77,6 +77,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./images/doge.jpg")
 	case "/question":
 		http.ServeFile(w, r, "./images/question.jpg")
+
+	// api handlers
+	case "/like":
+		endpoints.AddLike(w, r)
 	}
 }
 

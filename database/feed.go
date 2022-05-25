@@ -1,12 +1,18 @@
 package database
 
+import "encoding/json"
+
 type PostFeed struct {
-	ID      int
-	Title   string
-	Content string
+	ID       int    `json:"id,omitempty"`
+	Title    string `json:"title,omitempty"`
+	Content  string `json:"content,omitempty"`
+	Likes    int    `json:"likes,omitempty"`
+	Dislikes int    `json:"dislikes,omitempty"`
+	Created  string `json:"created,omitempty"`
+	Category string `json:"category,omitempty"`
 	// Comments []string
-	Likes    int
-	Dislikes int
-	Created  string
-	Category string
+}
+
+func (p PostFeed) MarshallJSON() ([]byte, error) {
+	return json.Marshal(p)
 }
