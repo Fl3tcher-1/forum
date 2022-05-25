@@ -67,7 +67,7 @@
           <!-- </div> -->
           
         </div>
-    <div class="featured"><h3> featured/trending posts</h3>
+    <div class="featured"><h3> Featured/trending posts</h3>
         <ol> 
             {{range . }}
             <li class = "row">
@@ -89,13 +89,16 @@
                     <p1 class ="Likes">
                         <a href ="thread">{{.Likes}} Likes</a>
                     </p1>
+                    <p1 class ="Dislikes">
+                        <a href ="thread">{{.Dislikes}} Dislikes</a>
+                    </p1>
                     </div>
                 </li>
                     {{end}}
                 </ol>
   </div>
   </div>
-  <div class="activity"><a href= "profile"><h3>your recent activity, likes, posts, comments etc</h3> </a>
+  <div class="activity"><a href= "profile"><h3>your recent activity, likes and dislikes, posts, comments, etc</h3> </a>
       </div>
     
                 
