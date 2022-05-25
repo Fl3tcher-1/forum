@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"net/http"
 	"strings"
+	"time"
 	"unicode"
 
 	uuid "github.com/satori/go.uuid"
@@ -179,7 +180,7 @@ func SignUpUser(w http.ResponseWriter, r *http.Request) {
 	minPwLength := 8
 	maxPwLength := 30
 
-	if minPwLength < len(user.Password) && len(user.Password) < maxPwLength {
+	if minPwLength <= len(user.Password) && len(user.Password) <= maxPwLength {
 		pwLength = true
 	}
 
@@ -267,6 +268,7 @@ func HomePage(writer http.ResponseWriter, request *http.Request) {
 	}
 	feed := database.Feed(posts)
 
+<<<<<<< HEAD
 	// feed.Add(database.PostFeed{
 	// 	Content: "the monkeys are taking control",
 	// })
@@ -304,14 +306,48 @@ func HomePage(writer http.ResponseWriter, request *http.Request) {
 		guest = true
 		fmt.Println(guest)
 		writer.WriteHeader(http.StatusOK)
+=======
+	items := feed.Get()
+	poststuff := request.ParseForm()
 
-		tpl.ExecuteTemplate(writer, "home.html", items)
+		fmt.Println(poststuff)
+	
+		postCategory := request.FormValue("category")
+	
+		postTitle := request.FormValue("title")
+	
+		postContent := request.FormValue("content")
+		postLikes := 0
+		time := time.Now()
+		postCreated := time.Format("01-02-2006 15:04")
 
+		//check to see if title, content and category has been provided to stop making empty posts
+if postTitle !="" ||  postContent !="" || postCategory !=""{
+	
+	//add values into database
+	feed.Add(database.PostFeed{
+		Title: postTitle,
+		Content: postContent,
+		Likes: postLikes,
+		Created: postCreated,
+		Category: postCategory,
+	})
+
+	tpl.ExecuteTemplate(writer, "./home", items)
+}
+>>>>>>> master
+
+
+<<<<<<< HEAD
 	} else {
 		// if person tries to login with incorrect details then it takes them back to login page
 		writer.WriteHeader(http.StatusBadRequest)
 		tpl.ExecuteTemplate(writer, "login.html", nil)
 	}
+=======
+ tpl.ExecuteTemplate(writer, "home.html", items)
+
+>>>>>>> master
 }
 
 func CategoriesList(writer http.ResponseWriter, request *http.Request) {

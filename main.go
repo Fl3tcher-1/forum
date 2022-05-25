@@ -9,7 +9,6 @@ import (
 	"net/http"
 
 	_ "github.com/mattn/go-sqlite3"
-	// "v2/go/pkg/mod/golang.org/x/text@v0.3.7/date"
 )
 
 // handles possible web directories
@@ -82,18 +81,38 @@ func handler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	database.UserDatabase()
 
-	posts, err := sql.Open("sqlite3", "./database/feed.db")
-	if err != nil {
-		fmt.Printf("main Database sql.Open error: %+v\n", err)
-	}
-	feed := database.Feed(posts)
+	// posts, err := sql.Open("sqlite3", "./database/feed.db")
+	// if err != nil {
+	// 	fmt.Printf("main Database sql.Open error: %+v\n", err)
+	// }
+	// feed := database.Feed(posts)
 
 	// feed.Add(database.PostFeed{
 	// 	Content: "the monkeys are taking control",
 	// })
 
-	items := feed.Get()
-	fmt.Println(items)
+	// items :=feed.Get()
+	// fmt.Println(items)
+
+	commentDB, err :=sql.Open("sqlite3", "./database/comments.db")
+	if err != nil {
+			fmt.Printf("comments Database sql.Open error: %+v\n", err)
+		}
+	
+	comments := database.Comments(commentDB)
+	
+	// comments.AddComment(database.PostFeed{
+	// 	Title: "monke",
+	// 	Content: "monkeys are taking control",
+	// 	Likes: 3,
+	// 	Created: "now",
+	// 	Category: "",
+	// })
+
+	c:=comments.GetComments()
+	fmt.Println(c)
+	
+	fmt.Println(comments)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", handler)
