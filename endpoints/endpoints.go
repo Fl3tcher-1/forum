@@ -162,8 +162,10 @@ func SignUpUser(w http.ResponseWriter, r *http.Request) {
 	if isValidEmail != strings.Contains(user.Email, "@") || isValidEmail != strings.Contains(user.Email, ".") { // checks if e-mail is valid by checking if it contains "@"
 		isValidEmail = false
 	}
+	fmt.Println(user.Email)
 
 	user.Username = r.FormValue("username")
+	fmt.Println(user.Username)
 	//check if only alphanumerical numbers
 	var isAlphaNumeric = true
 
@@ -219,7 +221,7 @@ func SignUpUser(w http.ResponseWriter, r *http.Request) {
 	err := row.Scan(&id)
 	if err != sql.ErrNoRows {
 		// fmt.Println("user exists", err)
-		tpl.ExecuteTemplate(w, "sign-up.html", "username taken")
+		tpl.ExecuteTemplate(w, "signup.html", "username taken")
 		return
 	}
 	stmt = "SELECT id FROM people where email =?"
@@ -237,7 +239,7 @@ func SignUpUser(w http.ResponseWriter, r *http.Request) {
 
 	passwordHash, err = bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		tpl.ExecuteTemplate(w, "signup.html", "there was an error registering account")
+		tpl.ExecuteTemplate(w, "signup.html", "there was an error registering account--- check password")
 		return
 	}
 
@@ -261,7 +263,9 @@ func SignUpUser(w http.ResponseWriter, r *http.Request) {
 		return
 	} else {
 		http.Redirect(w, r, "/login", 302)
+		return
 	}
+	// tpl.ExecuteTemplate(w, "signup.html", nil)
 
 }
 
