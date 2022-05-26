@@ -143,7 +143,7 @@ func (feed *CommentFeed) GetComments() []PostFeed {
 func (feed *NewsFeed) Add(item PostFeed) error {
 	stmt, err := feed.DB.Prepare("INSERT INTO feed (title, content, likes, dislikes, created, category) VALUES (?, ?, ?, ?, ?, ?);")
 	if err != nil {
-		return fmt.Errorf("feed DB Prepare error: %+v\n", err)
+		return fmt.Errorf("feed DB Prepare error: %+v", err)
 	}
 	defer stmt.Close()
 	// stmt.QueryRow(stmt, item.Title, item.Content, item.Category)
@@ -158,7 +158,7 @@ func (feed *NewsFeed) Add(item PostFeed) error {
 func (feed *NewsFeed) Update(item PostFeed) error {
 	stmt, err := feed.DB.Prepare("UPDATE feed SET title = ?, content = ?, likes = ?, dislikes = ?, category = ? WHERE id = ?;")
 	if err != nil {
-		return fmt.Errorf("feed DB Prepare error: %+v\n", err)
+		return fmt.Errorf("feed DB Prepare error: %+v", err)
 	}
 	defer stmt.Close()
 	// stmt.QueryRow(stmt, item.Title, item.Content, item.Category)

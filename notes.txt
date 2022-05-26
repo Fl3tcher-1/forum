@@ -1,6 +1,17 @@
-- likes and dislikes for posts/comments *
-- https: user certificates *
-- user rights: must registered to interact
-- mulit categories tags per posts
-- all post from one category
-- all likes/posts/comments from single user
+- like and dislike can't be done at the same time (write this in the go functions) *
+    - instead of likes/dislikes being an int, make it a map[userid]bool
+    - then get the count of likes by len of the map
+    - then when processing likes/dislikes, you can lookup to see if the user has liked/disliked the post and deny access to clicking the other
+- https: SSL user certificates *
+    - https://livebook.manning.com/book/go-web-programming/chapter-3/31
+- user rights: must be registered to interact with posting and liking *
+- user allowed to filter posts by category, created posts, and liked posts: only category can be done by an unregisterd user *
+- docker file and script *
+- handle bad request errors 400 *
+- multi categories tags per posts *
+
+- authentication: register and to login using at least Google and Github authentication tools. (https://learn.01founders.co/git/root/public/src/branch/master/subjects/forum/authentication)
+- security: (https://learn.01founders.co/git/root/public/src/branch/master/subjects/forum/security)
+- moderation: (https://learn.01founders.co/git/root/public/src/branch/master/subjects/forum/moderation)
+- advanced features: (https://learn.01founders.co/git/root/public/src/branch/master/subjects/forum/advanced-features)
+- image upload: (https://learn.01founders.co/git/root/public/src/branch/master/subjects/forum/image-upload)
