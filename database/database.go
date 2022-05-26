@@ -151,7 +151,7 @@ func (feed *NewsFeed) Add(item PostFeed) error {
 	if err != nil {
 		return fmt.Errorf("unable to insert item into feed: %w", err)
 	}
-	return err
+	return nil
 }
 
 // Update(Updates an item in a table)
@@ -166,16 +166,20 @@ func (feed *NewsFeed) Update(item PostFeed) error {
 	if err != nil {
 		return fmt.Errorf("unable to insert item into feed: %w", err)
 	}
-	return err
+	return nil
 }
 
 // Add(adds an item into a table)
-func (feed *CommentFeed) AddComment(item PostFeed) {
+func (feed *CommentFeed) AddComment(item PostFeed) error {
 	stmt, err := feed.DB2.Prepare("INSERT INTO comments (title, content, likes, dislikes, created, category) VALUES (?, ?, ?, ?, ?, ?);")
 	if err != nil {
 		fmt.Printf("AddComment DB Prepare error: %+v\n", err)
 	}
 	// stmt.QueryRow(stmt, item.Title, item.Content, item.Category)
-	stmt.Exec(item.Title, item.Content, item.Likes, item.Dislikes, item.Created, item.Category)
+	_, err = stmt.Exec(item.Title, item.Content, item.Likes, item.Dislikes, item.Created, item.Category)
+	if err != nil {
+		return fmt.Errorf("unable to insert comment into feed: %w", err)
+	}
 	defer stmt.Close()
+	return nil
 }

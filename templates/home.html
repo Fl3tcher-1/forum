@@ -81,7 +81,7 @@
             <div class="featured">
                 <h3> Featured/trending posts</h3>
                 <ol>
-                    {{range . }}
+                    {{range $i, $e := . }}
                     <li class="row">
                         <h4 class="title2">
                             <a href="thread">
@@ -100,11 +100,11 @@
                                 <a href="thread"> posted: {{.Created}}</a>
                             </p1>
                             <p1>
-                                <a onclick="like();" data-post-id="{{.ID}}" id="likes" href="#">{{.Likes}} Likes</a>
+                                <a onclick="like(this.id);" data-post-id="{{.ID}}" id="likes-{{ $i }}" href="#">{{.Likes}} Likes</a>
                             </p1>
                             <p1>
-                                <a onclick="dislike();" data-post-id="{{.ID}}" id="dislikes" href="#">{{.Dislikes}}</a>
-                                Dislikes
+                                <a onclick="dislike(this.id);" data-post-id="{{.ID}}" id="dislikes-{{ $i }}" href="#">{{.Dislikes}}
+                                    Dislikes</a>
                             </p1>
                         </div>
                     </li>
@@ -130,8 +130,8 @@
             }
 
             const appURL = location.protocol + '//' + location.host;
-            const like = async () => {
-                const currLikes = document.getElementById("likes");
+            const like = async (elementID) => {
+                const currLikes = document.getElementById(elementID);
 
                 const likes = await fetch(appURL + '/like?id=' + currLikes.getAttribute("data-post-id"));
                 const likesJson = await likes.json();
@@ -145,6 +145,24 @@
                 if (postResult.success != true) {
                     const currLikesNum = currLikes.split(" ")[0] - 1;
                     currLikes.value = currLikesNum + " Likes";
+                }
+            }
+
+            const dislike = async (elementID) => {
+                const currDislikes = document.getElementById(elementID);
+
+                const dislikes = await fetch(appURL + '/dislike?id=' + currDislikes.getAttribute("data-post-id"));
+                const dislikesJson = await dislikes.json();
+                newDislikesCount = dislikesJson.dislikes + 1;
+                currDislikes.innerHTML = newDislikesCount + " Dislikes";
+
+                const response = await fetch(appURL + '/dislike?id=' + currDislikes.getAttribute("data-post-id"), {
+                    method: 'POST',
+                });
+                const postResult = await response.json();
+                if (postResult.success != true) {
+                    const currDislikesNum = currDislikes.split(" ")[0] - 1;
+                    currDislikes.value = currDislikesNum + " Dislikes";
                 }
             }
         </script>

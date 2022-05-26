@@ -6,8 +6,8 @@ type PostFeed struct {
 	ID       int    `json:"id,omitempty"`
 	Title    string `json:"title,omitempty"`
 	Content  string `json:"content,omitempty"`
-	Likes    int    `json:"likes,omitempty"`
-	Dislikes int    `json:"dislikes,omitempty"`
+	Likes    int    `json:"likes"`
+	Dislikes int    `json:"dislikes"`
 	Created  string `json:"created,omitempty"`
 	Category string `json:"category,omitempty"`
 	// Comments []string

@@ -81,6 +81,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	// api handlers
 	case "/like":
 		endpoints.AddLike(w, r)
+	case "/dislike":
+		endpoints.AddDislike(w, r)
 	}
 }
 
@@ -128,4 +130,3 @@ func main() {
 		fmt.Printf("main ListenAndServe error: %+v\n", err)
 	}
 }
-

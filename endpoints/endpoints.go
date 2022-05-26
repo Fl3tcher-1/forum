@@ -447,7 +447,7 @@ func AddLike(writer http.ResponseWriter, request *http.Request) {
 		fmt.Printf("unable to parse post id: %v\n", err)
 		writer.WriteHeader(http.StatusInternalServerError)
 		writer.Header().Set("Content-Type", "application/json")
-    	writer.Write([]byte("{\"500\": \"Error parsing post id\"}"))
+		writer.Write([]byte("{\"500\": \"Error parsing post id\"}"))
 		return
 	}
 	requestedItem := database.PostFeed{}
@@ -462,7 +462,7 @@ func AddLike(writer http.ResponseWriter, request *http.Request) {
 		fmt.Printf("unable to find post %d in db: %v\n", reqItemID, err)
 		writer.WriteHeader(http.StatusNotFound)
 		writer.Header().Set("Content-Type", "application/json")
-    	writer.Write([]byte("{\"404\": \"Error finding post\"}"))
+		writer.Write([]byte("{\"404\": \"Error finding post\"}"))
 		return
 	}
 
@@ -471,7 +471,7 @@ func AddLike(writer http.ResponseWriter, request *http.Request) {
 		fmt.Printf("unable to marshal json for post %d: %v\n", reqItemID, err)
 		writer.WriteHeader(http.StatusInternalServerError)
 		writer.Header().Set("Content-Type", "application/json")
-    	writer.Write([]byte("{\"500\": \"Error marshalling json for post\"}"))
+		writer.Write([]byte("{\"500\": \"Error marshalling json for post\"}"))
 		return
 	}
 
@@ -498,6 +498,76 @@ func AddLike(writer http.ResponseWriter, request *http.Request) {
 			fmt.Printf("unable to send json response for post %d\n", reqItemID)
 		}
 		fmt.Printf("added like to post %d\n", reqItemID)
+	}
+}
+
+func AddDislike(writer http.ResponseWriter, request *http.Request) {
+	database.UserDatabase()
+
+	posts, err := sql.Open("sqlite3", "./database/feed.db")
+	if err != nil {
+		fmt.Printf("posts sql.Open error:  %+v\n", err)
+	}
+	feed := database.Feed(posts)
+
+	items := feed.Get()
+	reqItemIDraw := request.URL.Query().Get("id")
+	reqItemID, err := strconv.Atoi(reqItemIDraw)
+	if err != nil {
+		fmt.Printf("unable to parse post id: %v\n", err)
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Header().Set("Content-Type", "application/json")
+		writer.Write([]byte("{\"500\": \"Error parsing post id\"}"))
+		return
+	}
+	requestedItem := database.PostFeed{}
+
+	for _, item := range items {
+		if item.ID == reqItemID {
+			requestedItem = item
+		}
+	}
+
+	if requestedItem.Created == "" {
+		fmt.Printf("unable to find post %d in db: %v\n", reqItemID, err)
+		writer.WriteHeader(http.StatusNotFound)
+		writer.Header().Set("Content-Type", "application/json")
+		writer.Write([]byte("{\"404\": \"Error finding post\"}"))
+		return
+	}
+
+	j, err := requestedItem.MarshallJSON()
+	if err != nil {
+		fmt.Printf("unable to marshal json for post %d: %v\n", reqItemID, err)
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Header().Set("Content-Type", "application/json")
+		writer.Write([]byte("{\"500\": \"Error marshalling json for post\"}"))
+		return
+	}
+
+	switch request.Method {
+	case http.MethodGet:
+		writer.Header().Set("Content-Type", "application/json")
+		_, err := writer.Write(j)
+		if err != nil {
+			fmt.Printf("unable to send json response for post %d\n", reqItemID)
+		}
+	case http.MethodPost:
+		requestedItem.Dislikes = requestedItem.Dislikes + 1
+		err := feed.Update(requestedItem)
+		if err != nil {
+			fmt.Printf("unable increment dislikes for post %d: %v\n", reqItemID, err)
+			writer.WriteHeader(http.StatusInternalServerError)
+			writer.Header().Set("Content-Type", "application/json")
+			writer.Write([]byte("{\"500\": \"Error incrementing dislikes for post\"}"))
+			return
+		}
+		writer.Header().Set("Content-Type", "application/json")
+		_, err = writer.Write([]byte("{\"success\":true}"))
+		if err != nil {
+			fmt.Printf("unable to send json response for post %d\n", reqItemID)
+		}
+		fmt.Printf("added dislike to post %d\n", reqItemID)
 	}
 }
 
