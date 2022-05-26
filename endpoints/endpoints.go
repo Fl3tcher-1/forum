@@ -483,7 +483,12 @@ func AddLike(writer http.ResponseWriter, request *http.Request) {
 			fmt.Printf("unable to send json response for post %d\n", reqItemID)
 		}
 	case http.MethodPost:
+
+
 		requestedItem.Likes = requestedItem.Likes + 1
+
+
+		
 		err := feed.Update(requestedItem)
 		if err != nil {
 			fmt.Printf("unable increment likes for post %d: %v\n", reqItemID, err)
