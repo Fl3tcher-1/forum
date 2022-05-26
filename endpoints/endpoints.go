@@ -71,22 +71,10 @@ func init() {
 
 // login page
 func LoginWeb(w http.ResponseWriter, r *http.Request) {
-	var Roles []string
 
-	Roles = append(Roles, "guest", "user", "moderator", "admin")
-
-	fmt.Println(Roles)
 	var user User
 	user.Username = r.FormValue("username")
 	user.Password = r.FormValue("password")
-
-	// fmt.Println(r.FormValue("username"))
-	// fmt.Println(r.FormValue("username"))
-	// fmt.Println(user)
-
-	// fmt.Println(user.Username, user.Password)
-
-	// var user User
 
 	r.ParseForm()
 
@@ -116,8 +104,6 @@ func LoginWeb(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// fmt.Println("incorrect password")
-	// tpl.ExecuteTemplate(w, "login.html", "check username and password")
 
 	w.WriteHeader(http.StatusOK)
 	if err := r.ParseForm(); err != nil {
@@ -287,9 +273,10 @@ func HomePage(writer http.ResponseWriter, request *http.Request) {
 	feed := database.Feed(posts)
 
 	items := feed.Get()
-	poststuff := request.ParseForm()
+	// fmt.Println(items)
+	request.ParseForm()
 
-	fmt.Println(poststuff)
+	// fmt.Println(poststuff)
 
 	postCategory := request.FormValue("category")
 

@@ -11,7 +11,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// handles possible web directories
+// handles possible endpoints
 func handler(w http.ResponseWriter, r *http.Request) {
 	switch r.URL.Path {
 	//page handlers
@@ -110,7 +110,7 @@ func main() {
 	c:=comments.GetComments()
 	fmt.Println(c)
 	
-	fmt.Println(comments)
+	// fmt.Println(comments)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", handler)
@@ -121,5 +121,4 @@ func main() {
 		log.Fatal(500, "500 Internal server error", err)
 	}
 
-	// fmt.Println("hi")
 }
