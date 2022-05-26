@@ -1,8 +1,6 @@
 package database
 
-import (
-	"encoding/json"
-)
+import "encoding/json"
 
 // map[endpoints.Session]bool
 

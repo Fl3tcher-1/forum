@@ -26,7 +26,7 @@ type User struct {
 // could it be used to store data for userprofile and use a single template execution???
 
 // holds details of user session-- used for cookies
-type Session struct {
+type session struct {
 	Id    int
 	Uuid  string // random value to be stored at the browser
 	Email string
