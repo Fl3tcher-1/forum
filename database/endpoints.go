@@ -15,30 +15,6 @@ import (
 )
 
 // holds details of user session-- used for cookies
-type session struct {
-	Id    int
-	Uuid  string // random value to be stored at the browser
-	Email string
-
-	UserId int
-	// CreatedAt	time.Time
-}
-
-type usrProfile struct {
-	Name string
-	// image    *os.Open
-	Info     string
-	Photo    string
-	Gender   string
-	Age      int
-	Location string
-	Posts    []string
-	Comments []string
-	Likes    []string
-	Shares   []string
-	Userinfo map[string]string
-	// custom   string
-}
 
 type Post struct {
 	Title    string
@@ -60,8 +36,6 @@ func init() {
 // login page
 func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 
-	var cookie *http.Cookie
-
 	fmt.Println("*****loginUser is running********")
 
 	var user User
@@ -73,7 +47,7 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 
 	var passwordHash string
 
-	row := data.DB.QueryRow("SELECT passwordHash FROM people WHERE Username = ?", user.Username)
+	row := data.DB.QueryRow("SELECT password FROM people WHERE Username = ?", user.Username)
 	err := row.Scan(&passwordHash)
 
 	if err != nil {
@@ -85,33 +59,39 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 	// returns nill on succcess
 	if err == nil {
 		//tpl.ExecuteTemplate(w, "home.html", nil)
-		http.Redirect(w, r, "/home.html", http.StatusFound)
+		http.Redirect(w, r, "/home", 302)
+
+	} else {
+		fmt.Println("incorrect password")
+		tpl.ExecuteTemplate(w, "login.html", "check username and password")
 		return
 	}
+	fmt.Println("here")
+	var cookie *http.Cookie
 
-	fmt.Println("incorrect password")
-	tpl.ExecuteTemplate(w, "login.html", "check username and password")
-
-	cookie, err = r.Cookie("session")
-	if err != nil {
+	cookie, err2 := r.Cookie("session")
+	if err2 != nil {
 		id := uuid.NewV4()
 		//fmt.Println("cookie was not found")
 		cookie = &http.Cookie{
-			Name:     "session",
-			Value:    id.String(),
-			Secure:   true,
-			HttpOnly: true,
+			Name:  "session",
+			Value: id.String(),
+			//Secure:   true,
+			//HttpOnly: true,
+			MaxAge: 2 * int(time.Hour),
 		}
 		http.SetCookie(w, cookie)
+		//w.WriteHeader(200)
 	}
 
-	w.WriteHeader(http.StatusOK)
-	if err := r.ParseForm(); err != nil {
-		http.Error(w, "500 Internal Server Error", 500)
-		fmt.Printf("LoginWeb(writeheader) error:  %+v\n", err)
-	}
-	tpl.ExecuteTemplate(w, "login.html", nil)
 }
+// 	w.WriteHeader(http.StatusOK)
+// 	if err := r.ParseForm(); err != nil {
+// 		http.Error(w, "500 Internal Server Error", 500)
+// 		fmt.Printf("LoginWeb(writeheader) error:  %+v\n", err)
+// 	}
+// 	tpl.ExecuteTemplate(w, "login.html", nil)
+// }
 
 func (data *Forum) GetSignupPage(w http.ResponseWriter, r *http.Request) {
 	tpl.ExecuteTemplate(w, "signup.html", nil)
@@ -192,7 +172,7 @@ func (data *Forum) SignUpUser(w http.ResponseWriter, r *http.Request) {
 	err := row.Scan(&username)
 	if err != sql.ErrNoRows {
 		// fmt.Println("user exists", err)
-		tpl.ExecuteTemplate(w, "sign-up.html", "username taken")
+		tpl.ExecuteTemplate(w, "signup.html", "username taken")
 		fmt.Printf("sql scan row id error: %+v\n", err)
 		return
 	}
@@ -221,6 +201,7 @@ func (data *Forum) SignUpUser(w http.ResponseWriter, r *http.Request) {
 		Email:    user.Email,
 		Password: string(passwordHash),
 	})
+
 	if err != nil {
 		tpl.ExecuteTemplate(w, "signup.html", "there was an error registering account")
 		//fmt.Printf("Register Account (insertStmt) error:  %+v\n", err)
@@ -228,6 +209,7 @@ func (data *Forum) SignUpUser(w http.ResponseWriter, r *http.Request) {
 		return
 	} else {
 		http.Redirect(w, r, "/login", 302)
+		return
 	}
 }
 
@@ -252,30 +234,51 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 	postDislikes := 1
 	time := time.Now()
 	postCreated := time.Format("01-02-2006 15:04")
-	
-	sessionID := uuid.NewV4()
 
+	sessionID := uuid.NewV4()
+	user := 1
+
+	fmt.Println(postCategory)
+	fmt.Println(postTitle)
+	fmt.Println(postContent)
+
+	//items := data.Get()
+	// //poststuff := request.ParseForm()
+	// fmt.Println(items)
+	//   var content string
+	//   var title string
+
+	// 	rows, err := data.DB.Query("SELECT * FROM post", postTitle, postContent)
+	// 	if err != nil {
+	// 		fmt.Printf("Comments Feed DB Query error: %+v\n", err)
+	// 	}
+
+	// 	for rows.Next() {
+	// 		rows.Scan(&content, &title)
+
+	// 		fmt.Println(content, title)
 
 	//check to see if title, content and category has been provided to stop making empty posts
 	if postTitle != "" || postContent != "" || postCategory != "" {
 
-
-
 		data.CreatePost(PostFeed{
-			Uuid: sessionID.String(),
+			Uuid:      sessionID.String(),
 			Title:     postTitle,
 			Content:   postContent,
 			Likes:     postLikes,
-			Dislikes: postDislikes,
+			Dislikes:  postDislikes,
 			Category:  postCategory,
 			CreatedAt: postCreated,
-		})
+			UserID:    user,
+		},
+			User{
+				UserID: user,
+			})
 
-	
-		tpl.ExecuteTemplate(writer, "./home", data)
+		tpl.ExecuteTemplate(writer, "./home", data.Get())
 	}
 
-	tpl.ExecuteTemplate(writer, "home.html", nil)
+	tpl.ExecuteTemplate(writer, "home.html", data.Get())
 
 }
 
@@ -299,15 +302,15 @@ func (data *Forum) UserProfile(writer http.ResponseWriter, request *http.Request
 
 	users.Username = "test"
 
-	var usrInfo usrProfile
+	//var usrInfo usrProfile
 
-	usrInfo.Name = "Panda"
-	usrInfo.Info = "Hello my name is panda and I like to sleep and eat bamboo--- nom"
-	usrInfo.Gender = "Panda"
-	usrInfo.Age = 7
-	usrInfo.Location = "Bamboo Forest"
+	// usrInfo.Name = "Panda"
+	// usrInfo.Info = "Hello my name is panda and I like to sleep and eat bamboo--- nom"
+	// usrInfo.Gender = "Panda"
+	// usrInfo.Age = 7
+	// usrInfo.Location = "Bamboo Forest"
 
-	tpl.ExecuteTemplate(writer, "profile.html", usrInfo)
+	// tpl.ExecuteTemplate(writer, "profile.html", usrInfo)
 }
 
 func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {
@@ -400,6 +403,7 @@ func (data *Forum) Customization(writer http.ResponseWriter, request *http.Reque
 }
 
 func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
+	// check for cookie
 	switch r.URL.Path {
 	// page handlers
 	case "/stylesheet": // handle css

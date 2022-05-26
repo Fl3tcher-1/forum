@@ -18,6 +18,14 @@ func main() {
 	}
 	data := database.Connect(db)
 
+
+	//items := data.Get()
+	//poststuff := request.ParseForm()
+	//fmt.Println(items)
+
+	// items:= data.GetPost()
+	// fmt.Println(items)
+
 	// posts, err := sql.Open("sqlite3", "./database/feed.db")
 	// if err != nil {
 	// 	fmt.Printf("main Database sql.Open error: %+v\n", err)
