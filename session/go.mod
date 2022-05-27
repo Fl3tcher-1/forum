@@ -1,4 +1,4 @@
-module forum
+module session
 
 go 1.18
 
