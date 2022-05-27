@@ -16,75 +16,6 @@ import (
 	// "v2/go/pkg/mod/golang.org/x/crypto@v0.0.0-20200622213623-75b288015ac9/bcrypt"
 )
 
-type Log struct {
-	Loggedin bool
-}
-
-type User struct {
-	Username string
-	Password string
-	Email    string
-	UserID   string
-}
-
-// could it be used to store data for userprofile and use a single template execution???
-// holds details of user session-- used for cookies
-type session struct {
-	Id     int
-	Uuid   string // random value to be stored at the browser
-	Email  string
-	UserID string
-	// CreatedAt	time.Time
-}
-
-type usrProfile struct {
-	Name string
-	// image    *os.Open
-	Info     string
-	Photo    string
-	Gender   string
-	Age      int
-	Location string
-	Posts    []string
-	Comments []string
-	Likes    []Reaction
-	Dislikes []Reaction
-	Shares   []string
-	Userinfo map[string]string
-	// custom   string
-}
-
-type Post struct {
-	Title    string
-	Content  string
-	Date     string
-	Comments int
-	PostID   string
-	UserID   string
-	Reaction Reaction
-}
-
-type Reaction struct {
-	PostID     string
-	UserID     string
-	ReactionID string
-	CommentID  string
-	// React      int
-	Likes    int
-	Dislikes int
-}
-
-type PostFeed struct {
-	ID       int    `json:"id,omitempty"`
-	Title    string `json:"title,omitempty"`
-	Content  string `json:"content,omitempty"`
-	Likes    int    `json:"likes"`
-	Dislikes int    `json:"dislikes"`
-	Created  string `json:"created,omitempty"`
-	Category string `json:"category,omitempty"`
-	// Comments []string
-}
-
 func (p PostFeed) MarshallJSON() ([]byte, error) {
 	return json.Marshal(p)
 }
@@ -115,7 +46,7 @@ func LoginWeb(w http.ResponseWriter, r *http.Request) {
 	user.Password = r.FormValue("password")
 	fmt.Println(r.FormValue("username"))
 	fmt.Println(r.FormValue("username"))
-	
+
 	r.ParseForm()
 
 	stmt := "SELECT passwordHash FROM people WHERE Username = ?"
@@ -148,13 +79,13 @@ func GetSignupPage(w http.ResponseWriter, r *http.Request) {
 	tpl.ExecuteTemplate(w, "signup.html", nil)
 }
 
-/*  1. check e-mail criteria
-    2. check u.username criteria
-	 3. check password criteria
-	 4. check if u.username is already exists in database
-	 5. create bcrypt hash from password
-	 6. insert u.username and password hash in database
-*/
+//   1. check e-mail criteria
+//   2. check u.username criteria
+// 	 3. check password criteria
+// 	 4. check if u.username is already exists in database
+// 	 5. create bcrypt hash from password
+// 	 6. insert u.username and password hash in database
+
 func SignUpUser(w http.ResponseWriter, r *http.Request) {
 	var user User
 

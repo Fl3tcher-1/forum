@@ -7,18 +7,7 @@ import (
 	_ "github.com/mattn/go-sqlite3" // sqlite3 driver connects go with sql
 )
 
-type NewsFeed struct {
-	DB *sql.DB
-}
-
-type CommentFeed struct {
-	DB2 *sql.DB
-}
-
-var (
-	DB  *sql.DB
-	DB2 *sql.DB
-)
+var DB *sql.DB
 
 // opens database and checks if table exists, if not makes one
 func UserDatabase() {
