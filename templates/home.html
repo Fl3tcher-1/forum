@@ -100,10 +100,12 @@
                                 <a href="thread"> posted: {{.Created}}</a>
                             </p1>
                             <p1>
-                                <a onclick="like(this.id);" data-post-id="{{.ID}}" id="likes-{{ $i }}" href="#">{{.Likes}} Likes</a>
+                                <a onclick="like(this.id);" data-post-id="{{.ID}}" id="likes-{{ $i }}"
+                                    href="#">{{.Likes}} Likes</a>
                             </p1>
                             <p1>
-                                <a onclick="dislike(this.id);" data-post-id="{{.ID}}" id="dislikes-{{ $i }}" href="#">{{.Dislikes}}
+                                <a onclick="dislike(this.id);" data-post-id="{{.ID}}" id="dislikes-{{ $i }}"
+                                    href="#">{{.Dislikes}}
                                     Dislikes</a>
                             </p1>
                         </div>

@@ -11,11 +11,14 @@ import (
 	"time"
 	"unicode"
 
-	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
 	// uuid "v2/go/pkg/mod/github.com/satori/go.uuid@v1.2.0"
 	// "v2/go/pkg/mod/golang.org/x/crypto@v0.0.0-20200622213623-75b288015ac9/bcrypt"
 )
+
+type Log struct {
+	Loggedin bool
+}
 
 type User struct {
 	Username string
@@ -25,7 +28,6 @@ type User struct {
 }
 
 // could it be used to store data for userprofile and use a single template execution???
-
 // holds details of user session-- used for cookies
 type session struct {
 	Id     int
@@ -89,7 +91,6 @@ func (p PostFeed) MarshallJSON() ([]byte, error) {
 
 // creates all needed templates
 // will need to be reduced as there is too many at the moment
-
 var tpl *template.Template
 
 // parses files for all templates allowing them to be called
@@ -99,45 +100,41 @@ func init() {
 
 // login page
 func LoginWeb(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("session")
+	var Roles []string
+	var registered Log
+	var passwordHash string
+	var user User
+
+	Roles = append(Roles, "guest", "user", "moderator", "admin")
+	registered.Loggedin = false
+
+	fmt.Println(registered.Loggedin)
+	fmt.Println(Roles)
+
+	user.Username = r.FormValue("username")
+	user.Password = r.FormValue("password")
+	fmt.Println(r.FormValue("username"))
+	fmt.Println(r.FormValue("username"))
+	
+	r.ParseForm()
+
+	stmt := "SELECT passwordHash FROM people WHERE Username = ?"
+	row := DB.QueryRow(stmt, user.Username)
+	err := row.Scan(&passwordHash)
 	if err != nil {
-		id := uuid.NewV4()
-		cookie = &http.Cookie{
-			Name:     "session",
-			Value:    id.String(),
-			Secure:   true,
-			HttpOnly: true,
-		}
-		http.SetCookie(w, cookie)
-
-		var user User
-
-		r.ParseForm()
-
-		user.Username = r.FormValue("username")
-		user.Password = r.FormValue("password")
-
-		var passwordHash string
-
-		stmt := "SELECT passwordHash FROM people WHERE Username = ?"
-		row := DB.QueryRow(stmt, user.Username)
-		err = row.Scan(&passwordHash)
-
-		if err != nil {
-			tpl.ExecuteTemplate(w, "login.html", "check username and password")
-			return
-		}
-		err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(user.Password))
-		// returns nil on succcess
-		if err == nil {
-			tpl.ExecuteTemplate(w, "home.html", nil)
-			http.Redirect(w, r, "/home.html", http.StatusFound)
-			return
-		}
-
-		fmt.Println("incorrect password")
 		tpl.ExecuteTemplate(w, "login.html", "check username and password")
+		return
 	}
+	err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(user.Password))
+	// returns nil on succcess
+	if err == nil {
+		tpl.ExecuteTemplate(w, "home.html", nil)
+		http.Redirect(w, r, "/home.html", http.StatusFound)
+		return
+	}
+
+	fmt.Println("incorrect password")
+	tpl.ExecuteTemplate(w, "login.html", "check username and password")
 
 	w.WriteHeader(http.StatusOK)
 	if err := r.ParseForm(); err != nil {
@@ -162,7 +159,6 @@ func SignUpUser(w http.ResponseWriter, r *http.Request) {
 	var user User
 
 	r.ParseForm() // parses sign up form to fetch needed information
-
 	user.Email = r.FormValue("email")
 	// check if e-mail is valid format
 	isValidEmail := true
