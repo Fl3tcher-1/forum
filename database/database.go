@@ -30,7 +30,7 @@ func (forum *Forum) CreateUser(user User) {
 }
 
 func (forum *Forum) CreateSession(session Session) {
-	stmt, err := forum.DB.Prepare("INSERT INTO session (session_uuid, userID, authID) VALUES (?, ?, ?);")
+	stmt, err := forum.DB.Prepare("INSERT INTO session (session_uuid, userID) VALUES (?, ?);")
 	if err != nil {
 		CheckErr(err)
 	}
@@ -77,8 +77,7 @@ func userTable(db *sql.DB) {
 func sessionTable(db *sql.DB) {
 	stmt, err := db.Prepare(`CREATE TABLE IF NOT EXISTS session (
 	session_uuid TEXT PRIMARY KEY,
-	userID INTEGER REFERENCES people(userID),
-	authID TEXT);
+	userID INTEGER REFERENCES people(userID));
 	`)
 	if err != nil {
 		fmt.Println(err)

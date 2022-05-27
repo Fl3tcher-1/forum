@@ -36,6 +36,11 @@ func init() {
 // login page
 func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 
+	if r.URL.Path != "/login" {
+		http.Error(w, "404 not found.", http.StatusNotFound)
+		return
+	}
+
 	fmt.Println("*****loginUser is running********")
 
 	var user User
@@ -54,44 +59,38 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 		tpl.ExecuteTemplate(w, "login.html", "check username and password")
 		return
 	}
-
 	err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(user.Password))
 	// returns nill on succcess
 	if err == nil {
-		//tpl.ExecuteTemplate(w, "home.html", nil)
-		http.Redirect(w, r, "/home", 302)
+		var cookie *http.Cookie
 
-	} else {
-		fmt.Println("incorrect password")
-		tpl.ExecuteTemplate(w, "login.html", "check username and password")
-		return
-	}
-	fmt.Println("here")
-	var cookie *http.Cookie
-
-	cookie, err2 := r.Cookie("session")
-	if err2 != nil {
-		id := uuid.NewV4()
-		//fmt.Println("cookie was not found")
-		cookie = &http.Cookie{
+		cookie, err = r.Cookie("session")
+		if err != nil {
+			id := uuid.NewV4()
+			//fmt.Println("cookie was not found")
+			cookie = &http.Cookie{
 			Name:  "session",
 			Value: id.String(),
 			//Secure:   true,
-			//HttpOnly: true,
+			HttpOnly: true,
 			MaxAge: 2 * int(time.Hour),
-		}
-		http.SetCookie(w, cookie)
-		//w.WriteHeader(200)
-	}
+			}
+			http.SetCookie(w, cookie)
+			w.WriteHeader(200)
 
+		}
+		tpl.ExecuteTemplate(w, "home.html", nil)
+		//http.Redirect(w, r, "/home", 302)
+		} else {
+			fmt.Println("incorrect password")
+			tpl.ExecuteTemplate(w, "login.html", "check username and password")
+			return
+		}
+		fmt.Println("here")
+		
+		//tpl.ExecuteTemplate(w, "login.html", nil)
 }
-// 	w.WriteHeader(http.StatusOK)
-// 	if err := r.ParseForm(); err != nil {
-// 		http.Error(w, "500 Internal Server Error", 500)
-// 		fmt.Printf("LoginWeb(writeheader) error:  %+v\n", err)
-// 	}
-// 	tpl.ExecuteTemplate(w, "login.html", nil)
-// }
+
 
 func (data *Forum) GetSignupPage(w http.ResponseWriter, r *http.Request) {
 	tpl.ExecuteTemplate(w, "signup.html", nil)
@@ -275,10 +274,14 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 				UserID: user,
 			})
 
+     items := data.Get()
+	  fmt.Println(items)
+
+
 		tpl.ExecuteTemplate(writer, "./home", data.Get())
 	}
 
-	tpl.ExecuteTemplate(writer, "home.html", data.Get())
+tpl.ExecuteTemplate(writer, "home.html", data.Get())
 
 }
 
@@ -401,6 +404,10 @@ func (data *Forum) Customization(writer http.ResponseWriter, request *http.Reque
 		fmt.Printf("Customization Execute.Template error: %+v\n", err)
 	}
 }
+
+
+
+
 
 func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
 	// check for cookie

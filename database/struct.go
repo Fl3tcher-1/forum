@@ -25,9 +25,9 @@ type PostFeed struct {
 
 type Session struct {
 	Id        int
-	Uuid      string
+	Uuid  string
 	Email     string
-	UserId    int
+	UserID    int
 	CreatedAt string
 }
 
