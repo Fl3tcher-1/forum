@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"forum/database"
-	"forum/endpoints"
 	"log"
 	"net/http"
 
@@ -18,45 +17,45 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	case "/stylesheet": // handle css
 		http.ServeFile(w, r, "./templates/stylesheet.css")
 	case "/":
-		endpoints.LoginWeb(w, r)
+		database.LoginWeb(w, r)
 	case "/login":
-		endpoints.LoginWeb(w, r)
+		database.LoginWeb(w, r)
 	case "/home":
-		endpoints.HomePage(w, r)
+		database.HomePage(w, r)
 	case "/categories":
-		endpoints.CategoriesList(w, r)
+		database.CategoriesList(w, r)
 	case "/reset":
-		endpoints.PwReset(w, r)
+		database.PwReset(w, r)
 	case "/signup":
-		endpoints.GetSignupPage(w, r)
+		database.GetSignupPage(w, r)
 	case "/sign-up-form":
-		endpoints.SignUpUser(w, r)
+		database.SignUpUser(w, r)
 	case "/profile":
-		endpoints.UserProfile(w, r)
+		database.UserProfile(w, r)
 	case "/thread":
-		endpoints.Threads(w, r)
+		database.Threads(w, r)
 	case "/about":
-		endpoints.AboutFunc(w, r)
+		database.AboutFunc(w, r)
 	case "/contact-us":
-		endpoints.ContactUs(w, r)
+		database.ContactUs(w, r)
 
 		// user handlers
 	case "/photo":
-		endpoints.UserPhoto(w, r)
+		database.UserPhoto(w, r)
 	case "/posts":
-		endpoints.UserPosts(w, r)
+		database.UserPosts(w, r)
 	case "/comments":
-		endpoints.UserComments(w, r)
+		database.UserComments(w, r)
 	case "/likes":
-		endpoints.UserLikes(w, r)
+		database.UserLikes(w, r)
 	case "/dislikes":
-		endpoints.UserDislikes(w, r)
+		database.UserDislikes(w, r)
 	case "/shares":
-		endpoints.UserShares(w, r)
+		database.UserShares(w, r)
 	case "/info":
-		endpoints.UserInfo(w, r)
+		database.UserInfo(w, r)
 	case "/custom":
-		endpoints.Customization(w, r)
+		database.Customization(w, r)
 
 		// handles images
 	case "/cat":
@@ -80,9 +79,9 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	// api handlers
 	case "/like":
-		endpoints.AddLike(w, r)
+		database.AddLike(w, r)
 	case "/dislike":
-		endpoints.AddDislike(w, r)
+		database.AddDislike(w, r)
 	}
 }
 

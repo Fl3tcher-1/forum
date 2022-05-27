@@ -1,9 +1,9 @@
-package endpoints
+package database
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
-	"forum/database"
 	"html/template"
 	"net/http"
 	"strconv"
@@ -21,17 +21,17 @@ type User struct {
 	Username string
 	Password string
 	Email    string
+	UserID   string
 }
 
 // could it be used to store data for userprofile and use a single template execution???
 
 // holds details of user session-- used for cookies
 type session struct {
-	Id    int
-	Uuid  string // random value to be stored at the browser
-	Email string
-
-	UserId int
+	Id     int
+	Uuid   string // random value to be stored at the browser
+	Email  string
+	UserID string
 	// CreatedAt	time.Time
 }
 
@@ -45,8 +45,8 @@ type usrProfile struct {
 	Location string
 	Posts    []string
 	Comments []string
-	Likes    []string
-	Dislikes []string
+	Likes    []Reaction
+	Dislikes []Reaction
 	Shares   []string
 	Userinfo map[string]string
 	// custom   string
@@ -57,6 +57,34 @@ type Post struct {
 	Content  string
 	Date     string
 	Comments int
+	PostID   string
+	UserID   string
+	Reaction Reaction
+}
+
+type Reaction struct {
+	PostID     string
+	UserID     string
+	ReactionID string
+	CommentID  string
+	// React      int
+	Likes    int
+	Dislikes int
+}
+
+type PostFeed struct {
+	ID       int    `json:"id,omitempty"`
+	Title    string `json:"title,omitempty"`
+	Content  string `json:"content,omitempty"`
+	Likes    int    `json:"likes"`
+	Dislikes int    `json:"dislikes"`
+	Created  string `json:"created,omitempty"`
+	Category string `json:"category,omitempty"`
+	// Comments []string
+}
+
+func (p PostFeed) MarshallJSON() ([]byte, error) {
+	return json.Marshal(p)
 }
 
 // creates all needed templates
@@ -92,7 +120,7 @@ func LoginWeb(w http.ResponseWriter, r *http.Request) {
 		var passwordHash string
 
 		stmt := "SELECT passwordHash FROM people WHERE Username = ?"
-		row := database.DB.QueryRow(stmt, user.Username)
+		row := DB.QueryRow(stmt, user.Username)
 		err = row.Scan(&passwordHash)
 
 		if err != nil {
@@ -193,7 +221,7 @@ func SignUpUser(w http.ResponseWriter, r *http.Request) {
 
 	stmt := "SELECT id FROM people where username = ?"
 
-	row := database.DB.QueryRow(stmt, user.Username)
+	row := DB.QueryRow(stmt, user.Username)
 
 	var id string
 	err := row.Scan(&id)
@@ -205,7 +233,7 @@ func SignUpUser(w http.ResponseWriter, r *http.Request) {
 	}
 	stmt = "SELECT id FROM people where email =?"
 
-	row = database.DB.QueryRow(stmt, user.Username)
+	row = DB.QueryRow(stmt, user.Username)
 
 	var userEmail string
 	err = row.Scan(&userEmail)
@@ -224,7 +252,7 @@ func SignUpUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var insertStmt *sql.Stmt
-	insertStmt, err = database.DB.Prepare("INSERT INTO people (username, email, passwordHASH) VALUES (?, ?, ?);")
+	insertStmt, err = DB.Prepare("INSERT INTO people (username, email, passwordHASH) VALUES (?, ?, ?);")
 	if err != nil {
 		tpl.ExecuteTemplate(w, "signup.html", "there was an error registering account")
 		fmt.Printf("Register Account (insertStmt) error:  %+v\n", err)
@@ -262,13 +290,13 @@ func HomePage(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	// 🐈
-	database.UserDatabase()
+	UserDatabase()
 
 	posts, err := sql.Open("sqlite3", "./database/feed.db")
 	if err != nil {
 		fmt.Printf("posts sql.Open (HomePage) error:  %+v\n", err)
 	}
-	feed := database.Feed(posts)
+	feed := Feed(posts)
 
 	items := feed.Get()
 	postStuff := request.ParseForm()
@@ -287,7 +315,7 @@ func HomePage(writer http.ResponseWriter, request *http.Request) {
 	if postTitle != "" || postContent != "" || postCategory != "" {
 
 		// add values into database
-		feed.Add(database.PostFeed{
+		feed.Add(PostFeed{
 			Title:    postTitle,
 			Content:  postContent,
 			Likes:    postLikes,
@@ -432,13 +460,13 @@ func Customization(writer http.ResponseWriter, request *http.Request) {
 }
 
 func AddLike(writer http.ResponseWriter, request *http.Request) {
-	database.UserDatabase()
+	UserDatabase()
 
 	posts, err := sql.Open("sqlite3", "./database/feed.db")
 	if err != nil {
 		fmt.Printf("posts sql.Open error:  %+v\n", err)
 	}
-	feed := database.Feed(posts)
+	feed := Feed(posts)
 
 	items := feed.Get()
 	reqItemIDraw := request.URL.Query().Get("id")
@@ -450,7 +478,7 @@ func AddLike(writer http.ResponseWriter, request *http.Request) {
 		writer.Write([]byte("{\"500\": \"Error parsing post id\"}"))
 		return
 	}
-	requestedItem := database.PostFeed{}
+	requestedItem := PostFeed{}
 
 	for _, item := range items {
 		if item.ID == reqItemID {
@@ -484,11 +512,8 @@ func AddLike(writer http.ResponseWriter, request *http.Request) {
 		}
 	case http.MethodPost:
 
-
 		requestedItem.Likes = requestedItem.Likes + 1
 
-
-		
 		err := feed.Update(requestedItem)
 		if err != nil {
 			fmt.Printf("unable increment likes for post %d: %v\n", reqItemID, err)
@@ -507,13 +532,13 @@ func AddLike(writer http.ResponseWriter, request *http.Request) {
 }
 
 func AddDislike(writer http.ResponseWriter, request *http.Request) {
-	database.UserDatabase()
+	UserDatabase()
 
 	posts, err := sql.Open("sqlite3", "./database/feed.db")
 	if err != nil {
 		fmt.Printf("posts sql.Open error:  %+v\n", err)
 	}
-	feed := database.Feed(posts)
+	feed := Feed(posts)
 
 	items := feed.Get()
 	reqItemIDraw := request.URL.Query().Get("id")
@@ -525,7 +550,7 @@ func AddDislike(writer http.ResponseWriter, request *http.Request) {
 		writer.Write([]byte("{\"500\": \"Error parsing post id\"}"))
 		return
 	}
-	requestedItem := database.PostFeed{}
+	requestedItem := PostFeed{}
 
 	for _, item := range items {
 		if item.ID == reqItemID {
@@ -575,10 +600,3 @@ func AddDislike(writer http.ResponseWriter, request *http.Request) {
 		fmt.Printf("added dislike to post %d\n", reqItemID)
 	}
 }
-
-// func logOut(){
-
-// close session
-// log user out
-// clear cookie
-// }
