@@ -3,12 +3,13 @@ package endpoints
 import (
 	"database/sql"
 	"fmt"
-	"forum/database"
 	"html/template"
 	"net/http"
 	"strings"
 	"time"
 	"unicode"
+
+	"forum/database"
 
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -33,8 +34,8 @@ type session struct {
 	Uuid  string // random value to be stored at the browser
 	Email string
 
-	UserId int
-	// CreatedAt	time.Time
+	UserId    int
+	CreatedAt time.Time
 }
 
 type usrProfile struct {
@@ -63,12 +64,14 @@ type Post struct {
 // creates all needed templates
 // will need to be reduced as there is too many at the moment
 
-var tpl *template.Template
-dbSessions        = map[string]session{}
-dbSessionsCleaned time.Time
-dbUsers           = map[string]User{} 
-const sessionLength int = 30
+var (
+	tpl        *template.Template
+	dbSessions = map[string]session{}
+	// dbSessionsCleaned time.Time
+	dbUsers = map[string]User{}
+)
 
+const sessionLength int = 30
 
 // parses files for all templates allowing them to be called
 func init() {
@@ -122,7 +125,7 @@ func LoginWeb(w http.ResponseWriter, r *http.Request) {
 		registered.Loggedin = true
 		fmt.Println(registered)
 		// tpl.ExecuteTemplate(w, "home.html", items)
-		http.Redirect(w, r, "/home", 302)
+		http.Redirect(w, r, "/home", http.StatusFound)
 		return
 	}
 
@@ -134,19 +137,22 @@ func LoginWeb(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "500 Internal Server Error", 500)
 		fmt.Printf("LoginWeb(writeheader) error:  %+v\n", err)
 	}
-	tpl.ExecuteTemplate(w, "login.html", nil)
 
-	cookie, err := r.Cookie("session")
+	c, err := r.Cookie("session")
 	if err != nil {
 		id := uuid.NewV4()
-		cookie = &http.Cookie{
+		c = &http.Cookie{
 			Name:     "session",
 			Value:    id.String(),
 			Secure:   true,
 			HttpOnly: true,
 		}
-		http.SetCookie(w, cookie)
+
 	}
+	tpl.ExecuteTemplate(w, "login.html", nil)
+	http.SetCookie(w, c)
+	dbSessions[c.Value] = session{Uuid: c.Value}
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func GetSignupPage(w http.ResponseWriter, r *http.Request) {
@@ -468,17 +474,17 @@ func alreadyLoggedIn(w http.ResponseWriter, r *http.Request) bool {
 	}
 	s, ok := dbSessions[c.Value]
 	if ok {
-		s.lastActivity = time.Now()
+		// s.lastActivity = time.Now()
 		dbSessions[c.Value] = s
 	}
-	_, ok = dbUsers[s.un]
+	_, ok = dbUsers[s.Uuid]
 	// refresh session
 	c.MaxAge = sessionLength
 	http.SetCookie(w, c)
 	return ok
 }
 
-func logout(w http.ResponseWriter, r *http.Request) {
+func Logout(w http.ResponseWriter, r *http.Request) {
 	if !alreadyLoggedIn(w, r) {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
@@ -495,9 +501,9 @@ func logout(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, c)
 
 	// clean up dbSessions
-	if time.Since(dbSessionsCleaned) > (time.Second * 30) {
-		go cleanSessions()
-	}
+	// if time.Since(dbSessionsCleaned) > (time.Second * 30) {
+	// 	go cleanSessions()
+	// }
 
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }

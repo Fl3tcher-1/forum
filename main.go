@@ -3,10 +3,11 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"forum/database"
-	"forum/endpoints"
 	"log"
 	"net/http"
+
+	"forum/database"
+	"forum/endpoints"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -39,6 +40,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		endpoints.AboutFunc(w, r)
 	case "/contact-us":
 		endpoints.ContactUs(w, r)
+	case "/logout":
+		endpoints.Logout(w, r)
 
 		// user handlers
 	case "/photo":
@@ -94,13 +97,13 @@ func main() {
 	// items :=feed.Get()
 	// fmt.Println(items)
 
-	commentDB, err :=sql.Open("sqlite3", "./database/comments.db")
+	commentDB, err := sql.Open("sqlite3", "./database/comments.db")
 	if err != nil {
-			fmt.Printf("comments Database sql.Open error: %+v\n", err)
-		}
-	
+		fmt.Printf("comments Database sql.Open error: %+v\n", err)
+	}
+
 	comments := database.Comments(commentDB)
-	
+
 	// comments.AddComment(database.PostFeed{
 	// 	Title: "monke",
 	// 	Content: "monkeys are taking control",
@@ -109,9 +112,9 @@ func main() {
 	// 	Category: "",
 	// })
 
-	c:=comments.GetComments()
+	c := comments.GetComments()
 	fmt.Println(c)
-	
+
 	fmt.Println(comments)
 
 	mux := http.NewServeMux()

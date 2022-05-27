@@ -1,4 +1,4 @@
-package session
+package main
 
 import (
 	"fmt"
@@ -31,7 +31,7 @@ var (
 
 const sessionLength int = 30
 
-func init() {
+func main() {
 	tpl, _ = template.ParseGlob("templates/*.html")
 	dbSessionsCleaned = time.Now()
 	http.HandleFunc("/", index)
@@ -56,7 +56,7 @@ func getUser(w http.ResponseWriter, req *http.Request) User {
 	http.SetCookie(w, c)
 	var u User
 	// if the user exists already, get user
-	var u User
+
 	if s, ok := dbSessions[c.Value]; ok {
 		s.lastActivity = time.Now()
 		dbSessions[c.Value] = s
