@@ -3,13 +3,12 @@ package endpoints
 import (
 	"database/sql"
 	"fmt"
+	"forum/database"
 	"html/template"
 	"net/http"
 	"strings"
 	"time"
 	"unicode"
-
-	"forum/database"
 
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
