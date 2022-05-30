@@ -17,48 +17,7 @@ func main() {
 		fmt.Println(err.Error())
 	}
 	data := database.Connect(db)
-
-
-	//items := data.Get()
-	//poststuff := request.ParseForm()
-	//fmt.Println(items)
-
-	// items:= data.GetPost()
-	// fmt.Println(items)
-
-	// posts, err := sql.Open("sqlite3", "./database/feed.db")
-	// if err != nil {
-	// 	fmt.Printf("main Database sql.Open error: %+v\n", err)
-	// }
-	// feed := database.Feed(posts)
-
-	// feed.Add(database.PostFeed{
-	// 	Content: "the monkeys are taking control",
-	// })
-
-	// items :=feed.Get()
-	// fmt.Println(items)
-
-	// commentDB, err := sql.Open("sqlite3", "./database/comments.db")
-	// if err != nil {
-	// 	fmt.Printf("comments Database sql.Open error: %+v\n", err)
-	// }
-
-	// comments := database.Comments(commentDB)
-
-	// comments.AddComment(database.PostFeed{
-	// 	Title: "monke",
-	// 	Content: "monkeys are taking control",
-	// 	Likes: 3,
-	// 	Created: "now",
-	// 	Category: "",
-	// })
-
-	// c := comments.GetComments()
-	// fmt.Println(c)
-
-	// fmt.Println(comments)
-
+	
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", data.Handler)
 

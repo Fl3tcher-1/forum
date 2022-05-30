@@ -33,22 +33,41 @@ func init() {
 	tpl = template.Must(template.ParseGlob("templates/*"))
 }
 
+// sessions
+
+var sessions = map[string]Session{}
+
+func (s Session) isExpired() bool {
+	return s.Expiry.Before(time.Now())
+
+}
+
 // login page
 func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
+
+	fmt.Println("*****loginUser is running********")
 
 	if r.URL.Path != "/login" {
 		http.Error(w, "404 not found.", http.StatusNotFound)
 		return
 	}
 
-	fmt.Println("*****loginUser is running********")
+	r.ParseForm()
 
 	var user User
 
-	r.ParseForm()
-
+	
+	sessionToken := uuid.NewV4()
+	expiresAt := time.Now().Add(120 * time.Second)
+	
 	user.Username = r.FormValue("username")
 	user.Password = r.FormValue("password")
+	
+   data.CreateSession(Session{
+		Username: user.Username,
+		Expiry:   expiresAt,
+	})
+	
 
 	var passwordHash string
 
@@ -59,38 +78,44 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 		tpl.ExecuteTemplate(w, "login.html", "check username and password")
 		return
 	}
+
 	err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(user.Password))
 	// returns nill on succcess
 	if err == nil {
-		var cookie *http.Cookie
 
-		cookie, err = r.Cookie("session")
-		if err != nil {
-			id := uuid.NewV4()
-			//fmt.Println("cookie was not found")
-			cookie = &http.Cookie{
-			Name:  "session",
-			Value: id.String(),
-			//Secure:   true,
-			HttpOnly: true,
-			MaxAge: 2 * int(time.Hour),
-			}
-			http.SetCookie(w, cookie)
-			w.WriteHeader(200)
+		http.SetCookie(w, &http.Cookie{
+			Name:    "session_token",
+			Value:   sessionToken.String(),
+			Expires: expiresAt,
+		})
 
-		}
-		tpl.ExecuteTemplate(w, "home.html", nil)
-		//http.Redirect(w, r, "/home", 302)
-		} else {
-			fmt.Println("incorrect password")
-			tpl.ExecuteTemplate(w, "login.html", "check username and password")
-			return
-		}
-		fmt.Println("here")
-		
-		//tpl.ExecuteTemplate(w, "login.html", nil)
+		// var cookie *http.Cookie
+
+		// cookie, err = r.Cookie("session")
+		// if err != nil {
+		// 	sID := uuid.NewV4()
+		// 	//fmt.Println("cookie was not found")
+		// 	cookie = &http.Cookie{
+		// 	Name:  "session",
+		// 	Value: sID.String(),
+		// 	//Secure:   true,
+		// 	HttpOnly: true,
+		// 	MaxAge: 2 * int(time.Hour),
+		// 	}
+		// 	http.SetCookie(w, cookie)
+		// 	//w.WriteHeader(200)
+
+		//tpl.ExecuteTemplate(w, "home.html", nil)
+		http.Redirect(w, r, "/home", 302)
+	} else {
+		fmt.Println("incorrect password")
+		tpl.ExecuteTemplate(w, "login.html", "check username and password")
+		return
+	}
+	fmt.Println("here")
+
+	//tpl.ExecuteTemplate(w, "login.html", nil)
 }
-
 
 func (data *Forum) GetSignupPage(w http.ResponseWriter, r *http.Request) {
 	tpl.ExecuteTemplate(w, "signup.html", nil)
@@ -241,23 +266,6 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 	fmt.Println(postTitle)
 	fmt.Println(postContent)
 
-	//items := data.Get()
-	// //poststuff := request.ParseForm()
-	// fmt.Println(items)
-	//   var content string
-	//   var title string
-
-	// 	rows, err := data.DB.Query("SELECT * FROM post", postTitle, postContent)
-	// 	if err != nil {
-	// 		fmt.Printf("Comments Feed DB Query error: %+v\n", err)
-	// 	}
-
-	// 	for rows.Next() {
-	// 		rows.Scan(&content, &title)
-
-	// 		fmt.Println(content, title)
-
-	//check to see if title, content and category has been provided to stop making empty posts
 	if postTitle != "" || postContent != "" || postCategory != "" {
 
 		data.CreatePost(PostFeed{
@@ -274,14 +282,13 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 				UserID: user,
 			})
 
-     items := data.Get()
-	  fmt.Println(items)
+		items := data.Get()
+		fmt.Println(items)
 
-
-		tpl.ExecuteTemplate(writer, "./home", data.Get())
+		tpl.ExecuteTemplate(writer, "./home", items)
 	}
 
-tpl.ExecuteTemplate(writer, "home.html", data.Get())
+	tpl.ExecuteTemplate(writer, "home.html", data.Get())
 
 }
 
@@ -404,10 +411,6 @@ func (data *Forum) Customization(writer http.ResponseWriter, request *http.Reque
 		fmt.Printf("Customization Execute.Template error: %+v\n", err)
 	}
 }
-
-
-
-
 
 func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
 	// check for cookie

@@ -1,5 +1,7 @@
 package database
 
+import "time"
+
 type User struct {
 	UserID   int 
 	Uuid     string
@@ -24,11 +26,11 @@ type PostFeed struct {
 }
 
 type Session struct {
-	Id        int
-	Uuid  string
-	Email     string
-	UserID    int
-	CreatedAt string
+	//Uuid  string
+	Username string
+	Expiry time.Time
+//	UserID    int
+	//LoggedIn bool
 }
 
 type Comment struct {
