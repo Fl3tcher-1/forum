@@ -74,21 +74,25 @@
             <li class = "row">
                 <h4 class="title2">
                     <a href ="thread">
-                        {{.Title}}
+                        {{.Uuid}}
+                        {{.Title}}                        
                     </a>
                 </h4>
                 <div class="content">
                     <a href ="thread">
-                    <p1>{{.Content}}</p1> </a>
+                    <p1>{{.Content}} 
+                        {{.Likes}}
+                        {{.Dislikes}}
+                    </p1> </a>
                     <br> <br>
                     <p1>Category: {{.Category}}</p1>
                 </div>
                 <div class ="bottom">
                     <p1 class="timestamp">
-                        <a href ="thread"> posted: {{.Created}}</a> 
+                        <a href ="thread"> posted: {{.CreatedAt}}</a> 
                     </p1>
                     <p1 class ="Likes">
-                        <a href ="thread">{{.Likes}} Likes</a>
+                        <!-- <a href ="thread">{{.Likes}} Likes</a> -->
                     </p1>
                     </div>
                 </li>
