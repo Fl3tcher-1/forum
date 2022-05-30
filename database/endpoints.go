@@ -61,7 +61,7 @@ func init() {
 
 // sessions
 
-var sessions = map[string]Session{}
+// var sessions = map[string]Session{}
 
 func (s Session) isExpired() bool {
 	return s.Expiry.Before(time.Now())
@@ -82,19 +82,13 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 
 	var user User
 
-	
-	sessionToken := uuid.NewV4()
-	expiresAt := time.Now().Add(120 * time.Second)
-	
 	user.Username = r.FormValue("username")
 	user.Password = r.FormValue("password")
 	
-   data.CreateSession(Session{
-		Username: user.Username,
-		Expiry:   expiresAt,
-	})
-	
+	sessionToken := uuid.NewV4()
+	expiresAt := time.Now().Add(120 * time.Second)
 
+   
 	var passwordHash string
 
 	row := data.DB.QueryRow("SELECT password FROM people WHERE Username = ?", user.Username)
@@ -104,35 +98,26 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 		tpl.ExecuteTemplate(w, "login.html", "check username and password")
 		return
 	}
-	err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(user.Password))
-	// returns nill on succcess
-	if err == nil {
-		// posts, err := sql.Open("sqlite3", "./database/feed.db")
-		// if err != nil {
-		// 	database.CheckErr(err)
-		// }
-		// feed := database.Feed(posts)
-
-		// items := feed.Get()
-		// registered.Loggedin = true
-		// fmt.Println(registered)
-		// tpl.ExecuteTemplate(w, "home.html", items)
-		http.Redirect(w, r, "/home", 302)
-		return
-	}
 
 	// fmt.Println("incorrect password")
 	// tpl.ExecuteTemplate(w, "login.html", "check username and password")
 
 	err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(user.Password))
 	// returns nill on succcess
+	fmt.Println(err)
 	if err == nil {
+
+		data.CreateSession(Session{
+		Username: user.Username,
+		Expiry:   expiresAt,
+	})
 
 		http.SetCookie(w, &http.Cookie{
 			Name:    "session_token",
 			Value:   sessionToken.String(),
 			Expires: expiresAt,
 		})
+		
 
 		// var cookie *http.Cookie
 
@@ -151,7 +136,8 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 		// 	//w.WriteHeader(200)
 
 		//tpl.ExecuteTemplate(w, "home.html", nil)
-		http.Redirect(w, r, "/home", 302)
+		http.Redirect(w, r, "/home", http.StatusFound)
+		return
 	} else {
 		fmt.Println("incorrect password")
 		tpl.ExecuteTemplate(w, "login.html", "check username and password")
