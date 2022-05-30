@@ -14,6 +14,17 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type Log struct {
+	Loggedin bool
+}
+// type User struct {
+// 	Username string
+// 	Password string
+// 	Email    string
+// }
+
+// could it be used to store data for userprofile and use a single template execution???
+
 // holds details of user session-- used for cookies
 
 type Post struct {
@@ -21,6 +32,21 @@ type Post struct {
 	Content  string
 	Date     string
 	Comments int
+}
+type usrProfile struct {
+	Name string
+	// image    *os.Open
+	Info     string
+	Photo    string
+	Gender   string
+	Age      int
+	Location string
+	Posts    []string
+	Comments []string
+	Likes    []string
+	Shares   []string
+	Userinfo map[string]string
+	// custom   string
 }
 
 // creates all needed templates
@@ -78,6 +104,25 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 		tpl.ExecuteTemplate(w, "login.html", "check username and password")
 		return
 	}
+	err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(user.Password))
+	// returns nill on succcess
+	if err == nil {
+		// posts, err := sql.Open("sqlite3", "./database/feed.db")
+		// if err != nil {
+		// 	database.CheckErr(err)
+		// }
+		// feed := database.Feed(posts)
+
+		// items := feed.Get()
+		// registered.Loggedin = true
+		// fmt.Println(registered)
+		// tpl.ExecuteTemplate(w, "home.html", items)
+		http.Redirect(w, r, "/home", 302)
+		return
+	}
+
+	// fmt.Println("incorrect password")
+	// tpl.ExecuteTemplate(w, "login.html", "check username and password")
 
 	err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(user.Password))
 	// returns nill on succcess
@@ -312,15 +357,15 @@ func (data *Forum) UserProfile(writer http.ResponseWriter, request *http.Request
 
 	users.Username = "test"
 
-	//var usrInfo usrProfile
+	var usrInfo usrProfile
 
-	// usrInfo.Name = "Panda"
-	// usrInfo.Info = "Hello my name is panda and I like to sleep and eat bamboo--- nom"
-	// usrInfo.Gender = "Panda"
-	// usrInfo.Age = 7
-	// usrInfo.Location = "Bamboo Forest"
+	usrInfo.Name = "Panda"
+	usrInfo.Info = "Hello my name is panda and I like to sleep and eat bamboo--- nom"
+	usrInfo.Gender = "Panda"
+	usrInfo.Age = 7
+	usrInfo.Location = "Bamboo Forest"
 
-	// tpl.ExecuteTemplate(writer, "profile.html", usrInfo)
+	tpl.ExecuteTemplate(writer, "profile.html", usrInfo)
 }
 
 func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {

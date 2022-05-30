@@ -35,11 +35,12 @@
             </form>
         </h4>
         </div>
-        
-     <div class="banner"><h2> YOU ARE NOT LOGGED IN, PLEASE LOG IN TO ACCESS ALL FEATURES</h2> 
-        <form action = "login">
-            <input type="submit" value=" Click here to login"/>
-        </form>
+        <div class="guest">
+             <div class="banner"><h2> YOU ARE NOT LOGGED IN, PLEASE LOG IN TO ACCESS ALL FEATURES</h2> 
+               <form action = "login">
+               <input type="submit" value=" Click here to login"/>
+          </form>
+        </div>
     </div>
     <form>
         <div class="homeLayout">
@@ -62,7 +63,7 @@
                   <br>
                   <textarea name="content" id="postcontent" placeholder="Please enter post content here" required></textarea>
                   <br>
-                  <input type="submit" value="Post" a href ="/post" onclick="clear()" value="reset form">
+                  <input type="submit" value="Post" a href ="/home" onclick="clear()" value="reset form">
               </form>
           <!-- </div> -->
           
@@ -109,10 +110,7 @@
             <h7>© DogeCo, inc, All rights reserved </h7>
         </div>
 
-        <script>
-            function Clear(){
-                document.getElementById("usrpost").reset();
-            }
-        </script>
+        
+       
 </body>
 </html>
