@@ -68,10 +68,11 @@ var (
 	tpl        *template.Template
 	dbSessions = map[string]session{}
 	// dbSessionsCleaned time.Time
-	dbUsers = map[string]User{}
+	dbUsers           = map[string]User{}
+	dbSessionsCleaned time.Time
 )
 
-const sessionLength int = 30
+const sessionLength int = 60
 
 // parses files for all templates allowing them to be called
 func init() {
@@ -478,6 +479,15 @@ func alreadyLoggedIn(w http.ResponseWriter, r *http.Request) bool {
 	return ok
 }
 
+func cleanSessions() {
+	for k, v := range dbSessions {
+		if time.Since(v.CreatedAt) > (time.Second * 30) {
+			delete(dbSessions, k)
+		}
+	}
+	dbSessionsCleaned = time.Now()
+}
+
 func Logout(w http.ResponseWriter, r *http.Request) {
 	if !alreadyLoggedIn(w, r) {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -495,9 +505,9 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, c)
 
 	// clean up dbSessions
-	// if time.Since(dbSessionsCleaned) > (time.Second * 30) {
-	// 	go cleanSessions()
-	// }
+	if time.Since(dbSessionsCleaned) > (time.Second * 30) {
+		go cleanSessions()
+	}
 
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
