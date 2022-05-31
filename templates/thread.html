@@ -11,69 +11,83 @@
 <body>
     <div class="head">
               <h4>
-                  <form action= "home">
+                  <form action= "/home">
                 <input type ="submit" value="Home"/>
              </form>
             </h4>
-              <h4><form action = "categories">
+              <h4><form action = "/categories">
                 <input type="submit" value=" Categories"/>
             </form> 
         </h4>
-            <h4> <form action = "groups">
+            <h4> <form action = "/groups">
                 <input type="submit" value=" Groups"/>
             </form> 
         </h4>
-            <h4> <form action = "about">
+            <h4> <form action = "/about">
                 <input type="submit" value=" About"/>
             </form> 
         </h4>
-            <h4>   <form action = "profile">
+            <h4>   <form action = "/profile">
                 <input type="submit" value=" Profile"/>
             </form>
         </h4>
-            <h4>  <form action = "contact-us">
+            <h4>  <form action = "/contact-us">
                 <input type="submit" value=" Contact Us"/>
             </form>
         </h4>
         </div>
         
      <div class="banner"><h2> YOU ARE NOT LOGGED IN, PLEASE LOG IN TO ACCESS ALL FEATURES</h2> 
-        <form action = "login">
+        <form action = "/login">
             <input type="submit" value=" Click here to login"/>
         </form>
     </div>
-    <ol>
-          <li class = "header">
-                <h4 class="title">
-                    Thread 1
-                </h4>
-                <div class ="bottom">
-                    <p1 class="timestamp">
-                        11/04/2022
-                    </p1>
-                    <p1 class ="comment-count">
-                        4 comments
-                    </p1>
-                    </div>
-                    <textarea></textarea><br>
-                    <button>add comment</button>
+    <h4 class="title2">
+        {{.Post.Title}}
+    </h4>
+    <div class="content">
+        <p1> {{.Post.Content}}</p1>
+        <br>
+        <p1> {{.Post.Category}}</p1>
+    </div><br>
+    <bottom>
+        <p1 class ="timestamp">posted: {{.Post.CreatedAt}}</p1>
+        <p1 class="likes">likes: {{.Post.Likes}}</p1>
+        <p1 class="dislikes">dislikes: {{.Post.Dislikes}}</p1>
+    </bottom> <br>
+
+                    <form method = "POST" action="/thread/{{.Post.PostID}}" id="usrcomment">
+                        <br>
+                        <textarea name="comment" id="postcomment" placeholder="enter comment" required></textarea>
+                        
+                        <input type="submit" value="add comment" a href="/thread/{{.Post.PostID}}">
+                        <!-- content
+                        datecreated -->
+                    </form>
+                    <!-- <textarea placeholder="enter comment here"></textarea><br> -->
+                    <!-- <button>add comment</button> -->
+                    <br>
+                    <ol>
+                        {{range .Comment}}
+                        <li class = "row">
                         <div class = comments>
                           <div class = "comments">
                             <div class = "top-comment">
+                                {{.CommentID}}
                                <p1 class = "user">
-                                      Tom
-                                </p1>
+                                      {{.UserId}}
+                                    </p1>
+                                    <div class = "comment-content">
+                                        {{.Content}}
+                                    </div>
                                 <p1 class="timestamp">
-                                    11/04/2022
+                                    {{.CreatedAt}}
                                 </p1>
                             </div>
-                            <div class = "comment-content">
-                                Comment text
-                            </div>
-                    </a>
+                            {{end}}
             </li>
         </ol>
-          <form action = "home">
+          <form action = "/home">
         <input type="submit" value=" Back"/>
     </form> 
      <div class="rights">

@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"strconv"
 	"time"
 
 	"html/template"
@@ -17,6 +18,7 @@ import (
 type Log struct {
 	Loggedin bool
 }
+
 // type User struct {
 // 	Username string
 // 	Password string
@@ -82,13 +84,18 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 
 	var user User
 
-	user.Username = r.FormValue("username")
-	user.Password = r.FormValue("password")
-	
 	sessionToken := uuid.NewV4()
 	expiresAt := time.Now().Add(120 * time.Second)
 
-   
+	user.Username = r.FormValue("username")
+	user.Password = r.FormValue("password")
+
+	data.CreateSession(Session{
+		SessionID: sessionToken.String(),
+		Username:  user.Username,
+		Expiry:    expiresAt,
+	})
+
 	var passwordHash string
 
 	row := data.DB.QueryRow("SELECT password FROM people WHERE Username = ?", user.Username)
@@ -98,29 +105,35 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 		tpl.ExecuteTemplate(w, "login.html", "check username and password")
 		return
 	}
+	err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(user.Password))
+	// returns nill on succcess
+	if err == nil {
+		// posts, err := sql.Open("sqlite3", "./database/feed.db")
+		// if err != nil {
+		// 	database.CheckErr(err)
+		// }
+		// feed := database.Feed(posts)
+		// items := feed.Get()
+		// registered.Loggedin = true
+		// fmt.Println(registered)
+		// tpl.ExecuteTemplate(w, "home.html", items)
+		http.Redirect(w, r, "/home", 302)
+		return
+	}
 
 	// fmt.Println("incorrect password")
 	// tpl.ExecuteTemplate(w, "login.html", "check username and password")
-
 	err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(user.Password))
 	// returns nill on succcess
-	fmt.Println(err)
 	if err == nil {
-
-		data.CreateSession(Session{
-		Username: user.Username,
-		Expiry:   expiresAt,
-	})
 
 		http.SetCookie(w, &http.Cookie{
 			Name:    "session_token",
 			Value:   sessionToken.String(),
 			Expires: expiresAt,
 		})
-		
 
 		// var cookie *http.Cookie
-
 		// cookie, err = r.Cookie("session")
 		// if err != nil {
 		// 	sID := uuid.NewV4()
@@ -134,10 +147,9 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 		// 	}
 		// 	http.SetCookie(w, cookie)
 		// 	//w.WriteHeader(200)
-
 		//tpl.ExecuteTemplate(w, "home.html", nil)
-		http.Redirect(w, r, "/home", http.StatusFound)
-		return
+
+		http.Redirect(w, r, "/home", 302)
 	} else {
 		fmt.Println("incorrect password")
 		tpl.ExecuteTemplate(w, "login.html", "check username and password")
@@ -355,15 +367,90 @@ func (data *Forum) UserProfile(writer http.ResponseWriter, request *http.Request
 }
 
 func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("hi")
 	w.WriteHeader(http.StatusOK)
+	url:= r.URL.Path
+	fmt.Println(url)
+
+	r.ParseForm()
+
+
+	idstr := strings.Trim(url, "/thread/")
+	// fmt.Println(idstr)
+
+	id, err := strconv.Atoi(idstr)
+	if err != nil {
+		http.Error(w, "400 Bad Request", 400)
+	}
+
+	// fmt.Println(id)
+
+	
+
+	comment := r.FormValue("comment")
+	time := time.Now()
+	postCreated := time.Format("01-02-2006 15:04")
+
 	var postInfo Post
 	postInfo.Title = "testing"
 	postInfo.Content = "this is a completely empty post"
 	postInfo.Comments = 2
 	postInfo.Date = "11/11/11"
 
-	fmt.Print(postInfo)
-	tpl.ExecuteTemplate(w, "thread.html", postInfo)
+	type Test struct {
+		Post    PostFeed
+		Comment []Comment
+	}
+
+	var final Test
+
+	post := data.Get()
+	if comment != "" {
+		data.CreateComment(Comment{
+			PostID:    post[id-1].PostID,
+			UserId:    post[0].PostID,
+			Content:   comment,
+			CreatedAt: postCreated,
+		})
+	}
+	if id > len(post){
+		http.Error(w, "404 post not found", 400)
+		return
+	}
+
+	// fmt.Println("user id: ",post[0].UserID)
+	// fmt.Println("post id: ",post[0].PostID)
+	// fmt.Print(postInfo)
+
+	commentdb := data.GetComments()
+	// fmt.Println(post)
+	// fmt.Println(commentdb)
+
+	// fmt.Println(comment)
+
+	final.Post = post[id-1]
+	final.Comment = commentdb
+
+	// fmt.Println(final)
+	// fmt.Println(final.Post)
+	// fmt.Println(final.Post.Title)
+	fmt.Println(final.Comment[0].PostID, final.Comment)
+		fmt.Println(final.Comment[2].PostID, final.Comment)
+				fmt.Println(final.Comment[3].PostID, final.Comment)
+
+	if final.Comment[id-1].PostID == final.Post.PostID{
+		fmt.Println("hello there")
+		tpl.ExecuteTemplate(w, "thread.html", final)
+	} else{
+		fmt.Println("bye")
+		tpl.ExecuteTemplate(w, "thread.html", nil)
+	}
+
+
+	// for key, value := range final.Post {
+	// 	fmt.Println("key", key, "value ", value)
+	// }
+
 }
 
 func (data *Forum) AboutFunc(w http.ResponseWriter, r *http.Request) {
@@ -465,8 +552,8 @@ func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
 		data.SignUpUser(w, r)
 	case "/profile":
 		data.UserProfile(w, r)
-	case "/thread":
-		data.Threads(w, r)
+	// case "/thread/*":
+	// 	data.Threads(w, r)
 	case "/about":
 		data.AboutFunc(w, r)
 	case "/contact-us":

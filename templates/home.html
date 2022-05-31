@@ -70,13 +70,13 @@
             {{range . }}
             <li class = "row">
                 <h4 class="title2">
-                    <a href ="thread">
+                    <a href ="thread/{{.PostID}}">
                         {{.Uuid}}
                         {{.Title}}                        
                     </a>
                 </h4>
                 <div class="content">
-                    <a href ="thread">
+                    <a href ="thread/{{.PostID}}">
                     <p1>{{.Content}} 
                         {{.Likes}}
                         {{.Dislikes}}
@@ -86,7 +86,7 @@
                 </div>
                 <div class ="bottom">
                     <p1 class="timestamp">
-                        <a href ="thread"> posted: {{.CreatedAt}}</a> 
+                        <a href ="thread/{{.PostID}}"> posted: {{.CreatedAt}}</a> 
                     </p1>
                     <p1 class ="Likes">
                         <!-- <a href ="thread">{{.Likes}} Likes</a> -->

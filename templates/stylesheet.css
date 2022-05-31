@@ -398,3 +398,8 @@ h6{
   align-self: flex-start;
  top: 75px;
 }
+
+.textarea2{
+  width: 100px;
+  height: 50px;
+}
