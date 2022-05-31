@@ -65,9 +65,8 @@ type Post struct {
 // will need to be reduced as there is too many at the moment
 
 var (
-	tpl        *template.Template
-	dbSessions = map[string]session{}
-	// dbSessionsCleaned time.Time
+	tpl               *template.Template
+	dbSessions        = map[string]session{}
 	dbUsers           = map[string]User{}
 	dbSessionsCleaned time.Time
 )
@@ -77,6 +76,7 @@ const sessionLength int = 30
 // parses files for all templates allowing them to be called
 func init() {
 	tpl = template.Must(template.ParseGlob("templates/*"))
+	dbSessionsCleaned = time.Now()
 }
 
 // login page
@@ -155,6 +155,7 @@ func LoginWeb(w http.ResponseWriter, r *http.Request) {
 
 	}
 	tpl.ExecuteTemplate(w, "login.html", nil)
+	c.MaxAge = sessionLength
 	http.SetCookie(w, c)
 	dbSessions[c.Value] = session{Uuid: c.Value}
 	// http.Redirect(w, r, "/", http.StatusSeeOther)

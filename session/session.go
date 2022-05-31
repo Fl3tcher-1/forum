@@ -1,4 +1,4 @@
-package main
+package sesman
 
 import (
 	"fmt"
@@ -31,7 +31,7 @@ var (
 
 const sessionLength int = 30
 
-func main() {
+func init() {
 	tpl, _ = template.ParseGlob("templates/*.html")
 	dbSessionsCleaned = time.Now()
 	http.HandleFunc("/", index)
