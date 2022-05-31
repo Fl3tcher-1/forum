@@ -66,6 +66,8 @@ type Post struct {
 
 var (
 	tpl               *template.Template
+	db                *sql.DB
+	s                 session
 	dbSessions        = map[string]session{}
 	dbUsers           = map[string]User{}
 	dbSessionsCleaned time.Time
@@ -77,6 +79,31 @@ const sessionLength int = 30
 func init() {
 	tpl = template.Must(template.ParseGlob("templates/*"))
 	dbSessionsCleaned = time.Now()
+}
+
+func getUser(w http.ResponseWriter, req *http.Request) (User, bool) {
+	// get cookie
+	// c, _ := req.Cookie("session")
+	var u User
+	var s session
+	var err error
+	// if the user exists already, get user
+	if s.Uuid != " " {
+		err = db.QueryRow("SELECT auth_uuid FROM Session WHERE uuid = ?", s.Uuid).Scan(&u.Username)
+		if err == sql.ErrNoRows {
+			return u, false
+		} else {
+			err = db.QueryRow("SELECT * FROM users WHERE uuid = ?", s.Uuid).Scan(&u.Username, &u.Password, &u.Email)
+			return u, false
+		}
+
+		// if s, ok := dbSessions[c.Value]; ok {
+		// 	s.CreatedAt = time.Now()
+		// 	dbSessions[c.Value] = s
+		// 	u = dbUsers[s.Uuid]
+		// }
+	}
+	return u, false
 }
 
 // login page
@@ -149,15 +176,21 @@ func LoginWeb(w http.ResponseWriter, r *http.Request) {
 		c = &http.Cookie{
 			Name:     "session",
 			Value:    id.String(),
+			MaxAge:   2 * int(time.Hour),
 			Secure:   true,
 			HttpOnly: true,
 		}
 
 	}
-	tpl.ExecuteTemplate(w, "login.html", nil)
+
+	db.Exec("Delete", s.Uuid+"'")
+	db.Exec("Insert", s.Uuid, c.Value)
 	c.MaxAge = sessionLength
 	http.SetCookie(w, c)
 	dbSessions[c.Value] = session{Uuid: c.Value}
+
+	tpl.ExecuteTemplate(w, "login.html", nil)
+
 	// http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
