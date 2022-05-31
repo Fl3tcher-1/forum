@@ -423,28 +423,34 @@ func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {
 	// fmt.Print(postInfo)
 
 	commentdb := data.GetComments()
+
+	for v, comment := range commentdb{
+		fmt.Println("value", v, "comment ", comment)
+		if comment.PostID == id{
+			final.Comment = append(final.Comment, comment)
+			fmt.Println(comment)
+		}
+		
+	}
+	// fmt.Println(commentdb[])
 	// fmt.Println(post)
 	// fmt.Println(commentdb)
 
 	// fmt.Println(comment)
 
 	final.Post = post[id-1]
-	final.Comment = commentdb
+	// final.Comment = commentdb
 
 	// fmt.Println(final)
 	// fmt.Println(final.Post)
 	// fmt.Println(final.Post.Title)
-	fmt.Println(final.Comment[0].PostID, final.Comment)
-		fmt.Println(final.Comment[2].PostID, final.Comment)
-				fmt.Println(final.Comment[3].PostID, final.Comment)
+	// fmt.Println(final.Comment[0].PostID, final.Comment)
+	// 	fmt.Println(final.Comment[2].PostID, final.Comment)
+	// 			fmt.Println(final.Comment[3].PostID, final.Comment)
 
-	if final.Comment[id-1].PostID == final.Post.PostID{
-		fmt.Println("hello there")
+	
 		tpl.ExecuteTemplate(w, "thread.html", final)
-	} else{
-		fmt.Println("bye")
-		tpl.ExecuteTemplate(w, "thread.html", nil)
-	}
+	
 
 
 	// for key, value := range final.Post {
