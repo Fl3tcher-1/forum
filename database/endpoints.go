@@ -385,7 +385,6 @@ func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {
 
 	// fmt.Println(id)
 
-	
 
 	comment := r.FormValue("comment")
 	time := time.Now()
@@ -402,7 +401,7 @@ func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {
 		Comment []Comment
 	}
 
-	var final Test
+	var postWithComments Test
 
 	post := data.Get()
 	if comment != "" {
@@ -424,10 +423,11 @@ func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {
 
 	commentdb := data.GetComments()
 
+	//only adds a comment into database if the post ids match--- to only fetch the same ids
 	for v, comment := range commentdb{
 		fmt.Println("value", v, "comment ", comment)
 		if comment.PostID == id{
-			final.Comment = append(final.Comment, comment)
+			postWithComments.Comment = append(postWithComments.Comment, comment)
 			fmt.Println(comment)
 		}
 		
@@ -438,22 +438,17 @@ func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {
 
 	// fmt.Println(comment)
 
-	final.Post = post[id-1]
-	// final.Comment = commentdb
+	postWithComments.Post = post[id-1]
+	// postWithComments.Comment = commentdb
 
-	// fmt.Println(final)
-	// fmt.Println(final.Post)
-	// fmt.Println(final.Post.Title)
-	// fmt.Println(final.Comment[0].PostID, final.Comment)
-	// 	fmt.Println(final.Comment[2].PostID, final.Comment)
-	// 			fmt.Println(final.Comment[3].PostID, final.Comment)
-
-	
-		tpl.ExecuteTemplate(w, "thread.html", final)
-	
-
-
-	// for key, value := range final.Post {
+	// fmt.Println(postWithComments)
+	// fmt.Println(postWithComments.Post)
+	// fmt.Println(postWithComments.Post.Title)
+	// fmt.Println(postWithComments.Comment[0].PostID, postWithComments.Comment)
+	// 	fmt.Println(postWithComments.Comment[2].PostID, postWithComments.Comment)
+	// 			fmt.Println(postWithComments.Comment[3].PostID, postWithComments.Comment)
+		tpl.ExecuteTemplate(w, "thread.html", postWithComments)
+	// for key, value := range postWithComments.Post {
 	// 	fmt.Println("key", key, "value ", value)
 	// }
 
