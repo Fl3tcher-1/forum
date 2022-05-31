@@ -157,7 +157,7 @@ func LoginWeb(w http.ResponseWriter, r *http.Request) {
 	tpl.ExecuteTemplate(w, "login.html", nil)
 	http.SetCookie(w, c)
 	dbSessions[c.Value] = session{Uuid: c.Value}
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	// http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func GetSignupPage(w http.ResponseWriter, r *http.Request) {
