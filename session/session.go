@@ -222,7 +222,7 @@ func login(w http.ResponseWriter, req *http.Request) {
 	showSessions() // for demonstration purposes
 	tpl, err := template.ParseFiles("templates/login.html")
 	if err != nil {
-		log.Println(err.Error(), u, "")
+		log.Println(err.Error(), "")
 		return
 	}
 	err = tpl.Execute(w, u)

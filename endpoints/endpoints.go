@@ -72,7 +72,7 @@ var (
 	dbSessionsCleaned time.Time
 )
 
-const sessionLength int = 60
+const sessionLength int = 30
 
 // parses files for all templates allowing them to be called
 func init() {
@@ -111,6 +111,7 @@ func LoginWeb(w http.ResponseWriter, r *http.Request) {
 	err := row.Scan(&passwordHash)
 	if err != nil {
 		tpl.ExecuteTemplate(w, "login.html", "check username and password")
+		// http.Error(w, "check username and password", http.StatusForbidden)
 		return
 	}
 	err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(user.Password))
@@ -138,7 +139,10 @@ func LoginWeb(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "500 Internal Server Error", 500)
 		fmt.Printf("LoginWeb(writeheader) error:  %+v\n", err)
 	}
-
+	if alreadyLoggedIn(w, r) {
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
 	c, err := r.Cookie("session")
 	if err != nil {
 		id := uuid.NewV4()
@@ -469,7 +473,7 @@ func alreadyLoggedIn(w http.ResponseWriter, r *http.Request) bool {
 	}
 	s, ok := dbSessions[c.Value]
 	if ok {
-		// s.lastActivity = time.Now()
+		s.CreatedAt = time.Now()
 		dbSessions[c.Value] = s
 	}
 	_, ok = dbUsers[s.Uuid]
