@@ -35,7 +35,7 @@ func init() {
 
 // sessions
 
-var sessions = map[string]Session{}
+//var sessions = map[string]Session{}
 
 func (s Session) isExpired() bool {
 	return s.Expiry.Before(time.Now())
@@ -64,10 +64,11 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 	user.Password = r.FormValue("password")
 	
    data.CreateSession(Session{
+		SessionID: sessionToken.String(),
 		Username: user.Username,
 		Expiry:   expiresAt,
+
 	})
-	
 
 	var passwordHash string
 
@@ -106,6 +107,7 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 		// 	//w.WriteHeader(200)
 
 		//tpl.ExecuteTemplate(w, "home.html", nil)
+		
 		http.Redirect(w, r, "/home", 302)
 	} else {
 		fmt.Println("incorrect password")
@@ -238,16 +240,52 @@ func (data *Forum) SignUpUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // home page
-func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
+func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request){
 	writer.Header().Set("Content-Type", "text/html")
 
-	if err := request.ParseForm(); err != nil { // checks for errors parsing form
+	if err := request.ParseForm(); err != nil {// checks for errors parsing form
 		http.Error(writer, "500 Internal Server Error", 500)
 		fmt.Printf("ParseForm (HomePage) error:  %+v\n", err)
 		return
 	}
 
 	// 🐈
+
+	c, err := request.Cookie("session_token")
+  	if err != nil {
+		  fmt.Println(err)
+		if err == http.ErrNoCookie {  
+	// If the cookie is not set, return an unauthorized status
+		writer.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	// 	writer.WriteHeader(http.StatusBadRequest)
+	// 	return
+	}
+
+	sessionToken := c.Value 
+
+	 
+	a := data.GetSession()
+	fmt.Println(a[0].SessionID)
+	fmt.Println(sessionToken)
+	fmt.Println(	 sessionToken == a[0].SessionID )
+	// if sessionToken == a[0].SessionID {
+	// 	writer.WriteHeader(http.StatusUnauthorized)
+	// 	return
+	// }
+
+	// fmt.Println(a[0].isExpired())
+	// isExpired()
+	// ant:=isExpired()
+	// if  a[0].isExpired(){
+	// 	fmt.Println(a[0].isExpired())
+	// } else{
+	// 	fmt.Println("falserino")
+	// }
+
+	
+
 
 	postCategory := request.FormValue("category")
 
@@ -282,15 +320,16 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 				UserID: user,
 			})
 
-		items := data.Get()
+		items := data.GetPost()
 		fmt.Println(items)
 
 		tpl.ExecuteTemplate(writer, "./home", items)
 	}
 
-	tpl.ExecuteTemplate(writer, "home.html", data.Get())
-
+	tpl.ExecuteTemplate(writer, "home.html", data.GetPost())
 }
+
+
 
 func (data *Forum) CategoriesList(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)

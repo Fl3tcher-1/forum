@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3" // sqlite3 driver connects go with sql
 )
@@ -30,11 +31,11 @@ func (forum *Forum) CreateUser(user User) {
 }
 
 func (forum *Forum) CreateSession(session Session) {
-	stmt, err := forum.DB.Prepare("INSERT INTO session (expiryTime, userName) VALUES (?, ?);")
+	stmt, err := forum.DB.Prepare("INSERT INTO session (sessionID, userName, expiryTime) VALUES (?, ?, ?);")
 	if err != nil {
 		CheckErr(err)
 	}
-	stmt.Exec(session.Expiry, session.Username)
+	stmt.Exec(session.SessionID, session.Username, session.Expiry)
 	defer stmt.Close()
 }
 
@@ -49,7 +50,7 @@ func (forum *Forum) CreatePost(post PostFeed, user User) {
 }
 
 func (forum *Forum) CreateComment(comment Comment) {
-	stmt, err := forum.DB.Prepare("INSERT INTO comments (userID, postID, content, dateCreated,) VALUES (?, ?, ?, ?, ?);")
+	stmt, err := forum.DB.Prepare("INSERT INTO comments (userID, postID, content, dateCreated) VALUES (?, ?, ?, ?, ?);")
 	if err != nil {
 		CheckErr(err)
 	}
@@ -58,7 +59,7 @@ func (forum *Forum) CreateComment(comment Comment) {
 
 }
 
-// ---------------------------------------------- TABLES ---------------------------------//
+// ---------------------------------------------- TABLES ------------------------------- --//
 
 func userTable(db *sql.DB) {
 	stmt, err := db.Prepare(`CREATE TABLE IF NOT EXISTS people (
@@ -76,7 +77,8 @@ func userTable(db *sql.DB) {
 
 func sessionTable(db *sql.DB) {
 	stmt, err := db.Prepare(`CREATE TABLE IF NOT EXISTS session (
-	userName TEXT PRIMARY KEY REFERENCES people(userID),
+	sessionID TEXT PRIMARY KEY REFERENCES people(uuid),	
+	userName TEXT UNIQUE, 
 	expiryTime TEXT);
 	`)
 	if err != nil {
@@ -130,43 +132,76 @@ func Connect(db *sql.DB) *Forum {
 	}
 }
 
+func (data *Forum) GetPost() []PostFeed {
 
-func (data *Forum) Get() []PostFeed{
-	
 	posts := []PostFeed{}
 
-	rows, _:= data.DB.Query(`
+	rows, _ := data.DB.Query(`
 	SELECT * FROM post
 `)
 
-var id int 
-var uiD int 
-var title string
-var content string 
-var likes int 
-var dislikes int 
-var created string 
-var category string  
+	var id int
+	var uiD int
+	var title string
+	var content string
+	var likes int
+	var dislikes int
+	var created string
+	var category string
 
 	for rows.Next() {
-		rows.Scan(&id,&uiD,&title,&content,&likes,&dislikes,&category,&created)
+		rows.Scan(&id, &uiD, &title, &content, &likes, &dislikes, &category, &created)
 
 		posts = append(posts, PostFeed{
-		PostID:	id,
-		UserID: uiD,
-		Title: title,
-		Content: content,
-		Likes: likes,
-		Dislikes: dislikes,
-		Category: category,
-		CreatedAt: created,
-
-	})
-}
+			PostID:    id,
+			UserID:    uiD,
+			Title:     title,
+			Content:   content,
+			Likes:     likes,
+			Dislikes:  dislikes,
+			Category:  category,
+			CreatedAt: created,
+		})
+	}
 	//fmt.Println(posts)
 	return posts
 }
 
+func (data *Forum) GetSession() []Session {
+
+	session := []Session{}
+
+	rows, _ := data.DB.Query(`
+ SELECT * FROM session
+ `)
+
+ var session_token string 
+	var uName string
+	var exTime time.Time
+
+	for rows.Next() {
+		rows.Scan(&session_token,&uName, &exTime)
+	}
+
+	session = append(session, Session{
+		SessionID: session_token,
+		Username: uName,
+		Expiry:   exTime,
+	})
+
+	return session
+}
+
+// func (data *Forum) GetSessionID() (s Session){
+
+// 	 var s Session
+
+// 	 rows, _ := data.DB.Query(`
+// 	 SELECT
+// 	 `)
+
+// 	return s
+// }
 
 // Get() dumps all values from a selected table
 // func (feed *Forum) Get() []PostFeed {

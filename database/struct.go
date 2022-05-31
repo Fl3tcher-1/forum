@@ -26,7 +26,7 @@ type PostFeed struct {
 }
 
 type Session struct {
-	//Uuid  string
+   SessionID string 
 	Username string
 	Expiry time.Time
 //	UserID    int
