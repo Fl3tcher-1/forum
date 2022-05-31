@@ -3,12 +3,13 @@ package endpoints
 import (
 	"database/sql"
 	"fmt"
-	"forum/database"
 	"html/template"
 	"net/http"
 	"strings"
 	"time"
 	"unicode"
+
+	"forum/database"
 
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -460,12 +461,6 @@ func Customization(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-// func logOut(){
-
-// close session
-// log user out
-// clear cookie
-// }
 func alreadyLoggedIn(w http.ResponseWriter, r *http.Request) bool {
 	c, err := r.Cookie("session")
 	if err != nil {
