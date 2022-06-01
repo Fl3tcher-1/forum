@@ -26,7 +26,7 @@ func main() {
 	mux.HandleFunc("/thread/", data.Threads)
 	mux.HandleFunc("/thread/stylesheet", cssHandler)
 
-	fmt.Println("Starting server at port 8080: http://localhost:8080/login")
+	fmt.Println("Starting server at port 8080:\n http://localhost:8080/login")
 
 	if err := http.ListenAndServe(":8080", mux); err != nil {
 		log.Fatal(500, "500 Internal server error:", err)

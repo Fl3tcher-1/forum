@@ -366,91 +366,62 @@ func (data *Forum) UserProfile(writer http.ResponseWriter, request *http.Request
 	tpl.ExecuteTemplate(writer, "profile.html", usrInfo)
 }
 
+//Threds handles posts and their comments-- and displays them on /threads
 func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("hi")
 	w.WriteHeader(http.StatusOK)
+	//grab current url, parse the form to allow taking data from html 
 	url:= r.URL.Path
-	fmt.Println(url)
-
 	r.ParseForm()
 
-
-	idstr := strings.Trim(url, "/thread/")
+	idstr := strings.Trim(url, "/thread") //trim text so  we are only left with the final end point (postID)
 	// fmt.Println(idstr)
 
-	id, err := strconv.Atoi(idstr)
+	id, err := strconv.Atoi(idstr) //convert to number as postID is stored as an int on our database
 	if err != nil {
 		http.Error(w, "400 Bad Request", 400)
 	}
 
-	// fmt.Println(id)
-
-
-	comment := r.FormValue("comment")
-	time := time.Now()
+	comment := r.FormValue("comment") //take "comment" id value from html form
+	time := time.Now() //create a new time variable using following format
 	postCreated := time.Format("01-02-2006 15:04")
 
-	var postInfo Post
-	postInfo.Title = "testing"
-	postInfo.Content = "this is a completely empty post"
-	postInfo.Comments = 2
-	postInfo.Date = "11/11/11"
-
-	type Test struct {
+	//Databases holds our post and comment databases
+	type Databases struct {
 		Post    PostFeed
 		Comment []Comment
 	}
 
-	var postWithComments Test
+	var postWithComments Databases
 
-	post := data.Get()
-	if comment != "" {
+	post := data.Get() // get all posts
+
+	//if comment from html is not an empty string, add a new value to our comment database using the following structure
+	if comment != "" { 
 		data.CreateComment(Comment{
-			PostID:    post[id-1].PostID,
+			PostID:    post[id-1].PostID, //id-1 is used as items on database start at index 0, but start at 1 on html url
 			UserId:    post[0].PostID,
 			Content:   comment,
 			CreatedAt: postCreated,
 		})
 	}
-	if id > len(post){
+	if id > len(post){ //checks so that a post that is not higher than total post amount and returns an error
 		http.Error(w, "404 post not found", 400)
 		return
 	}
+	commentdb := data.GetComments() // get data from comment database
 
-	// fmt.Println("user id: ",post[0].UserID)
-	// fmt.Println("post id: ",post[0].PostID)
-	// fmt.Print(postInfo)
-
-	commentdb := data.GetComments()
-
-	//only adds a comment into database if the post ids match--- to only fetch the same ids
-	for v, comment := range commentdb{
-		fmt.Println("value", v, "comment ", comment)
+	//only adds a comment into database if the post id matches the url id (post requested)--- to only fetch the same ids
+	for _, comment := range commentdb{
+		// fmt.Println("value", v, "comment ", comment)
 		if comment.PostID == id{
-			postWithComments.Comment = append(postWithComments.Comment, comment)
-			fmt.Println(comment)
+			postWithComments.Comment = append(postWithComments.Comment, comment) //only adds matching comments to the database to be called only for specific posts
+			// fmt.Println(comment)
 		}
-		
 	}
-	// fmt.Println(commentdb[])
-	// fmt.Println(post)
-	// fmt.Println(commentdb)
 
-	// fmt.Println(comment)
+	postWithComments.Post = post[id-1] //only allows us to send the requested post
 
-	postWithComments.Post = post[id-1]
-	// postWithComments.Comment = commentdb
-
-	// fmt.Println(postWithComments)
-	// fmt.Println(postWithComments.Post)
-	// fmt.Println(postWithComments.Post.Title)
-	// fmt.Println(postWithComments.Comment[0].PostID, postWithComments.Comment)
-	// 	fmt.Println(postWithComments.Comment[2].PostID, postWithComments.Comment)
-	// 			fmt.Println(postWithComments.Comment[3].PostID, postWithComments.Comment)
-		tpl.ExecuteTemplate(w, "thread.html", postWithComments)
-	// for key, value := range postWithComments.Post {
-	// 	fmt.Println("key", key, "value ", value)
-	// }
+	tpl.ExecuteTemplate(w, "thread.html", postWithComments)
 
 }
 

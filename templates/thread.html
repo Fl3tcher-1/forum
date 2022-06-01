@@ -42,9 +42,11 @@
             <input type="submit" value=" Click here to login"/>
         </form>
     </div>
+
+ <div class="thread-layout">
     <h4 class="title2">
-        {{.Post.Title}}
-    </h4>
+        {{.Post.Title}} Posted by:
+    </h4> <br>
     <div class="content">
         <p1> {{.Post.Content}}</p1>
         <br>
@@ -55,38 +57,33 @@
         <p1 class="likes">likes: {{.Post.Likes}}</p1>
         <p1 class="dislikes">dislikes: {{.Post.Dislikes}}</p1>
     </bottom> <br>
-
                     <form method = "POST" action="/thread/{{.Post.PostID}}" id="usrcomment">
                         <br>
                         <textarea name="comment" id="postcomment" placeholder="enter comment" required></textarea>
-                        
                         <input type="submit" value="add comment" a href="/thread/{{.Post.PostID}}">
-                        <!-- content
-                        datecreated -->
                     </form>
-                    <!-- <textarea placeholder="enter comment here"></textarea><br> -->
-                    <!-- <button>add comment</button> -->
-                    <br>
+                    <h4 >Comments: </h4> <br>
                     <ol>
                         {{range .Comment}}
-                        <li class = "row">
-                        <div class = comments>
-                          <div class = "comments">
-                            <div class = "top-comment">
-                                <!-- {{.CommentID}} -->
-                               <p1 class = "user">
-                                      user ID: {{.UserId}}
-                                    </p1>
+                        <li class ="row">
+                            <!-- <div class = "comments"> -->
+                                <!-- <div class = "top-comment"> -->
+                                    <p2 class = "user">
+                                        Comment by: {{.UserId}}
+                                    </p2> <br>
                                     <div class = "comment-content">
-                                        {{.Content}}
-                                    </div>
-                                <p1 class="timestamp">
-                                    {{.CreatedAt}}
-                                </p1>
-                            </div>
+                                        Comment: {{.Content}}
+                                    </div> 
+                                    <br>
+                                <p2 class="timestamp">
+                                    {{.CreatedAt}} <br>
+                                </p2>
+                            <!-- </div> -->
                             {{end}}
             </li>
         </ol>
+<!-- </div> -->
+
           <form action = "/home">
         <input type="submit" value=" Back"/>
     </form> 
