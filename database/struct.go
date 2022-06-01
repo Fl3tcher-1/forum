@@ -27,6 +27,7 @@ type PostFeed struct {
 
 type Session struct {
 	//Uuid  string
+	SessionID string
 	Username string
 	Expiry time.Time
 //	UserID    int
@@ -36,7 +37,6 @@ type Session struct {
 type Comment struct {
 	CommentID int
 	PostID    int
-	Uuid      string
 	UserId    int
 	Content   string
 	CreatedAt string
