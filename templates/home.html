@@ -47,7 +47,6 @@
       
         <div class="homeLayout">
       <div class="post"><h3> Create a post</h3>
-          <!-- <div class="post"> -->
           <form method = "POST" action="/home" id="usrpost"> 
                   <label for="category"> Please choose a category</label><br> <t></t>
                   <select id="category" name="category">
@@ -61,43 +60,47 @@
                       <label for="title"> Title:</label> <br>
                       <input type="text" id="title" name="title" >
   
-                  <!-- <label form="content">Content</label> -->
                   <br>
                   <textarea name="content" id="postcontent" placeholder="Please enter post content here" required></textarea>
                   <br>
                   <input type="submit" value="post" a href ="/home" value="reset form">
               </form>
-          <!-- </div> -->
           
         </div>
     <div class="featured"><h3> featured/trending posts</h3>
+        
         <ol> 
             {{range . }}
-            <li class = "row">
-                <h4 class="title2">
-                    <a href ="thread">
-                        {{.Uuid}}
-                        {{.Title}}                        
+            <li class ="row">
+                <h3 class="title2">
+                    <a href ="thread/{{.PostID}}">
+                        <!-- {{.PostID}} -->
+                        {{.Title}} 
+                        <br>
+                        Posted by: {{.Username}}                       
                     </a>
-                </h4>
+                </h3>
                 <div class="content">
-                    <a href ="thread">
-                    <p1>{{.Content}} 
-                        {{.Likes}}
-                        {{.Dislikes}}
-                    </p1> </a>
-                    <br> <br>
+                    <a href ="thread/{{.PostID}}">
+                    <p1>{{.Content}} </p1> 
+                    <!-- <br> <br>
+                    <p1> likes: {{.Likes}} </p1>
+                    <p1> dislikes: {{.Dislikes}}</p1>  -->
+                     </a>
+                    <br>
                     <p1>Category: {{.Category}}</p1>
                 </div>
                 <div class ="bottom">
+                    
                     <p1 class="timestamp">
-                        <a href ="thread"> posted: {{.CreatedAt}}</a> 
-                    </p1>
-                    <p1 class ="Likes">
-                        <!-- <a href ="thread">{{.Likes}} Likes</a> -->
+                        <a href ="thread/{{.PostID}}">
+        <p1 class ="timestamp">posted: {{.CreatedAt}}</p1>
+        <p1 class="likes">likes: {{.Likes}}</p1>
+        <p1 class="dislikes">dislikes: {{.Dislikes}}</p1>
+                          </a>
                     </p1>
                     </div>
-                </li>
+                </li> <br>
                     {{end}}
                 </ol>
   </div>
@@ -111,14 +114,11 @@
       <h2><a href="/logout">logout</a></h2>
       <br>
       <br>
-      
-    <div class="rights"> 
+                
+    <div class="rights">
             <br>
             <h6>Content Policy||Privacy Policy||User Agreement</h6>
             <h7>© DogeCo, inc, All rights reserved </h7>
         </div>
-
-        
-       
 </body>
 </html>

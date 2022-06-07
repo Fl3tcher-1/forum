@@ -36,7 +36,6 @@ type Session struct {
 type Comment struct {
 	CommentID int
 	PostID    int
-	Uuid      string
 	UserId    int
 	Content   string
 	CreatedAt string

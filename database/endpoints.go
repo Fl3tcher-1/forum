@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"strconv"
 	"time"
 
 	"html/template"
@@ -16,6 +17,14 @@ import (
 
 // type Log struct {
 // 	Loggedin bool
+type Log struct {
+	Loggedin bool
+}
+
+// type User struct {
+// 	Username string
+// 	Password string
+// 	Email    string
 // }
 
 // could it be used to store data for userprofile and use a single template execution???
@@ -41,6 +50,8 @@ func init() {
 
 // sessions
 
+// var sessions = map[string]Session{}
+
 func (s Session) isExpired() bool {
 	return s.Expiry.Before(time.Now())
 
@@ -61,6 +72,17 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 
 		var user User
+	// sessionToken := uuid.NewV4()
+	// expiresAt := time.Now().Add(120 * time.Second)
+
+	// user.Username = r.FormValue("username")
+	// user.Password = r.FormValue("password")
+
+	// data.CreateSession(Session{
+	// 	SessionID: sessionToken.String(),
+	// 	Username:  user.Username,
+	// 	Expiry:    expiresAt,
+	// })
 
 		sessionToken := uuid.NewV4()
 		expiresAt := time.Now().Add(120 * time.Second)
@@ -100,9 +122,7 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("incorrect password")
 			tpl.ExecuteTemplate(w, "login.html", "check username and password")
 		}
-	// case "GET":
-	//	tpl.ExecuteTemplate(w, "login.html", nil)
-
+	
 	}
 
 
@@ -337,7 +357,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 
 		data.CreatePost(PostFeed{
 			//User:      sessionID.String(),
-
+			
 			Username:  user,
 			Title:     postTitle,
 			Content:   postContent,
@@ -394,16 +414,63 @@ func (data *Forum) PwReset(writer http.ResponseWriter, request *http.Request) {
 // 	tpl.ExecuteTemplate(writer, "profile.html", usrInfo)
 // }
 
+//Threds handles posts and their comments-- and displays them on /threads
 func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	var postInfo Post
-	postInfo.Title = "testing"
-	postInfo.Content = "this is a completely empty post"
-	postInfo.Comments = 2
-	postInfo.Date = "11/11/11"
+	//grab current url, parse the form to allow taking data from html 
+	url:= r.URL.Path
+	r.ParseForm()
 
-	fmt.Print(postInfo)
-	tpl.ExecuteTemplate(w, "thread.html", postInfo)
+	idstr := strings.Trim(url, "/thread") //trim text so  we are only left with the final end point (postID)
+	// fmt.Println(idstr)
+
+	id, err := strconv.Atoi(idstr) //convert to number as postID is stored as an int on our database
+	if err != nil {
+		http.Error(w, "400 Bad Request", 400)
+	}
+
+	comment := r.FormValue("comment") //take "comment" id value from html form
+	time := time.Now() //create a new time variable using following format
+	postCreated := time.Format("01-02-2006 15:04")
+
+	//Databases holds our post and comment databases
+	type Databases struct {
+		Post    PostFeed
+		Comment []Comment
+	}
+
+	var postWithComments Databases
+
+	post := data.GetPost() // get all posts
+
+	//if comment from html is not an empty string, add a new value to our comment database using the following structure
+	if comment != "" { 
+		data.CreateComment(Comment{
+			PostID:    post[id-1].PostID, //id-1 is used as items on database start at index 0, but start at 1 on html url
+			UserId:    post[0].PostID,
+			Content:   comment,
+			CreatedAt: postCreated,
+		})
+	}
+	if id > len(post){ //checks so that a post that is not higher than total post amount and returns an error
+		http.Error(w, "404 post not found", 400)
+		return
+	}
+	commentdb := data.GetComments() // get data from comment database
+
+	//only adds a comment into database if the post id matches the url id (post requested)--- to only fetch the same ids
+	for _, comment := range commentdb{
+		// fmt.Println("value", v, "comment ", comment)
+		if comment.PostID == id{
+			postWithComments.Comment = append(postWithComments.Comment, comment) //only adds matching comments to the database to be called only for specific posts
+			// fmt.Println(comment)
+		}
+	}
+
+	postWithComments.Post = post[id-1] //only allows us to send the requested post
+
+	tpl.ExecuteTemplate(w, "thread.html", postWithComments)
+
 }
 
 func (data *Forum) AboutFunc(w http.ResponseWriter, r *http.Request) {
@@ -485,7 +552,7 @@ func (data *Forum) Customization(writer http.ResponseWriter, request *http.Reque
 
 func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
 
-	data.CheckCookie(w, r)
+	// data.CheckCookie(w, r)
 
 	switch r.URL.Path {
 	// page handlers
@@ -511,6 +578,9 @@ func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
 	//	data.UserProfile(w, r)
 	case "/thread":
 		data.Threads(w, r)
+		// data.UserProfile(w, r)
+	// case "/thread/*":
+	// 	data.Threads(w, r)
 	case "/about":
 		data.AboutFunc(w, r)
 	case "/contact-us":
