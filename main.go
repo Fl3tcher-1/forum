@@ -9,6 +9,9 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 )
+// func cssHandler(w http.ResponseWriter, r *http.Request){
+// 	http.ServeFile(w, r, "./templates/stylesheet.css")
+// }
 
 func main() {
 
@@ -20,13 +23,13 @@ func main() {
 	
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", data.Handler)
+	//mux.Handle("/st", cssHandler)
 
-	fmt.Println("Starting server at port 8080: http://localhost:8080/login")
+	fmt.Println("Starting server at port 8080: http://localhost:8088/login")
 
-	if err := http.ListenAndServe(":8000", mux); err != nil {
+	if err := http.ListenAndServe(":8088", mux); err != nil {
 		log.Fatal(500, "500 Internal server error:", err)
 		fmt.Printf("main ListenAndServe error: %+v\n", err)
 	}
 
-	fmt.Println("hi")
 }
