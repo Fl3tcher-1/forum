@@ -81,31 +81,6 @@ func init() {
 	dbSessionsCleaned = time.Now()
 }
 
-func getUser(w http.ResponseWriter, req *http.Request) (User, bool) {
-	// get cookie
-	// c, _ := req.Cookie("session")
-	var u User
-	var s session
-	var err error
-	// if the user exists already, get user
-	if s.Uuid != " " {
-		err = db.QueryRow("SELECT auth_uuid FROM Session WHERE uuid = ?", s.Uuid).Scan(&u.Username)
-		if err == sql.ErrNoRows {
-			return u, false
-		} else {
-			err = db.QueryRow("SELECT * FROM users WHERE uuid = ?", s.Uuid).Scan(&u.Username, &u.Password, &u.Email)
-			return u, false
-		}
-
-		// if s, ok := dbSessions[c.Value]; ok {
-		// 	s.CreatedAt = time.Now()
-		// 	dbSessions[c.Value] = s
-		// 	u = dbUsers[s.Uuid]
-		// }
-	}
-	return u, false
-}
-
 // login page
 func LoginWeb(w http.ResponseWriter, r *http.Request) {
 	var Roles []string
@@ -497,6 +472,54 @@ func Customization(writer http.ResponseWriter, request *http.Request) {
 	err := tpl.ExecuteTemplate(writer, "customize.html", nil)
 	if err != nil {
 		fmt.Printf("Customization Execute.Template error: %+v\n", err)
+	}
+}
+
+func getUser(w http.ResponseWriter, req *http.Request) (User, bool) {
+	var u User
+	var s session
+	var err error
+	if s.Uuid != " " {
+		err = db.QueryRow("SELECT auth_uuid FROM Session WHERE uuid = ?", s.Uuid).Scan(&u.Username)
+		if err == sql.ErrNoRows {
+			return u, false
+		} else {
+			err = db.QueryRow("SELECT * FROM users WHERE uuid = ?", s.Uuid).Scan(&u.Username, &u.Password, &u.Email)
+			return u, false
+		}
+
+		// if s, ok := dbSessions[c.Value]; ok {
+		// 	s.CreatedAt = time.Now()
+		// 	dbSessions[c.Value] = s
+		// 	u = dbUsers[s.Uuid]
+		// }
+	}
+	return u, false
+}
+
+func CheckSession(w http.ResponseWriter, r *http.Request, db *sql.DB, c *http.Cookie) bool {
+	var err error
+	c, err = r.Cookie("session")
+	if err != nil {
+		return false
+	} else {
+		session, _ := db.Query("SELECT * FROM Session WHERE uuid = '" + c.Value + "'")
+		defer session.Close()
+
+		var id int
+		var sessionUuid string
+		var authUuid string
+		count := 0
+		for session.Next() {
+			session.Scan(&id, &sessionUuid, &authUuid)
+			fmt.Fprintln(w, "session: ", id, sessionUuid, authUuid)
+			count++
+		}
+		if count == 1 {
+			return true
+		} else {
+			return false
+		}
 	}
 }
 
