@@ -31,7 +31,7 @@ func (forum *Forum) CreateUser(user User) {
 }
 
 func (forum *Forum) CreateSession(session Session) {
-	stmt, err := forum.DB.Prepare("INSERT INTO session (sessionID, userName, expiryTime) VALUES (?, ?, ?);")
+	stmt, err := forum.DB.Prepare("INSERT INTO session (sessionID, username, expiryTime) VALUES (?, ?, ?);")
 	if err != nil {
 		CheckErr(err)
 	}
@@ -78,7 +78,7 @@ func userTable(db *sql.DB) {
 func sessionTable(db *sql.DB) {
 	stmt, err := db.Prepare(`CREATE TABLE IF NOT EXISTS session (
 	sessionID TEXT PRIMARY KEY REFERENCES people(uuid),	
-	userName TEXT REFERENCES people(username), 
+	username TEXT REFERENCES people(username), 
 	expiryTime TEXT);
 	`)
 	if err != nil {
@@ -141,7 +141,7 @@ func (data *Forum) GetPost() []PostFeed {
 `)
 
 	var id int
-	var uiD string
+	var username string
 	var title string
 	var content string
 	var likes int
@@ -150,11 +150,11 @@ func (data *Forum) GetPost() []PostFeed {
 	var category string
 
 	for rows.Next() {
-		rows.Scan(&id, &uiD, &title, &content, &likes, &dislikes, &category, &created)
+		rows.Scan(&id, &username, &title, &content, &likes, &dislikes, &category, &created)
 
 		posts = append(posts, PostFeed{
 			PostID:    id,
-			Username:  uiD,
+			Username:  username,
 			Title:     title,
 			Content:   content,
 			Likes:     likes,
@@ -198,7 +198,7 @@ func (data *Forum) GetSession() []Session {
  SELECT * FROM session
  `)
 
- var session_token string 
+   var session_token string 
 	var uName string
 	var exTime time.Time
 
@@ -210,8 +210,8 @@ func (data *Forum) GetSession() []Session {
 			Expiry:   exTime,
 		})
 	}
-
 	return session
+
 }
 
 

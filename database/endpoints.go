@@ -15,21 +15,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// type Log struct {
-// 	Loggedin bool
-type Log struct {
-	Loggedin bool
-}
-
-// type User struct {
-// 	Username string
-// 	Password string
-// 	Email    string
-// }
-
-// could it be used to store data for userprofile and use a single template execution???
-
-// holds details of user session-- used for cookies
 
 type Post struct {
 	Title    string
@@ -72,17 +57,6 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 
 		var user User
-	// sessionToken := uuid.NewV4()
-	// expiresAt := time.Now().Add(120 * time.Second)
-
-	// user.Username = r.FormValue("username")
-	// user.Password = r.FormValue("password")
-
-	// data.CreateSession(Session{
-	// 	SessionID: sessionToken.String(),
-	// 	Username:  user.Username,
-	// 	Expiry:    expiresAt,
-	// })
 
 		sessionToken := uuid.NewV4()
 		expiresAt := time.Now().Add(120 * time.Second)
@@ -282,7 +256,6 @@ func (data *Forum) CheckCookie(writer http.ResponseWriter, request *http.Request
 			}
 		}
 		return true
-	
 }
 
 
@@ -336,6 +309,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 
 	} else {
 
+   var u User
 
 	postCategory := request.FormValue("category")
 
@@ -347,7 +321,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 	time := time.Now()
 	postCreated := time.Format("01-02-2006 15:04")
 
-	user := "1"
+	user := u.Username
 
 	fmt.Println(postCategory)
 	fmt.Println(postTitle)

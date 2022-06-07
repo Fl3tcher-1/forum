@@ -30,7 +30,6 @@ type Session struct {
 	Username string
 	Expiry time.Time
 //	UserID    int
-	LoggedIn bool
 }
 
 type Comment struct {
