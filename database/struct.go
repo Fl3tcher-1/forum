@@ -15,7 +15,7 @@ type User struct {
 
 type PostFeed struct {
 	PostID    int
-	UserID    int
+	Username  string
 	Uuid      string
 	Title     string
 	Content   string
@@ -26,12 +26,11 @@ type PostFeed struct {
 }
 
 type Session struct {
-	//Uuid  string
-	SessionID string
+   SessionID string 
 	Username string
 	Expiry time.Time
 //	UserID    int
-	//LoggedIn bool
+	LoggedIn bool
 }
 
 type Comment struct {

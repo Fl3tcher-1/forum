@@ -15,6 +15,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// type Log struct {
+// 	Loggedin bool
 type Log struct {
 	Loggedin bool
 }
@@ -34,21 +36,6 @@ type Post struct {
 	Content  string
 	Date     string
 	Comments int
-}
-type usrProfile struct {
-	Name string
-	// image    *os.Open
-	Info     string
-	Photo    string
-	Gender   string
-	Age      int
-	Location string
-	Posts    []string
-	Comments []string
-	Likes    []string
-	Shares   []string
-	Userinfo map[string]string
-	// custom   string
 }
 
 // creates all needed templates
@@ -80,85 +67,64 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	r.ParseForm()
+	// switch r.Method {
+	// case "POST":
+		r.ParseForm()
 
-	var user User
+		var user User
+	// sessionToken := uuid.NewV4()
+	// expiresAt := time.Now().Add(120 * time.Second)
 
-	sessionToken := uuid.NewV4()
-	expiresAt := time.Now().Add(120 * time.Second)
+	// user.Username = r.FormValue("username")
+	// user.Password = r.FormValue("password")
 
-	user.Username = r.FormValue("username")
-	user.Password = r.FormValue("password")
+	// data.CreateSession(Session{
+	// 	SessionID: sessionToken.String(),
+	// 	Username:  user.Username,
+	// 	Expiry:    expiresAt,
+	// })
 
-	data.CreateSession(Session{
-		SessionID: sessionToken.String(),
-		Username:  user.Username,
-		Expiry:    expiresAt,
-	})
+		sessionToken := uuid.NewV4()
+		expiresAt := time.Now().Add(120 * time.Second)
 
-	var passwordHash string
+		user.Username = r.FormValue("username")
+		user.Password = r.FormValue("password")
 
-	row := data.DB.QueryRow("SELECT password FROM people WHERE Username = ?", user.Username)
-	err := row.Scan(&passwordHash)
+		var passwordHash string
 
-	if err != nil {
-		tpl.ExecuteTemplate(w, "login.html", "check username and password")
-		return
+		row := data.DB.QueryRow("SELECT password FROM people WHERE Username = ?", user.Username)
+		err := row.Scan(&passwordHash)
+
+		if err != nil {
+			tpl.ExecuteTemplate(w, "login.html", "check username and password")
+			return
+		}
+		err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(user.Password))
+		// returns nill on succcess
+		if err == nil {
+
+			data.CreateSession(Session{
+				SessionID: sessionToken.String(),
+				Username:  user.Username,
+				Expiry:    expiresAt,
+			})
+
+			http.SetCookie(w, &http.Cookie{
+				Name:    "session_token",
+				Value:   sessionToken.String(),
+				Expires: expiresAt,
+				//MaxAge:  2 * int(time.Hour),
+			})
+			//w.WriteHeader(200)
+			http.Redirect(w, r, "/home", 302)
+			//data.HomePage(w, r)
+		} else {
+			fmt.Println("incorrect password")
+			tpl.ExecuteTemplate(w, "login.html", "check username and password")
+		}
+	
 	}
-	err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(user.Password))
-	// returns nill on succcess
-	if err == nil {
-		// posts, err := sql.Open("sqlite3", "./database/feed.db")
-		// if err != nil {
-		// 	database.CheckErr(err)
-		// }
-		// feed := database.Feed(posts)
-		// items := feed.Get()
-		// registered.Loggedin = true
-		// fmt.Println(registered)
-		// tpl.ExecuteTemplate(w, "home.html", items)
-		http.Redirect(w, r, "/home", 302)
-		return
-	}
 
-	// fmt.Println("incorrect password")
-	// tpl.ExecuteTemplate(w, "login.html", "check username and password")
-	err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(user.Password))
-	// returns nill on succcess
-	if err == nil {
-
-		http.SetCookie(w, &http.Cookie{
-			Name:    "session_token",
-			Value:   sessionToken.String(),
-			Expires: expiresAt,
-		})
-
-		// var cookie *http.Cookie
-		// cookie, err = r.Cookie("session")
-		// if err != nil {
-		// 	sID := uuid.NewV4()
-		// 	//fmt.Println("cookie was not found")
-		// 	cookie = &http.Cookie{
-		// 	Name:  "session",
-		// 	Value: sID.String(),
-		// 	//Secure:   true,
-		// 	HttpOnly: true,
-		// 	MaxAge: 2 * int(time.Hour),
-		// 	}
-		// 	http.SetCookie(w, cookie)
-		// 	//w.WriteHeader(200)
-		//tpl.ExecuteTemplate(w, "home.html", nil)
-
-		http.Redirect(w, r, "/home", 302)
-	} else {
-		fmt.Println("incorrect password")
-		tpl.ExecuteTemplate(w, "login.html", "check username and password")
-		return
-	}
-	fmt.Println("here")
-
-	//tpl.ExecuteTemplate(w, "login.html", nil)
-}
 
 func (data *Forum) GetSignupPage(w http.ResponseWriter, r *http.Request) {
 	tpl.ExecuteTemplate(w, "signup.html", nil)
@@ -271,8 +237,6 @@ func (data *Forum) SignUpUser(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		tpl.ExecuteTemplate(w, "signup.html", "there was an error registering account")
-		//fmt.Printf("Register Account (insertStmt) error:  %+v\n", err)
-		//defer data.Close()
 		return
 	} else {
 		http.Redirect(w, r, "/login", 302)
@@ -280,17 +244,100 @@ func (data *Forum) SignUpUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// check cookie
+
+func (data *Forum) CheckCookie(writer http.ResponseWriter, request *http.Request)bool{
+
+	c, err := request.Cookie("session_token")
+	if err != nil {
+		if err == http.ErrNoCookie {
+		fmt.Println(err)
+		return false 		
+		}
+	}
+
+	sessionToken := c.Value
+	var currentSession Session
+	a := data.GetSession()
+
+	fmt.Println(sessionToken)
+	//fmt.Println(sessionToken == a[0].SessionID)
+	//sessFound := false
+
+	for _, sess := range a {
+		fmt.Println(sessionToken, " : ", sess.SessionID)
+		if sessionToken == sess.SessionID {
+			//fmt.Println(sessionToken, " : ", sess.SessionID)
+			currentSession = sess
+			//sessFound = true
+		}
+		
+		// if !sessFound {
+			// // // 	//writer.WriteHeader(http.StatusUnauthorized)
+			// // 	return
+			// // }
+		
+			if currentSession.isExpired() {
+				data.DB.Exec("DELETE FROM session where sessionID ='" + currentSession.SessionID + "'")
+			}
+		}
+		return true
+	
+}
+
+
+func (data *Forum) Logout(w http.ResponseWriter, r *http.Request) {
+	c, _ := r.Cookie("session_token")
+
+	sessionToken := c.Value
+	var currentSession Session
+	a := data.GetSession()
+
+	fmt.Println(sessionToken)
+ 
+
+	fmt.Println("here")
+
+	for _, sess := range a {
+		if sessionToken == sess.SessionID {
+			currentSession = sess
+			data.DB.Exec("DELETE FROM session where sessionID ='" + currentSession.SessionID + "'")
+		}
+		}
+
+		c = &http.Cookie{
+			Name: "session_token",
+			Value:  "",
+			MaxAge: -1,
+		}
+		http.SetCookie(w, c)
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+
+	}
+
 // home page
 func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "text/html")
-
+	
 	if err := request.ParseForm(); err != nil { // checks for errors parsing form
 		http.Error(writer, "500 Internal Server Error", 500)
 		fmt.Printf("ParseForm (HomePage) error:  %+v\n", err)
 		return
 	}
 
+	loggedIn:= data.CheckCookie(writer,request)
+	fmt.Println(loggedIn)
+
+
 	// 🐈
+	if !loggedIn{
+		fmt.Println(loggedIn)
+		tpl.ExecuteTemplate(writer, "guest.html", nil)
+
+	} else{
+
+	// if data.CheckCookie(writer,request) != true {
+	// }else{
 
 	postCategory := request.FormValue("category")
 
@@ -302,8 +349,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 	time := time.Now()
 	postCreated := time.Format("01-02-2006 15:04")
 
-	sessionID := uuid.NewV4()
-	user := 1
+	user := "1"
 
 	fmt.Println(postCategory)
 	fmt.Println(postTitle)
@@ -312,28 +358,32 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 	if postTitle != "" || postContent != "" || postCategory != "" {
 
 		data.CreatePost(PostFeed{
-			Uuid:      sessionID.String(),
+			//User:      sessionID.String(),
+			
+			Username:  user,
 			Title:     postTitle,
 			Content:   postContent,
 			Likes:     postLikes,
 			Dislikes:  postDislikes,
 			Category:  postCategory,
 			CreatedAt: postCreated,
-			UserID:    user,
-		},
-			User{
-				UserID: user,
-			})
-
-		items := data.Get()
+		})
+		
+		items := data.GetPost()
 		fmt.Println(items)
 
 		tpl.ExecuteTemplate(writer, "./home", items)
 	}
-
-	tpl.ExecuteTemplate(writer, "home.html", data.Get())
-
+	tpl.ExecuteTemplate(writer, "home.html", data.GetPost())
 }
+}
+
+func (data *Forum) Guestview(writer http.ResponseWriter, r *http.Request) {
+
+	fmt.Println("here")
+	tpl.ExecuteTemplate(writer,"guest.html", nil)
+}
+
 
 func (data *Forum) CategoriesList(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
@@ -347,24 +397,24 @@ func (data *Forum) PwReset(writer http.ResponseWriter, request *http.Request) {
 	tpl.ExecuteTemplate(writer, "passwordReset.html", nil)
 }
 
-func (data *Forum) UserProfile(writer http.ResponseWriter, request *http.Request) {
-	writer.WriteHeader(http.StatusOK)
-	writer.Header().Set("Content-Type", "text/html")
+// func (data *Forum) UserProfile(writer http.ResponseWriter, request *http.Request) {
+// 	writer.WriteHeader(http.StatusOK)
+// 	writer.Header().Set("Content-Type", "text/html")
 
-	var users User
+// 	var users User
 
-	users.Username = "test"
+// 	users.Username = "test"
 
-	var usrInfo usrProfile
+// 	//var usrInfo usrProfile
 
-	usrInfo.Name = "Panda"
-	usrInfo.Info = "Hello my name is panda and I like to sleep and eat bamboo--- nom"
-	usrInfo.Gender = "Panda"
-	usrInfo.Age = 7
-	usrInfo.Location = "Bamboo Forest"
+// 	usrInfo.Name = "Panda"
+// 	usrInfo.Info = "Hello my name is panda and I like to sleep and eat bamboo--- nom"
+// 	usrInfo.Gender = "Panda"
+// 	usrInfo.Age = 7
+// 	usrInfo.Location = "Bamboo Forest"
 
-	tpl.ExecuteTemplate(writer, "profile.html", usrInfo)
-}
+// 	tpl.ExecuteTemplate(writer, "profile.html", usrInfo)
+// }
 
 //Threds handles posts and their comments-- and displays them on /threads
 func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {
@@ -393,7 +443,7 @@ func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {
 
 	var postWithComments Databases
 
-	post := data.Get() // get all posts
+	post := data.GetPost() // get all posts
 
 	//if comment from html is not an empty string, add a new value to our comment database using the following structure
 	if comment != "" { 
@@ -503,7 +553,9 @@ func (data *Forum) Customization(writer http.ResponseWriter, request *http.Reque
 }
 
 func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
-	// check for cookie
+
+	// data.CheckCookie(w, r)
+
 	switch r.URL.Path {
 	// page handlers
 	case "/stylesheet": // handle css
@@ -512,6 +564,8 @@ func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
 		data.LoginWeb(w, r)
 	case "/login":
 		data.LoginWeb(w, r)
+	case "/logout":
+		data.Logout(w,r)	
 	case "/home":
 		data.HomePage(w, r)
 	case "/categories":
@@ -523,13 +577,18 @@ func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
 	case "/sign-up-form":
 		data.SignUpUser(w, r)
 	case "/profile":
-		data.UserProfile(w, r)
+	//	data.UserProfile(w, r)
+	case "/thread":
+		data.Threads(w, r)
+		// data.UserProfile(w, r)
 	// case "/thread/*":
 	// 	data.Threads(w, r)
 	case "/about":
 		data.AboutFunc(w, r)
 	case "/contact-us":
 		data.ContactUs(w, r)
+	case "/guest":
+		data.Guestview(w, r)	
 
 		// user handlers
 	case "/photo":
@@ -568,10 +627,3 @@ func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./images/question.jpg")
 	}
 }
-
-// func logOut(){
-
-// close session
-// log user out
-// clear cookie
-// }

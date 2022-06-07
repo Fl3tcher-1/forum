@@ -39,13 +39,13 @@ func (forum *Forum) CreateSession(session Session) {
 	defer stmt.Close()
 }
 
-func (forum *Forum) CreatePost(post PostFeed, user User) {
+func (forum *Forum) CreatePost(post PostFeed) {
 
-	stmt, err := forum.DB.Prepare("INSERT INTO post (userID, title, content, likes, dislikes, category, dateCreated) VALUES (?, ?, ?, ?, ?, ?, ?);")
+	stmt, err := forum.DB.Prepare("INSERT INTO post (username, title, content, likes, dislikes, category, dateCreated) VALUES (?, ?, ?, ?, ?, ?, ?);")
 	if err != nil {
 		CheckErr(err)
 	}
-	stmt.Exec(user.UserID, post.Title, post.Content, post.Likes, post.Dislikes, post.Category, post.CreatedAt)
+	stmt.Exec(post.Username, post.Title, post.Content, post.Likes, post.Dislikes, post.Category, post.CreatedAt)
 	defer stmt.Close()
 }
 
@@ -59,7 +59,7 @@ func (forum *Forum) CreateComment(comment Comment) {
 
 }
 
-// ---------------------------------------------- TABLES ---------------------------------//
+// ---------------------------------------------- TABLES ------------------------------- --//
 
 func userTable(db *sql.DB) {
 	stmt, err := db.Prepare(`CREATE TABLE IF NOT EXISTS people (
@@ -78,7 +78,7 @@ func userTable(db *sql.DB) {
 func sessionTable(db *sql.DB) {
 	stmt, err := db.Prepare(`CREATE TABLE IF NOT EXISTS session (
 	sessionID TEXT PRIMARY KEY REFERENCES people(uuid),	
-	userName TEXT UNIQUE, 
+	userName TEXT REFERENCES people(username), 
 	expiryTime TEXT);
 	`)
 	if err != nil {
@@ -91,7 +91,7 @@ func sessionTable(db *sql.DB) {
 func postTabe(db *sql.DB) {
 	stmt, err := db.Prepare(`CREATE TABLE IF NOT EXISTS post (
  postID INTEGER PRIMARY KEY AUTOINCREMENT,
- userID INTEGER REFERENCES people(userID),
+ username TEXT REFERENCES people(username),
  title TEXT,
  content TEXT, 
  likes INTEGER,
@@ -132,7 +132,7 @@ func Connect(db *sql.DB) *Forum {
 	}
 }
 
-func (data *Forum) Get() []PostFeed {
+func (data *Forum) GetPost() []PostFeed {
 
 	posts := []PostFeed{}
 
@@ -141,7 +141,7 @@ func (data *Forum) Get() []PostFeed {
 `)
 
 	var id int
-	var uiD int
+	var uiD string
 	var title string
 	var content string
 	var likes int
@@ -154,7 +154,7 @@ func (data *Forum) Get() []PostFeed {
 
 		posts = append(posts, PostFeed{
 			PostID:    id,
-			UserID:    uiD,
+			Username:  uiD,
 			Title:     title,
 			Content:   content,
 			Likes:     likes,
@@ -198,22 +198,22 @@ func (data *Forum) GetSession() []Session {
  SELECT * FROM session
  `)
 
-	var session_token string
+ var session_token string 
 	var uName string
 	var exTime time.Time
 
 	for rows.Next() {
-		rows.Scan(&session_token, &uName, &exTime)
+		rows.Scan(&session_token,&uName, &exTime)
+		session = append(session, Session{
+			SessionID: session_token,
+			Username: uName,
+			Expiry:   exTime,
+		})
 	}
-
-	session = append(session, Session{
-		SessionID: session_token,
-		Username:  uName,
-		Expiry:    exTime,
-	})
 
 	return session
 }
+
 
 // Get() dumps all values from a selected table
 // func (feed *Forum) Get() []PostFeed {

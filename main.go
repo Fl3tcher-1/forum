@@ -9,6 +9,9 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 )
+// func cssHandler(w http.ResponseWriter, r *http.Request){
+// 	http.ServeFile(w, r, "./templates/stylesheet.css")
+// }
 
 func cssHandler(w http.ResponseWriter, r*http.Request){
 	http.ServeFile(w, r, "./templates/stylesheet.css")
@@ -33,5 +36,4 @@ func main() {
 		fmt.Printf("main ListenAndServe error: %+v\n", err)
 	}
 
-	fmt.Println("hi")
 }
