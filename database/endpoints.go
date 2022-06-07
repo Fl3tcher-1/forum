@@ -334,10 +334,8 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 		fmt.Println(loggedIn)
 		tpl.ExecuteTemplate(writer, "guest.html", nil)
 
-	} else{
+	} else {
 
-	// if data.CheckCookie(writer,request) != true {
-	// }else{
 
 	postCategory := request.FormValue("category")
 
