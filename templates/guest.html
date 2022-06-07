@@ -15,7 +15,7 @@
                 <input type ="submit" value="Home"/>
              </form>
             </h4>
-              <h4><form action = "categories">
+              <h4><form action = "guestcategories">
                 <input type="submit" value=" Categories"/>
             </form> 
           </h4>
@@ -24,12 +24,12 @@
              <input type="submit" value=" About"/>
           </form> 
          </h4>
-             <h4> <form action = "profile">
-              <input type="submit" value=" Profile"/>
+             <h4> <form action = "login">
+              <input type="submit" value="Members area"/>
            </form>
           </h4>
-             <h4> <form action = "logout">
-                 <input type="submit" value=" Logout"/>
+             <h4> <form action = "login">
+                 <input type="submit" value="Login"/>
             </form> 
          </h4>
             <h4>  <form action = "contact-us">
@@ -47,34 +47,15 @@
     <form>
       
         <div class="homeLayout">
-      <div class="post"><h3> Create a post</h3>
-          <form method = "POST" action="/home" id="usrpost"> 
-                  <label for="category"> Please choose a category</label><br> <t></t>
-                  <select id="category" name="category">
-                      <option value="category 1">Category 1</option>
-                      <option value="category 2">Category 2</option>
-                      <option value="category 3">Category 3</option>
-                      <option value="category 4">Category 4</option>
-                      <option value="category 5">Category 5</option>
-                      <option value="category 6">Category 6</option>
-                  </select>  <br>
-                      <label for="title"> Title:</label> <br>
-                      <input type="text" id="title" name="title" >
-  
-                  <br>
-                  <textarea name="content" id="postcontent" placeholder="Please enter post content here" required></textarea>
-                  <br>
-                  <input type="submit" value="post" a href ="/home" value="reset form">
-              </form>
-          
-        </div>
+      
+
     <div class="featured"><h3> featured/trending posts</h3>
         
         <ol> 
             {{range . }}
             <li class ="row">
                 <h3 class="title2">
-                    <a href ="thread/{{.PostID}}">
+                    <a href ="threadg/{{.PostID}}">
                         <!-- {{.PostID}} -->
                         {{.Title}} 
                         <br>
@@ -82,7 +63,7 @@
                     </a>
                 </h3>
                 <div class="content">
-                    <a href ="thread/{{.PostID}}">
+                    <a href ="threadg/{{.PostID}}">
                     <p1>{{.Content}} </p1> 
                     <!-- <br> <br>
                     <p1> likes: {{.Likes}} </p1>
@@ -94,7 +75,7 @@
                 <div class ="bottom">
                     
                     <p1 class="timestamp">
-                        <a href ="thread/{{.PostID}}">
+                        <a href ="threadg/{{.PostID}}">
         <p1 class ="timestamp">posted: {{.CreatedAt}}</p1>
         <p1 class="likes">likes: {{.Likes}}</p1>
         <p1 class="dislikes">dislikes: {{.Dislikes}}</p1>
@@ -106,9 +87,6 @@
                 </ol>
   </div>
   </div>
-  <div class="activity"><a href= "profile"><h3>your recent activity, likes, posts, comments etc</h3> </a>
-      </div>
-
 
       <br>
       <br>

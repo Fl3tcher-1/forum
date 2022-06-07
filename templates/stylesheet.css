@@ -71,7 +71,7 @@ ol{
 li{
   border: 1px solid var(--heading-color);
   margin: 0 auto ;
-  gap: 1px;
+  gap: 10px;
 }
 .grid >div{
   background-color: var(--background-color);
@@ -171,8 +171,24 @@ button:hover{
   text-align: center;
 background-image: linear-gradient(red, crimson);}
 
+.welcome{
+  margin: 10px 10px;
+  margin:auto;
+  padding: 1 rem;
+  justify-content: center;
+  text-align: center;
+  color: var(--text-color);
+  /* background-image: linear-gradient(var(--heading-color), blue); */
+  max-width: fit-content;
+}
+
 .banner:hover{
   background-image: linear-gradient(crimson, red);
+}
+
+.welcome:hover{
+  color: var(--heading-color);
+  /* background-image: linear-gradient(blue, var(--heading-color)); */
 }
 
 .featured{
@@ -453,5 +469,11 @@ h6{
 .thread-layout >ol {
   margin-left: -15px;
   /* overflow: scroll; */
-  
+}
+
+
+li.row{
+  /* display: flex; */
+  margin: 10px;
+  flex-direction: column;
 }
