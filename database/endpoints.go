@@ -334,10 +334,8 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 		fmt.Println(loggedIn)
 		tpl.ExecuteTemplate(writer, "guest.html", nil)
 
-	} else{
+	} else {
 
-	// if data.CheckCookie(writer,request) != true {
-	// }else{
 
 	postCategory := request.FormValue("category")
 
@@ -359,7 +357,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 
 		data.CreatePost(PostFeed{
 			//User:      sessionID.String(),
-			
+
 			Username:  user,
 			Title:     postTitle,
 			Content:   postContent,
@@ -397,24 +395,24 @@ func (data *Forum) PwReset(writer http.ResponseWriter, request *http.Request) {
 	tpl.ExecuteTemplate(writer, "passwordReset.html", nil)
 }
 
-// func (data *Forum) UserProfile(writer http.ResponseWriter, request *http.Request) {
-// 	writer.WriteHeader(http.StatusOK)
-// 	writer.Header().Set("Content-Type", "text/html")
+func (data *Forum) UserProfile(writer http.ResponseWriter, request *http.Request) {
+	writer.WriteHeader(http.StatusOK)
+	writer.Header().Set("Content-Type", "text/html")
 
-// 	var users User
+	var users User
 
-// 	users.Username = "test"
+	users.Username = "test"
 
-// 	//var usrInfo usrProfile
+	var usrInfo UsrProfile
 
-// 	usrInfo.Name = "Panda"
-// 	usrInfo.Info = "Hello my name is panda and I like to sleep and eat bamboo--- nom"
-// 	usrInfo.Gender = "Panda"
-// 	usrInfo.Age = 7
-// 	usrInfo.Location = "Bamboo Forest"
+	usrInfo.Name = "Panda"
+	usrInfo.Info = "Hello my name is panda and I like to sleep and eat bamboo--- nom"
+	usrInfo.Gender = "Panda"
+	usrInfo.Age = 7
+	usrInfo.Location = "Bamboo Forest"
 
-// 	tpl.ExecuteTemplate(writer, "profile.html", usrInfo)
-// }
+	tpl.ExecuteTemplate(writer, "profile.html", usrInfo)
+}
 
 //Threds handles posts and their comments-- and displays them on /threads
 func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {
@@ -446,7 +444,7 @@ func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {
 	post := data.GetPost() // get all posts
 
 	//if comment from html is not an empty string, add a new value to our comment database using the following structure
-	if comment != "" { 
+	if comment != "" || comment == " "{ 
 		data.CreateComment(Comment{
 			PostID:    post[id-1].PostID, //id-1 is used as items on database start at index 0, but start at 1 on html url
 			UserId:    post[0].PostID,
@@ -577,7 +575,7 @@ func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
 	case "/sign-up-form":
 		data.SignUpUser(w, r)
 	case "/profile":
-	//	data.UserProfile(w, r)
+		data.UserProfile(w, r)
 	case "/thread":
 		data.Threads(w, r)
 		// data.UserProfile(w, r)

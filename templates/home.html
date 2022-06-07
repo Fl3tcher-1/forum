@@ -18,30 +18,30 @@
               <h4><form action = "categories">
                 <input type="submit" value=" Categories"/>
             </form> 
-        </h4>
-            <h4> <form action = "home">
-                <input type="submit" value=" Groups"/>
+          </h4>
+               <h4> 
+                   <form action = "about">
+             <input type="submit" value=" About"/>
+          </form> 
+         </h4>
+             <h4> <form action = "profile">
+              <input type="submit" value=" Profile"/>
+           </form>
+          </h4>
+             <h4> <form action = "logout">
+                 <input type="submit" value=" Logout"/>
             </form> 
-        </h4>
-            <h4> <form action = "about">
-                <input type="submit" value=" About"/>
-            </form> 
-        </h4>
-            <h4>   <form action = "profile">
-                <input type="submit" value=" Profile"/>
-            </form>
-        </h4>
+         </h4>
             <h4>  <form action = "contact-us">
                 <input type="submit" value=" Contact Us"/>
             </form>
         </h4>
         </div>
+        {{range .}}
         <div class="guest">
-             <div class="banner"><h2> YOU ARE NOT LOGGED IN, PLEASE LOG IN TO ACCESS ALL FEATURES</h2> 
-               <form action = "login">
-               <input type="submit" value=" Click here to login"/>
-          </form>
-        </div>
+             <div class="banner"><h2> Welcome {{.Username}} , hope you enjoy your stay :)</h2> 
+             </div>
+             {{end}}
     </div>
     <form>
       
@@ -111,7 +111,6 @@
 
       <br>
       <br>
-      <h2><a href="/logout">logout</a></h2>
       <br>
       <br>
                 

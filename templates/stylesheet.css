@@ -452,6 +452,6 @@ h6{
 
 .thread-layout >ol {
   margin-left: -15px;
-  overflow: scroll;
+  /* overflow: scroll; */
   
 }
