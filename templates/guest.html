@@ -37,11 +37,12 @@
             </form>
         </h4>
         </div>
-        {{range .}}
         <div class="guest">
-             <div class="banner"><h2> Welcome {{.Username}} , hope you enjoy your stay :)</h2> 
-             </div>
-             {{end}}
+             <div class="banner"><h2> YOU ARE NOT LOGGED IN, PLEASE LOG IN TO ACCESS ALL FEATURES</h2> 
+               <form action = "login">
+               <input type="submit" value=" Click here to login"/>
+          </form>
+        </div>
     </div>
     <form>
       
@@ -118,9 +119,6 @@
             <br>
             <h6>Content Policy||Privacy Policy||User Agreement</h6>
             <h7>© DogeCo, inc, All rights reserved </h7>
-            <br>
-            <br>
-            <a class="btn" href="/logout">Log out</a>
         </div>
 </body>
 </html>

@@ -8,7 +8,7 @@
     --body-color: rgb(255, 255, 255);
     --text-color: rgb(0, 0, 0);
     --rights-color: rgb(0, 2, 95);
-    --button-color: rgb(255, 255, 255);
+    --button-color: rgb(236, 232, 232);
     --button-text: rgb(0, 0, 0);
 
   }
@@ -55,6 +55,7 @@ h3 {
   color: var(--heading-color);
   margin-left: 20px;
 }
+
 textarea{
   margin: 20 0;
    vertical-align: middle;
@@ -64,10 +65,13 @@ textarea{
    
 }
 ol{
+  row-gap: 110px;
   margin: 0;
 }
 li{
-  margin:0;
+  border: 1px solid var(--heading-color);
+  margin: 0 auto ;
+  gap: 1px;
 }
 .grid >div{
   background-color: var(--background-color);
@@ -140,7 +144,21 @@ input[type=submit]{
   width: 250px;
 }
 
+
 input:hover[type=submit]{
+  background-color:var(--background-color);
+  color: var(--button-text);
+  opacity: .9;
+  font-size:115%;
+}
+button{
+  background-color: var(--button-color);
+  color: var(--button-text);
+  font-size: 15px;
+  height: 50px;
+  width: 250px;
+}
+button:hover{
   background-color:var(--background-color);
   color: var(--button-text);
   opacity: .9;
@@ -175,6 +193,10 @@ background-image: linear-gradient(red, crimson);}
   color: var(--text-color);
   display: inline;
   margin: 0;
+}
+.title2{
+  color:var(--heading-color);
+  
 }
 
 .bottom {
@@ -294,8 +316,15 @@ p{
 }
 p1{
   color: var(--text-color);
-  margin: 10px 5px;
+  margin: 0px 20px;
   padding: 5px;
+}
+
+p2{
+  color: var(--text-color);
+  margin: 0px ;
+  padding: 0px;
+
 }
 
 .contact{
@@ -397,4 +426,32 @@ h6{
   position: sticky;
   align-self: flex-start;
  top: 75px;
+}
+
+.textarea2{
+  width: 100px;
+  height: 50px;
+}
+
+.thread-layout{
+  /* max-width: 500px; */
+  max-width: 50%;
+  width: 50%;
+  display: flex;
+  flex-direction:column;
+  margin: 0 auto;
+  gap: 5px;
+  /* margin-left: 40%; */
+  padding: 0;
+}
+
+.thread-layout >h4{
+  margin-left: 23px;
+  padding: 0;
+}
+
+.thread-layout >ol {
+  margin-left: -15px;
+  /* overflow: scroll; */
+  
 }
