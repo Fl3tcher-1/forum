@@ -7,13 +7,16 @@ import (
 	"log"
 	"net/http"
 
+	// "forum/database"
+
 	_ "github.com/mattn/go-sqlite3"
 )
+
 // func cssHandler(w http.ResponseWriter, r *http.Request){
 // 	http.ServeFile(w, r, "./templates/stylesheet.css")
 // }
 
-func cssHandler(w http.ResponseWriter, r*http.Request){
+func cssHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "./templates/stylesheet.css")
 }
 func main() {
@@ -23,7 +26,7 @@ func main() {
 		fmt.Println(err.Error())
 	}
 	data := database.Connect(db)
-	
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", data.Handler)
 	mux.HandleFunc("/thread/", data.Threads)
