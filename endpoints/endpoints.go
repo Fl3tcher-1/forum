@@ -3,13 +3,12 @@ package endpoints
 import (
 	"database/sql"
 	"fmt"
+	"forum/database"
 	"html/template"
 	"net/http"
 	"strings"
 	"time"
 	"unicode"
-
-	"forum/database"
 
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -20,6 +19,7 @@ import (
 type Log struct {
 	Loggedin bool
 }
+
 type User struct {
 	Username string
 	Password string
@@ -557,6 +557,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	c, _ := r.Cookie("session")
 	// delete the session
 	delete(dbSessions, c.Value)
+	db.Exec("DELETE FROM Session where uuid='" + c.Value + "'")
 	// remove the cookie
 	c = &http.Cookie{
 		Name:   "session",

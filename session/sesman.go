@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	uuid "github.com/satori/uuid.go"
+	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
