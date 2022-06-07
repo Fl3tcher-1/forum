@@ -488,11 +488,6 @@ func (data *Forum) ThreadGuest(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "400 Bad Request", 400)
 	}
 
-	// comment := r.FormValue("comment") //take "comment" id value from html form
-	// time := time.Now() //create a new time variable using following format
-	// postCreated := time.Format("01-02-2006 15:04")
-
-	//Databases holds our post and comment databases
 	type Databases struct {
 		Post    PostFeed
 		Comment []Comment
@@ -502,15 +497,6 @@ func (data *Forum) ThreadGuest(w http.ResponseWriter, r *http.Request) {
 
 	post := data.GetPost() // get all posts
 
-	//if comment from html is not an empty string, add a new value to our comment database using the following structure
-	// if comment != "" || comment == " "{
-	// 	data.CreateComment(Comment{
-	// 		PostID:    post[id-1].PostID, //id-1 is used as items on database start at index 0, but start at 1 on html url
-	// 		UserId:    post[0].PostID,
-	// 		Content:   comment,
-	// 		CreatedAt: postCreated,
-	// 	})
-	// }
 	if id > len(post) { //checks so that a post that is not higher than total post amount and returns an error
 		http.Error(w, "404 post not found", 400)
 		return
