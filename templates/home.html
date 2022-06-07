@@ -8,10 +8,9 @@
     <title>Home</title>
 </head>
 <body>
-
-         <div class="head">
+     <div class="head">
               <h4>
-                  <form action= "home">
+                  <form action= "/home">
                 <input type ="submit" value="Home"/>
              </form>
             </h4>
@@ -28,7 +27,7 @@
               <input type="submit" value=" Profile"/>
            </form>
           </h4>
-             <h4> <form action = "logout">
+             <h4> <form action = "/logout">
                  <input type="submit" value=" Logout"/>
             </form> 
          </h4>
@@ -36,37 +35,38 @@
                 <input type="submit" value=" Contact Us"/>
             </form>
         </h4>
-        </div>
-        {{range .}}
-        <div class="guest">
-             <div class="banner"><h2> Welcome {{.Username}} , hope you enjoy your stay :)</h2> 
-             </div>
-             {{end}}
     </div>
+    <!-- </div> -->
+    <!-- <div class="guest"> -->
+        <div class="welcome"><h2> 
+            Welcome  {{range .}} {{.Username}} {{end}}, hope you enjoy your stay :)
+        </h2> 
+         </div>
     <form>
       
         <div class="homeLayout">
-      <div class="post"><h3> Create a post</h3>
-          <form method = "POST" action="/home" id="usrpost"> 
-                  <label for="category"> Please choose a category</label><br> <t></t>
-                  <select id="category" name="category">
-                      <option value="category 1">Category 1</option>
-                      <option value="category 2">Category 2</option>
-                      <option value="category 3">Category 3</option>
-                      <option value="category 4">Category 4</option>
-                      <option value="category 5">Category 5</option>
-                      <option value="category 6">Category 6</option>
-                  </select>  <br>
-                      <label for="title"> Title:</label> <br>
-                      <input type="text" id="title" name="title" >
+             <div class="post"><h3> Create a post</h3>
+                 <form method = "POST" action="/home" id="usrpost"> 
+                         <label for="category"> Please choose a category</label><br> <t></t>
+                       <select id="category" name="category">
+                            <option value="category 1">Category 1</option>
+                            <option value="category 2">Category 2</option>
+                           <option value="category 3">Category 3</option>
+                           <option value="category 4">Category 4</option>
+                           <option value="category 5">Category 5</option>
+                            <option value="category 6">Category 6</option>
+                          </select>  <br>
+                           <label for="title"> Title:</label> <br>
+                           <input type="text" id="title" name="title" >
   
-                  <br>
-                  <textarea name="content" id="postcontent" placeholder="Please enter post content here" required></textarea>
-                  <br>
-                  <input type="submit" value="post" a href ="/home" value="reset form">
-              </form>
+                         <br>
+                          <textarea name="content" id="postcontent" placeholder="Please enter post content here" required></textarea>
+                          <br>
+                          <input type="submit" value="post" a href ="/home" value="reset form">
+                      </form>
           
-        </div>
+            </div>
+            
     <div class="featured"><h3> featured/trending posts</h3>
         
         <ol> 
