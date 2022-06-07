@@ -154,7 +154,7 @@ func (data *Forum) GetPost() []PostFeed {
 
 		posts = append(posts, PostFeed{
 			PostID:    id,
-			Username:    uiD,
+			Username:  uiD,
 			Title:     title,
 			Content:   content,
 			Likes:     likes,
