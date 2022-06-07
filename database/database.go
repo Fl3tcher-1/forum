@@ -50,11 +50,11 @@ func (forum *Forum) CreatePost(post PostFeed) {
 }
 
 func (forum *Forum) CreateComment(comment Comment) {
-	stmt, err := forum.DB.Prepare("INSERT INTO comments (userID, postID, content, dateCreated) VALUES (?, ?, ?, ?, ?);")
+	stmt, err := forum.DB.Prepare("INSERT INTO comments ( postID, userID, content, dateCreated) VALUES (?, ?, ?, ?);")
 	if err != nil {
 		CheckErr(err)
 	}
-	stmt.Exec(comment.Uuid, comment.PostID, comment.Content, comment.CreatedAt)
+	stmt.Exec(comment.PostID, comment.UserId, comment.Content,comment.CreatedAt)
 	defer stmt.Close()
 
 }
@@ -108,9 +108,9 @@ func postTabe(db *sql.DB) {
 
 func commentTable(db *sql.DB) {
 	stmt, err := db.Prepare(`CREATE TABLE IF NOT EXISTS comments (
-   commentID TEXT PRIMARY KEY, 
+   commentID INTEGER PRIMARY KEY AUTOINCREMENT, 
+   postID INTEGER REFERENCES people(userID), 
 	userID INTEGER REFERENCES people(userID),
-	postID INTEGER REFERENCES people(userID), 
 	content TEXT NOT NULL, 
 	dateCreated TEXT NOT NULL);
 	`)
@@ -154,7 +154,7 @@ func (data *Forum) GetPost() []PostFeed {
 
 		posts = append(posts, PostFeed{
 			PostID:    id,
-			Username:    uiD,
+			Username:  uiD,
 			Title:     title,
 			Content:   content,
 			Likes:     likes,
@@ -165,6 +165,29 @@ func (data *Forum) GetPost() []PostFeed {
 	}
 	//fmt.Println(posts)
 	return posts
+}
+
+func (data *Forum) GetComments() []Comment {
+	comments := []Comment{}
+	rows, _ := data.DB.Query(`SELECT * FROM comments`)
+
+	var commentid int
+	var postid int
+	var userid int
+	var content string
+	var created string
+
+	for rows.Next() {
+		rows.Scan(&commentid, &postid, &userid, &content, &created)
+		comments = append(comments, Comment{
+			CommentID: commentid,
+			PostID:    postid,
+			UserId:    userid,
+			Content:   content,
+			CreatedAt: created,
+		})
+	}
+	return comments
 }
 
 func (data *Forum) GetSession() []Session {
