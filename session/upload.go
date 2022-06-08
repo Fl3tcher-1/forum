@@ -24,14 +24,17 @@ func init() {
 	http.ListenAndServe(":8080", nil)
 }
 
-func ind(w http.ResponseWriter, req *http.Request) {
-	c := getCookie(w, req)
-	if req.Method == http.MethodPost {
-		mf, fh, err := req.FormFile("nf")
+func ind(w http.ResponseWriter, r *http.Request) {
+	c := getCookie(w, r)
+	if r.Method == http.MethodPost {
+		mf, fh, err := r.FormFile("nf")
 		if err != nil {
 			fmt.Println(err)
 		}
 		defer mf.Close()
+
+		r.ParseMultipartForm(5 << 20)
+
 		// create sha for file name
 		ext := fh.Filename
 		// h := sha1.New()
@@ -54,13 +57,14 @@ func ind(w http.ResponseWriter, req *http.Request) {
 		// add filename to this user's cookie
 		c = appendValue(w, c, fname)
 	}
+
 	xs := strings.Split(c.Value, "|")
 	// sliced cookie values to only send over images
 	t.ExecuteTemplate(w, "index.html", xs[1:])
 }
 
-func getCookie(w http.ResponseWriter, req *http.Request) *http.Cookie {
-	c, err := req.Cookie("session")
+func getCookie(w http.ResponseWriter, r *http.Request) *http.Cookie {
+	c, err := r.Cookie("session")
 	if err != nil {
 		sID := uuid.NewV4()
 		c = &http.Cookie{

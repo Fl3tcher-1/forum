@@ -3,12 +3,14 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"strconv"
-	"time"
-
 	"html/template"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
+	"time"
 	"unicode"
 
 	uuid "github.com/satori/go.uuid"
@@ -54,12 +56,10 @@ func init() {
 
 func (s Session) isExpired() bool {
 	return s.Expiry.Before(time.Now())
-
 }
 
 // login page
 func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
-
 	fmt.Println("*****loginUser is running********")
 
 	if r.URL.Path != "/login" {
@@ -69,9 +69,9 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 
 	// switch r.Method {
 	// case "POST":
-		r.ParseForm()
+	r.ParseForm()
 
-		var user User
+	var user User
 	// sessionToken := uuid.NewV4()
 	// expiresAt := time.Now().Add(120 * time.Second)
 
@@ -84,47 +84,44 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 	// 	Expiry:    expiresAt,
 	// })
 
-		sessionToken := uuid.NewV4()
-		expiresAt := time.Now().Add(120 * time.Second)
+	sessionToken := uuid.NewV4()
+	expiresAt := time.Now().Add(120 * time.Second)
 
-		user.Username = r.FormValue("username")
-		user.Password = r.FormValue("password")
+	user.Username = r.FormValue("username")
+	user.Password = r.FormValue("password")
 
-		var passwordHash string
+	var passwordHash string
 
-		row := data.DB.QueryRow("SELECT password FROM people WHERE Username = ?", user.Username)
-		err := row.Scan(&passwordHash)
-
-		if err != nil {
-			tpl.ExecuteTemplate(w, "login.html", "check username and password")
-			return
-		}
-		err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(user.Password))
-		// returns nill on succcess
-		if err == nil {
-
-			data.CreateSession(Session{
-				SessionID: sessionToken.String(),
-				Username:  user.Username,
-				Expiry:    expiresAt,
-			})
-
-			http.SetCookie(w, &http.Cookie{
-				Name:    "session_token",
-				Value:   sessionToken.String(),
-				Expires: expiresAt,
-				//MaxAge:  2 * int(time.Hour),
-			})
-			//w.WriteHeader(200)
-			http.Redirect(w, r, "/home", 302)
-			//data.HomePage(w, r)
-		} else {
-			fmt.Println("incorrect password")
-			tpl.ExecuteTemplate(w, "login.html", "check username and password")
-		}
-	
+	row := data.DB.QueryRow("SELECT password FROM people WHERE Username = ?", user.Username)
+	err := row.Scan(&passwordHash)
+	if err != nil {
+		tpl.ExecuteTemplate(w, "login.html", "check username and password")
+		return
 	}
+	err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(user.Password))
+	// returns nill on succcess
+	if err == nil {
 
+		data.CreateSession(Session{
+			SessionID: sessionToken.String(),
+			Username:  user.Username,
+			Expiry:    expiresAt,
+		})
+
+		http.SetCookie(w, &http.Cookie{
+			Name:    "session_token",
+			Value:   sessionToken.String(),
+			Expires: expiresAt,
+			// MaxAge:  2 * int(time.Hour),
+		})
+		// w.WriteHeader(200)
+		http.Redirect(w, r, "/home", 302)
+		// data.HomePage(w, r)
+	} else {
+		fmt.Println("incorrect password")
+		tpl.ExecuteTemplate(w, "login.html", "check username and password")
+	}
+}
 
 func (data *Forum) GetSignupPage(w http.ResponseWriter, r *http.Request) {
 	tpl.ExecuteTemplate(w, "signup.html", nil)
@@ -138,7 +135,6 @@ func (data *Forum) GetSignupPage(w http.ResponseWriter, r *http.Request) {
 	 6. insert u.username and password hash in database
 */
 func (data *Forum) SignUpUser(w http.ResponseWriter, r *http.Request) {
-
 	r.ParseForm() // parses sign up form to fetch needed information
 
 	fmt.Println("****Sign-up new user is running ")
@@ -246,13 +242,12 @@ func (data *Forum) SignUpUser(w http.ResponseWriter, r *http.Request) {
 
 // check cookie
 
-func (data *Forum) CheckCookie(writer http.ResponseWriter, request *http.Request)bool{
-
+func (data *Forum) CheckCookie(writer http.ResponseWriter, request *http.Request) bool {
 	c, err := request.Cookie("session_token")
 	if err != nil {
 		if err == http.ErrNoCookie {
-		fmt.Println(err)
-		return false 		
+			fmt.Println(err)
+			return false
 		}
 	}
 
@@ -261,30 +256,28 @@ func (data *Forum) CheckCookie(writer http.ResponseWriter, request *http.Request
 	a := data.GetSession()
 
 	fmt.Println(sessionToken)
-	//fmt.Println(sessionToken == a[0].SessionID)
-	//sessFound := false
+	// fmt.Println(sessionToken == a[0].SessionID)
+	// sessFound := false
 
 	for _, sess := range a {
 		fmt.Println(sessionToken, " : ", sess.SessionID)
 		if sessionToken == sess.SessionID {
-			//fmt.Println(sessionToken, " : ", sess.SessionID)
+			// fmt.Println(sessionToken, " : ", sess.SessionID)
 			currentSession = sess
-			//sessFound = true
+			// sessFound = true
 		}
-		
-		// if !sessFound {
-			// // // 	//writer.WriteHeader(http.StatusUnauthorized)
-			// // 	return
-			// // }
-		
-			if currentSession.isExpired() {
-				data.DB.Exec("DELETE FROM session where sessionID ='" + currentSession.SessionID + "'")
-			}
-		}
-		return true
-	
-}
 
+		// if !sessFound {
+		// // // 	//writer.WriteHeader(http.StatusUnauthorized)
+		// // 	return
+		// // }
+
+		if currentSession.isExpired() {
+			data.DB.Exec("DELETE FROM session where sessionID ='" + currentSession.SessionID + "'")
+		}
+	}
+	return true
+}
 
 func (data *Forum) Logout(w http.ResponseWriter, r *http.Request) {
 	c, _ := r.Cookie("session_token")
@@ -294,7 +287,6 @@ func (data *Forum) Logout(w http.ResponseWriter, r *http.Request) {
 	a := data.GetSession()
 
 	fmt.Println(sessionToken)
- 
 
 	fmt.Println("here")
 
@@ -303,85 +295,80 @@ func (data *Forum) Logout(w http.ResponseWriter, r *http.Request) {
 			currentSession = sess
 			data.DB.Exec("DELETE FROM session where sessionID ='" + currentSession.SessionID + "'")
 		}
-		}
-
-		c = &http.Cookie{
-			Name: "session_token",
-			Value:  "",
-			MaxAge: -1,
-		}
-		http.SetCookie(w, c)
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
-
 	}
+
+	c = &http.Cookie{
+		Name:   "session_token",
+		Value:  "",
+		MaxAge: -1,
+	}
+	http.SetCookie(w, c)
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
+}
 
 // home page
 func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "text/html")
-	
+
 	if err := request.ParseForm(); err != nil { // checks for errors parsing form
 		http.Error(writer, "500 Internal Server Error", 500)
 		fmt.Printf("ParseForm (HomePage) error:  %+v\n", err)
 		return
 	}
 
-	loggedIn:= data.CheckCookie(writer,request)
+	loggedIn := data.CheckCookie(writer, request)
 	fmt.Println(loggedIn)
 
-
 	// 🐈
-	if !loggedIn{
+	if !loggedIn {
 		fmt.Println(loggedIn)
 		tpl.ExecuteTemplate(writer, "guest.html", nil)
 
 	} else {
 
+		postCategory := request.FormValue("category")
 
-	postCategory := request.FormValue("category")
+		postTitle := request.FormValue("title")
 
-	postTitle := request.FormValue("title")
+		postContent := request.FormValue("content")
+		postLikes := 0
+		postDislikes := 1
+		time := time.Now()
+		postCreated := time.Format("01-02-2006 15:04")
 
-	postContent := request.FormValue("content")
-	postLikes := 0
-	postDislikes := 1
-	time := time.Now()
-	postCreated := time.Format("01-02-2006 15:04")
+		user := "1"
 
-	user := "1"
+		fmt.Println(postCategory)
+		fmt.Println(postTitle)
+		fmt.Println(postContent)
 
-	fmt.Println(postCategory)
-	fmt.Println(postTitle)
-	fmt.Println(postContent)
+		if postTitle != "" || postContent != "" || postCategory != "" {
 
-	if postTitle != "" || postContent != "" || postCategory != "" {
+			data.CreatePost(PostFeed{
+				// User:      sessionID.String(),
 
-		data.CreatePost(PostFeed{
-			//User:      sessionID.String(),
+				Username:  user,
+				Title:     postTitle,
+				Content:   postContent,
+				Likes:     postLikes,
+				Dislikes:  postDislikes,
+				Category:  postCategory,
+				CreatedAt: postCreated,
+			})
 
-			Username:  user,
-			Title:     postTitle,
-			Content:   postContent,
-			Likes:     postLikes,
-			Dislikes:  postDislikes,
-			Category:  postCategory,
-			CreatedAt: postCreated,
-		})
-		
-		items := data.GetPost()
-		fmt.Println(items)
+			items := data.GetPost()
+			fmt.Println(items)
 
-		tpl.ExecuteTemplate(writer, "./home", items)
+			tpl.ExecuteTemplate(writer, "./home", items)
+		}
+		tpl.ExecuteTemplate(writer, "home.html", data.GetPost())
 	}
-	tpl.ExecuteTemplate(writer, "home.html", data.GetPost())
-}
 }
 
 func (data *Forum) Guestview(writer http.ResponseWriter, r *http.Request) {
-
 	fmt.Println("here")
-	tpl.ExecuteTemplate(writer,"guest.html", nil)
+	tpl.ExecuteTemplate(writer, "guest.html", nil)
 }
-
 
 func (data *Forum) CategoriesList(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
@@ -414,26 +401,26 @@ func (data *Forum) UserProfile(writer http.ResponseWriter, request *http.Request
 	tpl.ExecuteTemplate(writer, "profile.html", usrInfo)
 }
 
-//Threds handles posts and their comments-- and displays them on /threads
+// Threds handles posts and their comments-- and displays them on /threads
 func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	//grab current url, parse the form to allow taking data from html 
-	url:= r.URL.Path
+	// grab current url, parse the form to allow taking data from html
+	url := r.URL.Path
 	r.ParseForm()
 
-	idstr := strings.Trim(url, "/thread") //trim text so  we are only left with the final end point (postID)
+	idstr := strings.Trim(url, "/thread") // trim text so  we are only left with the final end point (postID)
 	// fmt.Println(idstr)
 
-	id, err := strconv.Atoi(idstr) //convert to number as postID is stored as an int on our database
+	id, err := strconv.Atoi(idstr) // convert to number as postID is stored as an int on our database
 	if err != nil {
 		http.Error(w, "400 Bad Request", 400)
 	}
 
-	comment := r.FormValue("comment") //take "comment" id value from html form
-	time := time.Now() //create a new time variable using following format
+	comment := r.FormValue("comment") // take "comment" id value from html form
+	time := time.Now()                // create a new time variable using following format
 	postCreated := time.Format("01-02-2006 15:04")
 
-	//Databases holds our post and comment databases
+	// Databases holds our post and comment databases
 	type Databases struct {
 		Post    PostFeed
 		Comment []Comment
@@ -443,34 +430,33 @@ func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {
 
 	post := data.GetPost() // get all posts
 
-	//if comment from html is not an empty string, add a new value to our comment database using the following structure
-	if comment != "" || comment == " "{ 
+	// if comment from html is not an empty string, add a new value to our comment database using the following structure
+	if comment != "" || comment == " " {
 		data.CreateComment(Comment{
-			PostID:    post[id-1].PostID, //id-1 is used as items on database start at index 0, but start at 1 on html url
+			PostID:    post[id-1].PostID, // id-1 is used as items on database start at index 0, but start at 1 on html url
 			UserId:    post[0].PostID,
 			Content:   comment,
 			CreatedAt: postCreated,
 		})
 	}
-	if id > len(post){ //checks so that a post that is not higher than total post amount and returns an error
+	if id > len(post) { // checks so that a post that is not higher than total post amount and returns an error
 		http.Error(w, "404 post not found", 400)
 		return
 	}
 	commentdb := data.GetComments() // get data from comment database
 
-	//only adds a comment into database if the post id matches the url id (post requested)--- to only fetch the same ids
-	for _, comment := range commentdb{
+	// only adds a comment into database if the post id matches the url id (post requested)--- to only fetch the same ids
+	for _, comment := range commentdb {
 		// fmt.Println("value", v, "comment ", comment)
-		if comment.PostID == id{
-			postWithComments.Comment = append(postWithComments.Comment, comment) //only adds matching comments to the database to be called only for specific posts
+		if comment.PostID == id {
+			postWithComments.Comment = append(postWithComments.Comment, comment) // only adds matching comments to the database to be called only for specific posts
 			// fmt.Println(comment)
 		}
 	}
 
-	postWithComments.Post = post[id-1] //only allows us to send the requested post
+	postWithComments.Post = post[id-1] // only allows us to send the requested post
 
 	tpl.ExecuteTemplate(w, "thread.html", postWithComments)
-
 }
 
 func (data *Forum) AboutFunc(w http.ResponseWriter, r *http.Request) {
@@ -550,8 +536,71 @@ func (data *Forum) Customization(writer http.ResponseWriter, request *http.Reque
 	}
 }
 
-func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
+var t *template.Template
 
+func (data *Forum) ImgUpload(writer http.ResponseWriter, request *http.Request) {
+	c := getCookie(writer, request)
+	if request.Method == http.MethodPost {
+		mf, fh, err := request.FormFile("nf")
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer mf.Close()
+
+		request.ParseMultipartForm(5 << 20)
+
+		// create sha for file name
+		ext := fh.Filename
+		// h := sha1.New()
+		// io.Copy(h, mf)
+		fname := ext
+		// create new file
+		wd, err := os.Getwd()
+		if err != nil {
+			fmt.Println(err)
+		}
+		path := filepath.Join(wd, "public", "pics", fname)
+		nf, err := os.Create(path)
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer nf.Close()
+		// copy
+		mf.Seek(0, 0)
+		io.Copy(nf, mf)
+		// add filename to this user's cookie
+		c = appendValue(writer, c, fname)
+	}
+
+	xs := strings.Split(c.Value, "|")
+	// sliced cookie values to only send over images
+	t.ExecuteTemplate(writer, "index.html", xs[1:])
+}
+
+func getCookie(w http.ResponseWriter, r *http.Request) *http.Cookie {
+	c, err := r.Cookie("session")
+	if err != nil {
+		sID := uuid.NewV4()
+		c = &http.Cookie{
+			Name:  "session",
+			Value: sID.String(),
+		}
+		http.SetCookie(w, c)
+	}
+	return c
+}
+
+func appendValue(w http.ResponseWriter, c *http.Cookie, fname string) *http.Cookie {
+	s := c.Value
+	if !strings.Contains(s, fname) {
+		s += "|" + fname
+	}
+	c.Value = s
+	http.SetCookie(w, c)
+	return c
+}
+
+func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
 	// data.CheckCookie(w, r)
 
 	switch r.URL.Path {
@@ -563,7 +612,7 @@ func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
 	case "/login":
 		data.LoginWeb(w, r)
 	case "/logout":
-		data.Logout(w,r)	
+		data.Logout(w, r)
 	case "/home":
 		data.HomePage(w, r)
 	case "/categories":
@@ -586,13 +635,14 @@ func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
 	case "/contact-us":
 		data.ContactUs(w, r)
 	case "/guest":
-		data.Guestview(w, r)	
+		data.Guestview(w, r)
 
 		// user handlers
 	case "/photo":
 		data.UserPhoto(w, r)
 	case "/posts":
 		data.UserPosts(w, r)
+		data.ImgUpload(w, r)
 	case "/comments":
 		data.UserComments(w, r)
 	case "/likes":
