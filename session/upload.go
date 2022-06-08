@@ -1,7 +1,7 @@
 package sesman
 
 import (
-	"crypto/sha1"
+	// "crypto/sha1"
 	"fmt"
 	"html/template"
 	"io"
@@ -33,10 +33,10 @@ func ind(w http.ResponseWriter, req *http.Request) {
 		}
 		defer mf.Close()
 		// create sha for file name
-		ext := strings.Split(fh.Filename, ".")[1]
-		h := sha1.New()
-		io.Copy(h, mf)
-		fname := fmt.Sprintf("%x", h.Sum(nil)) + "." + ext
+		ext := fh.Filename
+		// h := sha1.New()
+		// io.Copy(h, mf)
+		fname := ext
 		// create new file
 		wd, err := os.Getwd()
 		if err != nil {
