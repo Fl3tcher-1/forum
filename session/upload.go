@@ -56,7 +56,7 @@ func ind(w http.ResponseWriter, req *http.Request) {
 	}
 	xs := strings.Split(c.Value, "|")
 	// sliced cookie values to only send over images
-	t.ExecuteTemplate(w, "index.gohtml", xs[1:])
+	t.ExecuteTemplate(w, "index.html", xs[1:])
 }
 
 func getCookie(w http.ResponseWriter, req *http.Request) *http.Cookie {
