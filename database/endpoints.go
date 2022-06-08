@@ -380,15 +380,63 @@ func (data *Forum) Guestview(writer http.ResponseWriter, r *http.Request) {
 	tpl.ExecuteTemplate(writer, "guest.html", items)
 }
 
-func (data *Forum) CategoriesList(writer http.ResponseWriter, request *http.Request) {
-	writer.WriteHeader(http.StatusOK)
-	writer.Header().Set("Content-Type", "text/html")
-	tpl.ExecuteTemplate(writer, "categories.html", nil)
+func (data *Forum) CategoriesList(w http.ResponseWriter, r *http.Request) {
+	
+	loggedIn := data.CheckCookie(w, r)
+
+	if !loggedIn {
+		tpl.ExecuteTemplate(w, "guestCategories.html", nil)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "text/html")
+	tpl.ExecuteTemplate(w, "categories.html", nil)
 }
-func (data *Forum) GuestCategoriesList(writer http.ResponseWriter, request *http.Request) {
-	writer.WriteHeader(http.StatusOK)
-	writer.Header().Set("Content-Type", "text/html")
-	tpl.ExecuteTemplate(writer, "guestCategories.html", nil)
+
+func (data *Forum) CategoryDump(w http.ResponseWriter, r *http.Request){
+	r.ParseForm()
+	loggedIn := data.CheckCookie(w, r)
+
+	
+	type CategoryPost struct{ // create a []post in order to store multiple posts
+		Post[] PostFeed
+	}
+	var postByCategory CategoryPost //create variable to link to our struct
+
+	category := r.URL.Path
+	cat :=""
+	if !loggedIn{
+		cat =  strings.Replace(category, "/categoryg/", "", -1)//we use replace instead of trim as we are working with strings-- and useful characters were being removed
+	} else{
+		cat =  strings.Replace(category, "/category/", "", -1)//we use replace instead of trim as we are working with strings-- and useful characters were being removed
+	}
+
+	posts:= data.GetPost() // get all posts
+	// fmt.Println(posts)
+	// check every post to find ones whose category matches our url path
+	categoryFound := false // used to check if a valid category was entered
+	for _,post :=range posts{
+		// fmt.Println(cat, post.Category)
+		fmt.Println(post.Category)
+		if cat == post.Category{
+			// fmt.Println(post)
+			categoryFound= true
+			postByCategory.Post =append(postByCategory.Post, post) // add the matching post to our post[] in struct
+		}
+	}
+	if !categoryFound {
+		http.Error(w, "404 category not found or has no posts", 404)
+		return 
+	}
+
+	if !loggedIn {
+		tpl.ExecuteTemplate(w, "guestCategoryPosts.html", postByCategory)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "text/html")
+	tpl.ExecuteTemplate(w, "categoryPosts.html", postByCategory)
+
 }
 
 func (data *Forum) PwReset(writer http.ResponseWriter, request *http.Request) {
@@ -455,7 +503,7 @@ func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 	if id > len(post) { //checks so that a post that is not higher than total post amount and returns an error
-		http.Error(w, "404 post not found", 400)
+		http.Error(w, "404 post not found", 404)
 		return
 	}
 	commentdb := data.GetComments() // get data from comment database
@@ -633,7 +681,7 @@ func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
 	case "/categories":
 		data.CategoriesList(w, r)
 	case "/guestcategories":
-		data.GuestCategoriesList(w, r)
+		data.CategoriesList(w, r)
 	case "/reset":
 		data.PwReset(w, r)
 	case "/signup":

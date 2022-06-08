@@ -29,10 +29,14 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", data.Handler)
+	mux.HandleFunc("/category/", data.CategoryDump)
+	mux.HandleFunc("/categoryg/", data.CategoryDump)
 	mux.HandleFunc("/threadg/", data.ThreadGuest)
 	mux.HandleFunc("/thread/", data.Threads)
+	mux.HandleFunc("/category/stylesheet", cssHandler)
 	mux.HandleFunc("/threadg/stylesheet", cssHandler)
 	mux.HandleFunc("/thread/stylesheet", cssHandler)
+	mux.HandleFunc("/categoryg/stylesheet", cssHandler)
 
 	fmt.Println("Starting server at port 8080:\n http://localhost:8080/login")
 
