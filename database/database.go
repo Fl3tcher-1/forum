@@ -132,6 +132,36 @@ func Connect(db *sql.DB) *Forum {
 	}
 }
 
+
+func (data *Forum) GetUser() []User {
+	user := []User{}
+
+	rows, _ := data.DB.Query(`
+	SELECT * FROM people
+	`)
+
+	var uID int 
+	var uuid string
+	var username string
+	var email string 
+	var pass string 
+
+
+	for rows.Next(){
+		rows.Scan(&uID,&uuid,&username,&email,&pass)
+		user =append(user, User{
+			UserID: uID,
+			Uuid: uuid,
+			Username: username,
+			Email: email,
+			Password: pass,
+		})
+	}
+	return user
+}
+
+
+
 func (data *Forum) GetPost() []PostFeed {
 
 	posts := []PostFeed{}
@@ -214,51 +244,3 @@ func (data *Forum) GetSession() []Session {
 
 }
 
-
-// Get() dumps all values from a selected table
-// func (feed *Forum) Get() []PostFeed {
-// 	// variable init
-// 	var id int
-// 	var title string
-// 	var content string
-// 	// var comments []string
-// 	var likes int
-// 	var created string
-// 	var category string
-
-// 	posts := []PostFeed{}
-
-// 	rows, err := feed.DB.Query("SELECT * FROM feed")
-// 	if err != nil {
-// 		fmt.Printf("Feed DB Query error: %+v\n", err)
-// 	}
-
-// 	// scan rows in database, update variable using memory addresses and link to struct
-// 	for rows.Next() {
-// 		rows.Scan(&id, &title, &content, &likes, &created, &category)
-// 		newPost := PostFeed{ // explicit values
-// 			PostID:    id,
-// 			Title:     title,
-// 			Content:   content,
-// 			Likes:     likes,
-// 			CreatedAt: created,
-// 			// Comments: comments,
-// 			Category: category,
-// 		}
-// 		posts = append(posts, newPost)
-// 	}
-// 	return posts
-// }
-
-// Add(adds an item into a table)
-// func (feed *Forum) Add(item PostFeed) {
-// 	stmt, err := feed.DB.Prepare("INSERT INTO feed (title, content, likes, created, category) VALUES (?, ?, ?, ?, ?);")
-// 	if err != nil {
-// 		fmt.Printf("feed DB Prepare error: %+v\n", err)
-// 	}
-// 	// stmt.QueryRow(stmt, item.Title, item.Content, item.Category)
-
-// 	stmt.Exec(item.Title, item.Content, item.Likes, item.CreatedAt, item.Category)
-
-// 	defer stmt.Close()
-// }

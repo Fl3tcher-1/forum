@@ -217,18 +217,18 @@ func (data *Forum) SignUpUser(w http.ResponseWriter, r *http.Request) {
 
 // check cookie
 
-func (data *Forum) CheckCookie(writer http.ResponseWriter, request *http.Request) bool {
+func (data *Forum) CheckCookie(writer http.ResponseWriter, request *http.Request) (string,bool) {
 
 	c, err := request.Cookie("session_token")
 	if err != nil {
 		if err == http.ErrNoCookie {
 			fmt.Println(err)
-			return false
+			return "", false
 		}
 	}
 
 	sessionToken := c.Value
-	var currentSession Session
+	//var currentSession Session
 	a := data.GetSession()
 
 	fmt.Println(sessionToken)
@@ -238,8 +238,9 @@ func (data *Forum) CheckCookie(writer http.ResponseWriter, request *http.Request
 	for _, sess := range a {
 		fmt.Println(sessionToken, " : ", sess.SessionID)
 		if sessionToken == sess.SessionID {
+			return sess.Username,true
 			//fmt.Println(sessionToken, " : ", sess.SessionID)
-			currentSession = sess
+			//currentSession = sess
 			//sessFound = true
 		}
 
@@ -248,43 +249,43 @@ func (data *Forum) CheckCookie(writer http.ResponseWriter, request *http.Request
 		// // 	return
 		// // }
 
-		if currentSession.isExpired() {
-			data.DB.Exec("DELETE FROM session where sessionID ='" + currentSession.SessionID + "'")
-		}
+		// if currentSession.isExpired() {
+		// 	data.DB.Exec("DELETE FROM session where sessionID ='" + currentSession.SessionID + "'")
+		// }
 	}
-	return true
+	return "",false
 }
 
-func (data *Forum) Logout(w http.ResponseWriter, r *http.Request) {
-	c, _ := r.Cookie("session_token")
+func (data *Forum) Logout(w http.ResponseWriter, r *http.Request, userName string) {
+	// c, _ := r.Cookie("session_token")
 
-	sessionToken := c.Value
-	var currentSession Session
+	// sessionToken := c.Value
+	// var currentSession Session
 	a := data.GetSession()
 
-	fmt.Println(sessionToken)
+	// fmt.Println(sessionToken)
 
 	fmt.Println("here")
 
 	for _, sess := range a {
-		if sessionToken == sess.SessionID {
-			currentSession = sess
-			data.DB.Exec("DELETE FROM session where sessionID ='" + currentSession.SessionID + "'")
+		if userName == sess.Username {
+			// currentSession = sess
+			data.DB.Exec("DELETE FROM session where username ='" + userName + "'")
 		}
 	}
 
-	c = &http.Cookie{
-		Name:   "session_token",
-		Value:  "",
-		MaxAge: -1,
-	}
-	http.SetCookie(w, c)
+	// c = &http.Cookie{
+	// 	Name:   "session_token",
+	// 	Value:  "",
+	// 	MaxAge: -1,
+	// }
+	// http.SetCookie(w, c)
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 
 }
 
 // home page
-func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
+func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request,loggedIn bool,userName string) {
 	writer.Header().Set("Content-Type", "text/html")
 
 	if err := request.ParseForm(); err != nil { // checks for errors parsing form
@@ -293,7 +294,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	loggedIn := data.CheckCookie(writer, request)
+	//loggedIn := data.CheckCookie(writer, request)
 	fmt.Println(loggedIn)
 
 	// 🐈
@@ -304,7 +305,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 
 	} else {
 
-		// var u User
+
 		postCategory := request.FormValue("category")
 
 		postTitle := request.FormValue("title")
@@ -315,16 +316,26 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 		time := time.Now()
 		postCreated := time.Format("01-02-2006 15:04")
 
-		user := "1"
+	 // a := data.GetUser()
+	//  var u User
 
-		// user := u.Username
+	//   for _, user := range a {
+		
+		  
+	//   }
+
+   
+
+	//u := "1"
+
+
 
 		if postTitle != "" || postContent != "" || postCategory != "" {
 
 			data.CreatePost(PostFeed{
 				//User:      sessionID.String(),
 
-				Username:  user,
+				Username:  userName,
 				Title:     postTitle,
 				Content:   postContent,
 				Likes:     postLikes,
@@ -492,8 +503,8 @@ func (data *Forum) ThreadGuest(w http.ResponseWriter, r *http.Request) {
 	// tpl.ExecuteTemplate(w,"threadGuest.html", items)
 }
 
-func (data *Forum) AboutFunc(w http.ResponseWriter, r *http.Request) {
-	loggedIn := data.CheckCookie(w, r)
+func (data *Forum) AboutFunc(w http.ResponseWriter, r *http.Request,loggedIn bool) {
+	//loggedIn := data.CheckCookie(w, r)
 	if !loggedIn {
 		tpl.ExecuteTemplate(w, "aboutGuest.html", nil)
 		return
@@ -506,8 +517,8 @@ func (data *Forum) AboutFunc(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (data *Forum) ContactUs(w http.ResponseWriter, r *http.Request) {
-	loggedIn := data.CheckCookie(w, r)
+func (data *Forum) ContactUs(w http.ResponseWriter, r *http.Request, loggedIn bool) {
+	//loggedIn := data.CheckCookie(w, r)
 
 	if !loggedIn {
 		tpl.ExecuteTemplate(w, "contactGuest.html", nil)
@@ -586,8 +597,10 @@ func (data *Forum) Customization(writer http.ResponseWriter, request *http.Reque
 
 func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
 
-	// data.CheckCookie(w, r)
-
+    username,loggedIn :=data.CheckCookie(w, r)
+	 fmt.Println(username)
+	// check login status
+//data.GetUser()
 	switch r.URL.Path {
 	// page handlers
 	case "/stylesheet": // handle css
@@ -597,9 +610,9 @@ func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
 	case "/login":
 		data.LoginWeb(w, r)
 	case "/logout":
-		data.Logout(w, r)
+		data.Logout(w, r, username)
 	case "/home":
-		data.HomePage(w, r)
+		data.HomePage(w, r,loggedIn,username)
 	case "/categories":
 		data.CategoriesList(w, r)
 	case "/guestcategories":
@@ -618,9 +631,9 @@ func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
 	// case "/thread/*":
 	// 	data.Threads(w, r)
 	case "/about":
-		data.AboutFunc(w, r)
+		data.AboutFunc(w, r,loggedIn)
 	case "/contact-us":
-		data.ContactUs(w, r)
+		data.ContactUs(w, r,loggedIn)
 	case "/guest":
 		data.Guestview(w, r)
 
