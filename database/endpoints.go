@@ -43,7 +43,6 @@ type Post struct {
 
 // creates all needed templates
 // will need to be reduced as there is too many at the moment
-
 var tpl *template.Template
 
 // parses files for all templates allowing them to be called
@@ -545,7 +544,6 @@ func (data *Forum) ImgUpload(writer http.ResponseWriter, request *http.Request) 
 	}
 
 	c := getCookie(writer, request)
-	// process form submission
 	if request.Method == http.MethodPost {
 		mf, fh, err := request.FormFile("nf")
 		if err != nil {
@@ -562,8 +560,7 @@ func (data *Forum) ImgUpload(writer http.ResponseWriter, request *http.Request) 
 		if err != nil {
 			fmt.Println(err)
 		}
-		path := filepath.Join(wd, fname)
-		fmt.Println(path)
+		path := filepath.Join(wd, "pics", fname)
 		nf, err := os.Create(path)
 		if err != nil {
 			fmt.Println(err)
@@ -576,7 +573,8 @@ func (data *Forum) ImgUpload(writer http.ResponseWriter, request *http.Request) 
 		c = appendValue(writer, c, fname)
 	}
 	xs := strings.Split(c.Value, "|")
-	tpl.ExecuteTemplate(writer, "upload.html", xs)
+	// sliced cookie values to only send over images
+	tpl.ExecuteTemplate(writer, "upload.html", xs[1:])
 }
 
 func getCookie(w http.ResponseWriter, r *http.Request) *http.Cookie {

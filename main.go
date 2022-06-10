@@ -29,6 +29,7 @@ func main() {
 	data := database.Connect(db)
 
 	mux := http.NewServeMux()
+	mux.Handle("/pics/", http.StripPrefix("/pics", http.FileServer(http.Dir("./pics"))))
 	mux.HandleFunc("/", data.Handler)
 	mux.HandleFunc("/thread/", data.Threads)
 	mux.HandleFunc("/thread/stylesheet", cssHandler)
