@@ -50,6 +50,10 @@ a{
 a:hover{
   transform: scale(1.2);
 }
+h2{
+  display: flex;
+  justify-content: center;
+}
 
 h3 {
   color: var(--heading-color);

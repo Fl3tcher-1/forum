@@ -36,7 +36,7 @@ type Session struct {
 type Comment struct {
 	CommentID int
 	PostID    int
-	UserId    int
+	UserId    string
 	Content   string
 	CreatedAt string
 }

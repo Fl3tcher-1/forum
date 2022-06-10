@@ -39,7 +39,7 @@
     <!-- </div> -->
     <!-- <div class="guest"> -->
         <div class="welcome"><h2> 
-            Welcome  {{range .}} {{.Username}} {{end}}, hope you enjoy your stay :)
+            Welcome {{.UserSession.Username}}, hope you enjoy your stay :)
         </h2> 
          </div>
     <form>
@@ -70,7 +70,7 @@
     <div class="featured"><h3> featured/trending posts</h3>
         
         <ol> 
-            {{range . }}
+            {{range .Post}}
             <li class ="row">
                 <h3 class="title2">
                     <a href ="thread/{{.PostID}}">

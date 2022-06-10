@@ -6,7 +6,7 @@
                 <link rel="stylesheet" href ="stylesheet" type ="text/css">
 
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{{.Name}}</title>
+        <title>{{.Profile.Name}}</title>
 </head>
 <body>
                   <div class="head">
@@ -39,7 +39,7 @@
                   </div>
         
         <div class="welcome"><h2> 
-            Welcome {{.Name}}, hope you enjoy your stay :)
+            Welcome {{.Profile.Name}}, hope you enjoy your stay :)
         </h2> 
          </div>
     <br>
@@ -79,18 +79,18 @@
             </form>
 </div>
 <div class="profile-grid">
-    <div class="user"> {{.Name}}
+    <div class="user"> {{.Profile.Name}}
         <br><br>
      <div class="image">
         <img src="panda"> 
         </div><br>
         <div class="about">
-            {{.Info}}
+            {{.Profile.Info}}
         </div>
         <br>
-        <div class="gender">Gender: {{.Gender}}</div>
-        <div class="age">Age: {{.Age}}</div>
-        <div class="location">Location: {{.Location}}</div>
+        <div class="gender">Gender: {{.Profile.Gender}}</div>
+        <div class="age">Age: {{.Profile.Age}}</div>
+        <div class="location">Location: {{.Profile.Location}}</div>
         <br>
     </div>
 </div>
