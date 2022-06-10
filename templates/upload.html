@@ -1,0 +1,9 @@
+{{define "Upload"}}
+<h4>Pictures:</h4>
+<!-- {{range .}}
+<img src="{{.}}" width="400px">
+{{end}} -->
+<form method="post" enctype="multipart/form-data" action="/upload">
+<input type="file" name="nf">
+</form>
+{{end}}

@@ -3,9 +3,10 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"forum/database"
 	"log"
 	"net/http"
+
+	"forum/database"
 
 	// "forum/database"
 
@@ -19,8 +20,8 @@ import (
 func cssHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "./templates/stylesheet.css")
 }
-func main() {
 
+func main() {
 	db, err := sql.Open("sqlite3", "./database/userdata.db")
 	if err != nil {
 		fmt.Println(err.Error())
@@ -38,5 +39,4 @@ func main() {
 		log.Fatal(500, "500 Internal server error:", err)
 		fmt.Printf("main ListenAndServe error: %+v\n", err)
 	}
-
 }

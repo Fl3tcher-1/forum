@@ -1,6 +1,7 @@
 package database
 
 import (
+	"crypto/sha1"
 	"database/sql"
 	"fmt"
 	"html/template"
@@ -536,30 +537,33 @@ func (data *Forum) Customization(writer http.ResponseWriter, request *http.Reque
 	}
 }
 
-var t *template.Template
-
 func (data *Forum) ImgUpload(writer http.ResponseWriter, request *http.Request) {
+	err := request.ParseMultipartForm(5 << 20)
+	if err != nil {
+		http.Error(writer, "The uploaded image is too big. Please use an image less than 20mb in size", http.StatusBadRequest)
+		return
+	}
+
 	c := getCookie(writer, request)
+	// process form submission
 	if request.Method == http.MethodPost {
 		mf, fh, err := request.FormFile("nf")
 		if err != nil {
 			fmt.Println(err)
 		}
 		defer mf.Close()
-
-		request.ParseMultipartForm(5 << 20)
-
 		// create sha for file name
-		ext := fh.Filename
-		// h := sha1.New()
-		// io.Copy(h, mf)
-		fname := ext
+		ext := strings.Split(fh.Filename, ".")[1]
+		h := sha1.New()
+		io.Copy(h, mf)
+		fname := fmt.Sprintf("%x", h.Sum(nil)) + "." + ext
 		// create new file
 		wd, err := os.Getwd()
 		if err != nil {
 			fmt.Println(err)
 		}
-		path := filepath.Join(wd, "public", "pics", fname)
+		path := filepath.Join(wd, fname)
+		fmt.Println(path)
 		nf, err := os.Create(path)
 		if err != nil {
 			fmt.Println(err)
@@ -571,10 +575,8 @@ func (data *Forum) ImgUpload(writer http.ResponseWriter, request *http.Request) 
 		// add filename to this user's cookie
 		c = appendValue(writer, c, fname)
 	}
-
 	xs := strings.Split(c.Value, "|")
-	// sliced cookie values to only send over images
-	t.ExecuteTemplate(writer, "index.html", xs[1:])
+	tpl.ExecuteTemplate(writer, "upload.html", xs)
 }
 
 func getCookie(w http.ResponseWriter, r *http.Request) *http.Cookie {
@@ -642,6 +644,7 @@ func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
 		data.UserPhoto(w, r)
 	case "/posts":
 		data.UserPosts(w, r)
+	case "/upload":
 		data.ImgUpload(w, r)
 	case "/comments":
 		data.UserComments(w, r)
