@@ -20,6 +20,7 @@ func CheckErr(err error) {
 	log.Fatal(err)
 }
 
+// @TODO: handle errors for all create funcs
 func (forum *Forum) CreateUser(user User) {
 
 	stmt, err := forum.DB.Prepare("INSERT INTO people (uuid, username, email, password) VALUES (?, ?, ?, ?);")
@@ -54,9 +55,24 @@ func (forum *Forum) CreateComment(comment Comment) {
 	if err != nil {
 		CheckErr(err)
 	}
-	stmt.Exec(comment.PostID, comment.UserId, comment.Content,comment.CreatedAt)
+	stmt.Exec(comment.PostID, comment.UserId, comment.Content, comment.CreatedAt)
 	defer stmt.Close()
 
+}
+
+// Update(Updates an item in a table)
+func (feed *Forum) UpdatePost(item PostFeed) error {
+	stmt, err := feed.DB.Prepare("UPDATE post SET title = ?, content = ?, likes = ?, dislikes = ?, category = ? WHERE postID = ?;")
+	if err != nil {
+		return fmt.Errorf("feed DB Prepare error: %+v", err)
+	}
+	defer stmt.Close()
+	// stmt.QueryRow(stmt, item.Title, item.Content, item.Category)
+	_, err = stmt.Exec(item.Title, item.Content, item.Likes, item.Dislikes, item.Category, item.PostID)
+	if err != nil {
+		return fmt.Errorf("unable to insert item into post: %w", err)
+	}
+	return nil
 }
 
 // ---------------------------------------------- TABLES ------------------------------- --//
@@ -88,7 +104,7 @@ func sessionTable(db *sql.DB) {
 
 }
 
-func postTabe(db *sql.DB) {
+func postTable(db *sql.DB) {
 	stmt, err := db.Prepare(`CREATE TABLE IF NOT EXISTS post (
  postID INTEGER PRIMARY KEY AUTOINCREMENT,
  username TEXT REFERENCES people(username),
@@ -106,6 +122,7 @@ func postTabe(db *sql.DB) {
 
 }
 
+// @TODO: add likes/dislikes to comments
 func commentTable(db *sql.DB) {
 	stmt, err := db.Prepare(`CREATE TABLE IF NOT EXISTS comments (
    commentID INTEGER PRIMARY KEY AUTOINCREMENT, 
@@ -124,7 +141,7 @@ func commentTable(db *sql.DB) {
 func Connect(db *sql.DB) *Forum {
 	userTable(db)
 	sessionTable(db)
-	postTabe(db)
+	postTable(db)
 	commentTable(db)
 
 	return &Forum{
@@ -163,10 +180,11 @@ func (data *Forum) GetPost() []PostFeed {
 			CreatedAt: created,
 		})
 	}
-	//fmt.Println(posts)
+	// fmt.Println(posts)
 	return posts
 }
 
+// @TODO: add likes/dislikes to comments
 func (data *Forum) GetComments() []Comment {
 	comments := []Comment{}
 	rows, _ := data.DB.Query(`SELECT * FROM comments`)
@@ -198,67 +216,18 @@ func (data *Forum) GetSession() []Session {
  SELECT * FROM session
  `)
 
- var session_token string 
+	var session_token string
 	var uName string
 	var exTime time.Time
 
 	for rows.Next() {
-		rows.Scan(&session_token,&uName, &exTime)
+		rows.Scan(&session_token, &uName, &exTime)
 		session = append(session, Session{
 			SessionID: session_token,
-			Username: uName,
-			Expiry:   exTime,
+			Username:  uName,
+			Expiry:    exTime,
 		})
 	}
 
 	return session
 }
-
-
-// Get() dumps all values from a selected table
-// func (feed *Forum) Get() []PostFeed {
-// 	// variable init
-// 	var id int
-// 	var title string
-// 	var content string
-// 	// var comments []string
-// 	var likes int
-// 	var created string
-// 	var category string
-
-// 	posts := []PostFeed{}
-
-// 	rows, err := feed.DB.Query("SELECT * FROM feed")
-// 	if err != nil {
-// 		fmt.Printf("Feed DB Query error: %+v\n", err)
-// 	}
-
-// 	// scan rows in database, update variable using memory addresses and link to struct
-// 	for rows.Next() {
-// 		rows.Scan(&id, &title, &content, &likes, &created, &category)
-// 		newPost := PostFeed{ // explicit values
-// 			PostID:    id,
-// 			Title:     title,
-// 			Content:   content,
-// 			Likes:     likes,
-// 			CreatedAt: created,
-// 			// Comments: comments,
-// 			Category: category,
-// 		}
-// 		posts = append(posts, newPost)
-// 	}
-// 	return posts
-// }
-
-// Add(adds an item into a table)
-// func (feed *Forum) Add(item PostFeed) {
-// 	stmt, err := feed.DB.Prepare("INSERT INTO feed (title, content, likes, created, category) VALUES (?, ?, ?, ?, ?);")
-// 	if err != nil {
-// 		fmt.Printf("feed DB Prepare error: %+v\n", err)
-// 	}
-// 	// stmt.QueryRow(stmt, item.Title, item.Content, item.Category)
-
-// 	stmt.Exec(item.Title, item.Content, item.Likes, item.CreatedAt, item.Category)
-
-// 	defer stmt.Close()
-// }

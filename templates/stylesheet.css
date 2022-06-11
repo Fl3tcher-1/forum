@@ -1,7 +1,7 @@
 /* light theme */
-@media (prefers-color-scheme: light){
-  :root{
-    --heading-color: rgb(4, 29, 139) ;
+@media (prefers-color-scheme: light) {
+  :root {
+    --heading-color: rgb(4, 29, 139);
     --background-color: aqua;
     --border-color: rgb(216, 216, 216);
     --border-color-lighter: rgb(192, 189, 189);
@@ -14,9 +14,9 @@
   }
 }
 
-@media (prefers-color-scheme: dark){
-  :root{
-    --heading-color: rgb(160, 255, 255) ;
+@media (prefers-color-scheme: dark) {
+  :root {
+    --heading-color: rgb(160, 255, 255);
     --background-color: aqua;
     --border-color: rgb(122, 120, 120);
     --border-color-lighter: rgb(48, 46, 46);
@@ -35,19 +35,20 @@ body {
   background-color: var(--body-color);
   margin: 10px;
   color: var(--text-color);
-  
+
 }
 
-body > .dark-mode{
+body>.dark-mode {
   background-color: black;
-  color:antiquewhite;
+  color: antiquewhite;
 }
-a{
+
+a {
   color: var(--text-color);
   text-decoration: none;
 }
 
-a:hover{
+a:hover {
   transform: scale(1.2);
 }
 
@@ -56,24 +57,27 @@ h3 {
   margin-left: 20px;
 }
 
-textarea{
+textarea {
   margin: 20 0;
-   vertical-align: middle;
-   width: 82%;
-   height: 80px;
-   color: black;
-   
+  vertical-align: middle;
+  width: 82%;
+  height: 80px;
+  color: black;
+
 }
-ol{
+
+ol {
   row-gap: 110px;
   margin: 0;
 }
-li{
+
+li {
   border: 1px solid var(--heading-color);
-  margin: 0 auto ;
+  margin: 0 auto;
   gap: 10px;
 }
-.grid >div{
+
+.grid>div {
   background-color: var(--background-color);
   padding: 1em;
   display: block;
@@ -81,28 +85,30 @@ li{
 }
 
 
-.image{
+.image {
   height: auto;
   display: block;
-  margin-left:auto;
+  margin-left: auto;
   margin-right: auto;
   text-align: center;
   width: 50%;
   height: 50%;
   object-fit: cover;
 }
-.imageCat{
+
+.imageCat {
   height: auto;
   display: block;
-  margin-left:auto;
+  margin-left: auto;
   margin-right: auto;
   text-align: center;
   width: 50%;
   height: 50%;
   object-fit: cover;
 }
-.grid{
-  display:grid;
+
+.grid {
+  display: grid;
   gap: 1rem;
   margin: auto;
   width: 50%;
@@ -111,8 +117,9 @@ li{
   padding: 10px;
 
 }
-.head{
-    border: var(--border-color) 5px solid;
+
+.head {
+  border: var(--border-color) 5px solid;
   display: flex;
   background-color: var(--border-color-lighter);
   margin: 10;
@@ -123,20 +130,22 @@ li{
   width: 100%;
   z-index: 1000;
 }
-.head > h4{
+
+.head>h4 {
   border: var(--border-color);
   color: var(--text-color);
 }
-.header{
+
+.header {
   display: inline;
   margin: 0;
 }
 
-.button{
+.button {
   margin-left: 10;
 }
 
-input[type=submit]{
+input[type=submit] {
   background-color: var(--button-color);
   color: var(--button-text);
   font-size: 15px;
@@ -145,35 +154,38 @@ input[type=submit]{
 }
 
 
-input:hover[type=submit]{
-  background-color:var(--background-color);
+input:hover[type=submit] {
+  background-color: var(--background-color);
   color: var(--button-text);
   opacity: .9;
-  font-size:115%;
+  font-size: 115%;
 }
-button{
+
+button {
   background-color: var(--button-color);
   color: var(--button-text);
   font-size: 15px;
   height: 50px;
   width: 250px;
 }
-button:hover{
-  background-color:var(--background-color);
+
+button:hover {
+  background-color: var(--background-color);
   color: var(--button-text);
   opacity: .9;
-  font-size:115%;
+  font-size: 115%;
 }
 
-.banner{
+.banner {
   margin: 10px 10px;
   padding: 1 rem;
   text-align: center;
-background-image: linear-gradient(red, crimson);}
+  background-image: linear-gradient(red, crimson);
+}
 
-.welcome{
+.welcome {
   margin: 10px 10px;
-  margin:auto;
+  margin: auto;
   padding: 1 rem;
   justify-content: center;
   text-align: center;
@@ -182,37 +194,40 @@ background-image: linear-gradient(red, crimson);}
   max-width: fit-content;
 }
 
-.banner:hover{
+.banner:hover {
   background-image: linear-gradient(crimson, red);
 }
 
-.welcome:hover{
+.welcome:hover {
   color: var(--heading-color);
   /* background-image: linear-gradient(blue, var(--heading-color)); */
 }
 
-.featured{
+.featured {
   color: var(--heading-color);
-   text-align: left; 
+  text-align: left;
   padding-right: 125px;
-  margin:0;
+  margin: 0;
   padding: 0;
 }
-.content{
+
+.content {
   /* text-align: right; */
   color: var(--heading-color);
   margin: 3px 0;
   gap: 0;
   margin: 0;
 }
-.title{
+
+.title {
   color: var(--text-color);
   display: inline;
   margin: 0;
 }
-.title2{
-  color:var(--heading-color);
-  
+
+.title2 {
+  color: var(--heading-color);
+
 }
 
 .bottom {
@@ -222,21 +237,24 @@ background-image: linear-gradient(red, crimson);}
   margin: 0;
   padding: 0;
 }
-.timestamp{
+
+.timestamp {
   padding-right: 10px;
 }
 
-.post > textarea{
+.post>textarea {
   max-width: 500px;
   height: 100px;
   padding: 0;
   margin: 0;
-  
+
 }
-h4{
+
+h4 {
   margin: 0;
   color: var(--heading-color);
 }
+
 /* p{
   padding: 1rem;
   margin: 5px 0;
@@ -247,22 +265,22 @@ p1{
     color: var(--text-color);
 
 } */
-.form{
+.form {
   width: 350px;
   margin: 10;
 }
 
-.category-grid{
+.category-grid {
   display: grid;
-  justify-content: center;  
+  justify-content: center;
   grid-template-columns: 300px 300px;
   grid-template-rows: auto auto;
-  gap: 40px;  
+  gap: 40px;
   padding: 2rem;
   margin: 0;
 }
 
-.category{
+.category {
   color: var(--text-color);
   display: grid;
   text-align: center;
@@ -274,25 +292,26 @@ p1{
   overflow: hidden;
 }
 
-.category > .image{
+.category>.image {
   width: auto;
   height: auto;
 }
 
-.image >img{
+.image>img {
   gap: 50px;
   margin: 0;
-width:  100%;
-height: 100%;
-object-fit: cover;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.profilenav{
+.profilenav {
   display: flex;
   grid-template-columns: 300px 500px;
   margin: 0;
 }
-.profilenav > .profile-grid{
+
+.profilenav>.profile-grid {
   display: flex;
   text-align: center;
   padding: 5px;
@@ -300,92 +319,99 @@ object-fit: cover;
   border: rgb(151, 8, 8) 4px dashed;
 }
 
-.profilenav > .profile-grid > .about{
+.profilenav>.profile-grid>.about {
   width: 50px;
 }
 
-.profilenav > .profile-grid > .user >.image{
+.profilenav>.profile-grid>.user>.image {
   width: 150px;
   height: 150px;
   border-radius: 50%;
   overflow: hidden;
 }
 
-.user{
+.user {
   width: 400px;
   font-size: 18px;
 }
-.text{
-    color: var(--text-color);
+
+.text {
+  color: var(--text-color);
   width: 250px;
   display: flex;
   justify-content: center;
   align-items: center;
   text-align: center;
 }
-p{
-    color: var(--text-color);
+
+p {
+  color: var(--text-color);
   text-align: center;
   margin: 25px 450px;
   padding: 10px;
   font-size: 20px;
 }
-p1{
+
+p1 {
   color: var(--text-color);
   margin: 0px 20px;
   padding: 5px;
 }
 
-p2{
+p2 {
   color: var(--text-color);
-  margin: 0px ;
+  margin: 0px;
   padding: 0px;
 
 }
 
-.contact{
+.contact {
   text-align: center;
   margin: 0;
   padding: 1rem;
 }
-.rights{
+
+.rights {
   text-align: center;
   margin: 0;
   padding: 1rem;
   position: relative;
   bottom: 0;
 }
-h5{
+
+h5 {
   font-size: 25px;
   margin: 20px;
-    color: var(--text-color);
-}
-h6{
-  font-size: 12px;
-  margin: 10px;
-    color: var(--rights-color);
+  color: var(--text-color);
 }
 
-.imageq{
+h6 {
+  font-size: 12px;
+  margin: 10px;
+  color: var(--rights-color);
+}
+
+.imageq {
   display: block;
   margin-left: auto;
   margin-right: auto;
- justify-content: center;
- text-align: center;
+  justify-content: center;
+  text-align: center;
   width: 75%;
   padding: 1rem;
 }
 
-.header > .comments{
+.header>.comments {
   margin: 5px 5px;
   padding: 5px;
-    color: var(--text-color);
+  color: var(--text-color);
 }
 
-.form-popup{
+.form-popup {
   text-align: center;
 }
-.photo-grid{
+
+.photo-grid {
   display: grid;
   justify-content: center;
   grid-template-columns: 200px 200px 200px;
@@ -396,7 +422,7 @@ h6{
   overflow: hidden;
 }
 
-.img-cell{
+.img-cell {
   display: block;
   margin-top: auto;
   margin-bottom: auto;
@@ -405,74 +431,74 @@ h6{
   overflow: hidden;
 }
 
-.img-cell >img{
+.img-cell>img {
   width: 100%;
   height: auto;
- 
+
 }
 
-.photo-grid > .img-cell:hover{
+.photo-grid>.img-cell:hover {
   transform: scale(1.1);
-  border: var(--border-color ) solid 3px;
+  border: var(--border-color) solid 3px;
   overflow: hidden;
-  
+
 }
 
-.btn{
+.btn {
   font-size: 15px;
   background-color: var(--button-color);
   color: var(--button-text);
 }
 
-.btn:hover{
-  transform:scale(1.2)
+.btn:hover {
+  transform: scale(1.2)
 }
 
-.homeLayout{
+.homeLayout {
   display: flex;
   grid-template-columns: 30 40 30;
   gap: 10px;
 }
 
-.homeLayout > .post{
+.homeLayout>.post {
   display: flex;
   align-items: center;
   flex-direction: column;
   gap: 2px;
   position: sticky;
   align-self: flex-start;
- top: 75px;
+  top: 75px;
 }
 
-.textarea2{
+.textarea2 {
   width: 100px;
   height: 50px;
 }
 
-.thread-layout{
+.thread-layout {
   /* max-width: 500px; */
   max-width: 50%;
   width: 50%;
   display: flex;
-  flex-direction:column;
+  flex-direction: column;
   margin: 0 auto;
   gap: 5px;
   /* margin-left: 40%; */
   padding: 0;
 }
 
-.thread-layout >h4{
+.thread-layout>h4 {
   margin-left: 23px;
   padding: 0;
 }
 
-.thread-layout >ol {
+.thread-layout>ol {
   margin-left: -15px;
   /* overflow: scroll; */
 }
 
 
-li.row{
+li.row {
   /* display: flex; */
   margin: 10px;
   flex-direction: column;

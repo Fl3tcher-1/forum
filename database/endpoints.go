@@ -2,12 +2,13 @@ package database
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
-	"strconv"
 	"time"
 
 	"html/template"
 	"net/http"
+	"strconv"
 	"strings"
 	"unicode"
 
@@ -17,9 +18,6 @@ import (
 
 // type Log struct {
 // 	Loggedin bool
-type Log struct {
-	Loggedin bool
-}
 
 // type User struct {
 // 	Username string
@@ -38,9 +36,12 @@ type Post struct {
 	Comments int
 }
 
+func (p PostFeed) MarshallJSON() ([]byte, error) {
+	return json.Marshal(p)
+}
+
 // creates all needed templates
 // will need to be reduced as there is too many at the moment
-
 var tpl *template.Template
 
 // parses files for all templates allowing them to be called
@@ -57,6 +58,7 @@ func (s Session) isExpired() bool {
 
 }
 
+// @TODO: error handling
 // login page
 func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 
@@ -100,7 +102,7 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(user.Password))
-	// returns nill on succcess
+	// returns nil on succcess
 	if err == nil {
 
 		data.CreateSession(Session{
@@ -125,6 +127,7 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// @TODO: error handling
 func (data *Forum) GetSignupPage(w http.ResponseWriter, r *http.Request) {
 	tpl.ExecuteTemplate(w, "signup.html", nil)
 }
@@ -328,7 +331,10 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 	// 🐈
 	if !loggedIn {
 		fmt.Println(loggedIn)
-		tpl.ExecuteTemplate(writer, "guest.html", data.GetPost())
+		err := tpl.ExecuteTemplate(writer, "guest.html", data.GetPost()) 
+		if err != nil {
+			fmt.Printf("ExecuteTemplate guest error: %+v", err)
+		}
 		return
 
 	} else {
@@ -339,7 +345,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 
 		postContent := request.FormValue("content")
 		postLikes := 0
-		postDislikes := 1
+		postDislikes := 0
 		time := time.Now()
 		postCreated := time.Format("01-02-2006 15:04")
 
@@ -381,7 +387,7 @@ func (data *Forum) Guestview(writer http.ResponseWriter, r *http.Request) {
 }
 
 func (data *Forum) CategoriesList(w http.ResponseWriter, r *http.Request) {
-	
+
 	loggedIn := data.CheckCookie(w, r)
 
 	if !loggedIn {
@@ -393,40 +399,39 @@ func (data *Forum) CategoriesList(w http.ResponseWriter, r *http.Request) {
 	tpl.ExecuteTemplate(w, "categories.html", nil)
 }
 
-func (data *Forum) CategoryDump(w http.ResponseWriter, r *http.Request){
+func (data *Forum) CategoryDump(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	loggedIn := data.CheckCookie(w, r)
 
-	
-	type CategoryPost struct{ // create a []post in order to store multiple posts
-		Post[] PostFeed
+	type CategoryPost struct { // create a []post in order to store multiple posts
+		Post []PostFeed
 	}
 	var postByCategory CategoryPost //create variable to link to our struct
 
 	category := r.URL.Path
-	cat :=""
-	if !loggedIn{
-		cat =  strings.Replace(category, "/categoryg/", "", -1)//we use replace instead of trim as we are working with strings-- and useful characters were being removed
-	} else{
-		cat =  strings.Replace(category, "/category/", "", -1)//we use replace instead of trim as we are working with strings-- and useful characters were being removed
+	cat := ""
+	if !loggedIn {
+		cat = strings.Replace(category, "/categoryg/", "", -1) //we use replace instead of trim as we are working with strings-- and useful characters were being removed
+	} else {
+		cat = strings.Replace(category, "/category/", "", -1) //we use replace instead of trim as we are working with strings-- and useful characters were being removed
 	}
 
-	posts:= data.GetPost() // get all posts
+	posts := data.GetPost() // get all posts
 	// fmt.Println(posts)
 	// check every post to find ones whose category matches our url path
 	categoryFound := false // used to check if a valid category was entered
-	for _,post :=range posts{
+	for _, post := range posts {
 		// fmt.Println(cat, post.Category)
 		fmt.Println(post.Category)
-		if cat == post.Category{
+		if cat == post.Category {
 			// fmt.Println(post)
-			categoryFound= true
-			postByCategory.Post =append(postByCategory.Post, post) // add the matching post to our post[] in struct
+			categoryFound = true
+			postByCategory.Post = append(postByCategory.Post, post) // add the matching post to our post[] in struct
 		}
 	}
 	if !categoryFound {
 		http.Error(w, "404 category not found or has no posts", 404)
-		return 
+		return
 	}
 
 	if !loggedIn {
@@ -635,6 +640,15 @@ func (data *Forum) UserLikes(writer http.ResponseWriter, request *http.Request) 
 	}
 }
 
+func (data *Forum) UserDislikes(writer http.ResponseWriter, request *http.Request) {
+	writer.WriteHeader(http.StatusOK)
+	writer.Header().Set("Content-Type", "text/html")
+	err := tpl.ExecuteTemplate(writer, "likes.html", nil)
+	if err != nil {
+		fmt.Printf("UserDislikes Execute.Template error: %+v\n", err)
+	}
+}
+
 func (data *Forum) UserShares(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
@@ -659,6 +673,132 @@ func (data *Forum) Customization(writer http.ResponseWriter, request *http.Reque
 	err := tpl.ExecuteTemplate(writer, "customize.html", nil)
 	if err != nil {
 		fmt.Printf("Customization Execute.Template error: %+v\n", err)
+	}
+}
+
+func (data *Forum) AddLike(writer http.ResponseWriter, request *http.Request) {
+	items := data.GetPost()
+	reqItemIDraw := request.URL.Query().Get("id")
+	reqItemID, err := strconv.Atoi(reqItemIDraw)
+	if err != nil {
+		fmt.Printf("unable to parse post id: %v\n", err)
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Header().Set("Content-Type", "application/json")
+		writer.Write([]byte("{\"500\": \"Error parsing post id\"}"))
+		return
+	}
+	requestedItem := PostFeed{}
+
+	for _, item := range items {
+		if item.PostID == reqItemID {
+			requestedItem = item
+		}
+	}
+
+	if requestedItem.CreatedAt == "" {
+		fmt.Printf("unable to find post %d in db: %v\n", reqItemID, err)
+		writer.WriteHeader(http.StatusNotFound)
+		writer.Header().Set("Content-Type", "application/json")
+		writer.Write([]byte("{\"404\": \"Error finding post\"}"))
+		return
+	}
+
+	j, err := requestedItem.MarshallJSON()
+	if err != nil {
+		fmt.Printf("unable to marshal json for post %d: %v\n", reqItemID, err)
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Header().Set("Content-Type", "application/json")
+		writer.Write([]byte("{\"500\": \"Error marshalling json for post\"}"))
+		return
+	}
+
+	switch request.Method {
+	case http.MethodGet:
+		writer.Header().Set("Content-Type", "application/json")
+		_, err := writer.Write(j)
+		if err != nil {
+			fmt.Printf("unable to send json response for post %d\n", reqItemID)
+		}
+	case http.MethodPost:
+
+		requestedItem.Likes = requestedItem.Likes + 1
+
+		err := data.UpdatePost(requestedItem)
+		if err != nil {
+			fmt.Printf("unable increment likes for post %d: %v\n", reqItemID, err)
+			writer.WriteHeader(http.StatusInternalServerError)
+			writer.Header().Set("Content-Type", "application/json")
+			writer.Write([]byte("{\"500\": \"Error incrementing likes for post\"}"))
+			return
+		}
+		writer.Header().Set("Content-Type", "application/json")
+		_, err = writer.Write([]byte("{\"success\":true}"))
+		if err != nil {
+			fmt.Printf("unable to send json response for post %d\n", reqItemID)
+		}
+		fmt.Printf("added like to post %d\n", reqItemID)
+	}
+}
+
+func (data *Forum) AddDislike(writer http.ResponseWriter, request *http.Request) {
+	items := data.GetPost()
+	reqItemIDraw := request.URL.Query().Get("id")
+	reqItemID, err := strconv.Atoi(reqItemIDraw)
+	if err != nil {
+		fmt.Printf("unable to parse post id: %v\n", err)
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Header().Set("Content-Type", "application/json")
+		writer.Write([]byte("{\"500\": \"Error parsing post id\"}"))
+		return
+	}
+	requestedItem := PostFeed{}
+
+	for _, item := range items {
+		if item.PostID == reqItemID {
+			requestedItem = item
+		}
+	}
+
+	if requestedItem.CreatedAt == "" {
+		fmt.Printf("unable to find post %d in db: %v\n", reqItemID, err)
+		writer.WriteHeader(http.StatusNotFound)
+		writer.Header().Set("Content-Type", "application/json")
+		writer.Write([]byte("{\"404\": \"Error finding post\"}"))
+		return
+	}
+
+	j, err := requestedItem.MarshallJSON()
+	if err != nil {
+		fmt.Printf("unable to marshal json for post %d: %v\n", reqItemID, err)
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Header().Set("Content-Type", "application/json")
+		writer.Write([]byte("{\"500\": \"Error marshalling json for post\"}"))
+		return
+	}
+
+	switch request.Method {
+	case http.MethodGet:
+		writer.Header().Set("Content-Type", "application/json")
+		_, err := writer.Write(j)
+		if err != nil {
+			fmt.Printf("unable to send json response for post %d\n", reqItemID)
+		}
+	case http.MethodPost:
+		requestedItem.Dislikes = requestedItem.Dislikes + 1
+		err := data.UpdatePost(requestedItem)
+		if err != nil {
+			fmt.Printf("unable increment dislikes for post %d: %v\n", reqItemID, err)
+			writer.WriteHeader(http.StatusInternalServerError)
+			writer.Header().Set("Content-Type", "application/json")
+			writer.Write([]byte("{\"500\": \"Error incrementing dislikes for post\"}"))
+			return
+		}
+		writer.Header().Set("Content-Type", "application/json")
+		_, err = writer.Write([]byte("{\"success\":true}"))
+		if err != nil {
+			fmt.Printf("unable to send json response for post %d\n", reqItemID)
+		}
+		fmt.Printf("added dislike to post %d\n", reqItemID)
 	}
 }
 
@@ -737,5 +877,11 @@ func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./images/doge.jpg")
 	case "/question":
 		http.ServeFile(w, r, "./images/question.jpg")
+
+		// api handlers
+	case "/like":
+		data.AddLike(w, r)
+	case "/dislike":
+		data.AddDislike(w, r)
 	}
 }

@@ -3,7 +3,7 @@ package database
 import "time"
 
 type User struct {
-	UserID   int 
+	UserID   int
 	Uuid     string
 	Username string
 	Email    string
@@ -11,25 +11,27 @@ type User struct {
 	//	CreatedAt string
 }
 
-
+type Log struct {
+	Loggedin bool
+}
 
 type PostFeed struct {
-	PostID    int
+	PostID    int `json:"postid,omitempty"`
 	Username  string
 	Uuid      string
 	Title     string
 	Content   string
-	Likes     int
-	Dislikes  int
+	Likes     int `json:"likes"`
+	Dislikes  int `json:"dislikes"`
 	Category  string
 	CreatedAt string
 }
 
 type Session struct {
-   SessionID string 
-	Username string
-	Expiry time.Time
-//	UserID    int
+	SessionID string
+	Username  string
+	Expiry    time.Time
+	//	UserID    int
 	LoggedIn bool
 }
 
@@ -40,7 +42,6 @@ type Comment struct {
 	Content   string
 	CreatedAt string
 }
-
 
 type UsrProfile struct {
 	Name string

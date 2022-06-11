@@ -1,120 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-        <link rel="stylesheet" href ="stylesheet" type ="text/css">
+    <link rel="stylesheet" href="stylesheet" type="text/css">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
 </head>
+
 <body>
-     <div class="head">
-              <h4>
-                  <form action= "/home">
-                <input type ="submit" value="Home"/>
-             </form>
-            </h4>
-              <h4><form action = "categories">
-                <input type="submit" value=" Categories"/>
-            </form> 
-          </h4>
-               <h4> 
-                   <form action = "about">
-             <input type="submit" value=" About"/>
-          </form> 
-         </h4>
-             <h4> <form action = "profile">
-              <input type="submit" value=" Profile"/>
-           </form>
-          </h4>
-             <h4> <form action = "/logout">
-                 <input type="submit" value=" Logout"/>
-            </form> 
-         </h4>
-            <h4>  <form action = "contact-us">
-                <input type="submit" value=" Contact Us"/>
+    <div class="head">
+        <h4>
+            <form action="/home">
+                <input type="submit" value="Home" />
+            </form>
+        </h4>
+        <h4>
+            <form action="categories">
+                <input type="submit" value=" Categories" />
+            </form>
+        </h4>
+        <h4>
+            <form action="about">
+                <input type="submit" value=" About" />
+            </form>
+        </h4>
+        <h4>
+            <form action="profile">
+                <input type="submit" value=" Profile" />
+            </form>
+        </h4>
+        <h4>
+            <form action="/logout">
+                <input type="submit" value=" Logout" />
+            </form>
+        </h4>
+        <h4>
+            <form action="contact-us">
+                <input type="submit" value=" Contact Us" />
             </form>
         </h4>
     </div>
     <!-- </div> -->
     <!-- <div class="guest"> -->
-        <div class="welcome"><h2> 
-            Welcome  {{range .}} {{.Username}} {{end}}, hope you enjoy your stay :)
-        </h2> 
-         </div>
+    <div class="welcome">
+        <h2>
+            Welcome {{range .}} {{.Username}} {{end}}, hope you enjoy your stay :)
+        </h2>
+    </div>
     <form>
-      
+
         <div class="homeLayout">
-             <div class="post"><h3> Create a post</h3>
-                 <form method = "POST" action="/home" id="usrpost"> 
-                         <label for="category"> Please choose a category</label><br> <t></t>
-                       <select id="category" name="category">
-                            <option value="Health">Health</option>
-                            <option value="Finance">Finance</option>
-                           <option value="Animals">Animals</option>
-                           <option value="Fitness">Fitness</option>
-                           <option value="Technology">Technology</option>
-                            <option value="Travel">Travel</option>
-                          </select>  <br>
-                           <label for="title"> Title:</label> <br>
-                           <input type="text" id="title" name="title" required>
-  
-                         <br>
-                          <textarea name="content" id="postcontent" placeholder="Please enter post content here" required></textarea>
-                          <br>
-                          <input type="submit" value="post" a href ="/home" value="reset form">
-                      </form>
-          
+            <div class="post">
+                <h3> Create a post</h3>
+                <form method="POST" action="/home" id="usrpost">
+                    <label for="category"> Please choose a category</label><br>
+                    <t></t>
+                    <select id="category" name="category">
+                        <option value="Health">Health</option>
+                        <option value="Finance">Finance</option>
+                        <option value="Animals">Animals</option>
+                        <option value="Fitness">Fitness</option>
+                        <option value="Technology">Technology</option>
+                        <option value="Travel">Travel</option>
+                    </select> <br>
+                    <label for="title"> Title:</label> <br>
+                    <input type="text" id="title" name="title" required>
+
+                    <br>
+                    <textarea name="content" id="postcontent" placeholder="Please enter post content here"
+                        required></textarea>
+                    <br>
+                    <input type="submit" value="post" a href="/home" value="reset form">
+                </form>
+
             </div>
-            
-    <div class="featured"><h3> featured/trending posts</h3>
-        
-        <ol> 
-            {{range . }}
-            <li class ="row">
-                <h3 class="title2">
-                    <a href ="thread/{{.PostID}}">
-                        <!-- {{.PostID}} -->
-                        {{.Title}} 
-                        <br>
-                        Posted by: {{.Username}}                       
-                    </a>
-                </h3>
-                <div class="content">
-                    <a href ="thread/{{.PostID}}">
-                    <p1>{{.Content}} </p1> 
-                    <!-- <br> <br>
+
+            <div class="featured">
+                <h3> featured/trending posts</h3>
+
+                <ol>
+                    {{range $i, $e := . }}
+                    <li class="row">
+                        <h3 class="title2">
+                            <a href="thread/{{.PostID}}">
+                                <!-- {{.PostID}} -->
+                                {{.Title}}
+                                <br>
+                                Posted by: {{.Username}}
+                            </a>
+                        </h3>
+                        <div class="content">
+                            <a href="thread/{{.PostID}}">
+                                <p1>{{.Content}} </p1>
+                                <!-- <br> <br>
                     <p1> likes: {{.Likes}} </p1>
                     <p1> dislikes: {{.Dislikes}}</p1>  -->
-                     </a>
-                    <br>
-                    <p1>Category: {{.Category}}</p1>
-                </div>
-                <div class ="bottom">
-                    
-                    <p1 class="timestamp">
-                        <a href ="thread/{{.PostID}}">
-        <p1 class ="timestamp">posted: {{.CreatedAt}}</p1>
-        <p1 class="likes">likes: {{.Likes}}</p1>
-        <p1 class="dislikes">dislikes: {{.Dislikes}}</p1>
-                          </a>
-                    </p1>
-                    </div>
-                </li> <br>
+                            </a>
+                            <br>
+                            <p1>Category: {{.Category}}</p1>
+                        </div>
+                        <div class="bottom">
+
+                            <p1 class="timestamp">
+                                <a href="thread/{{.PostID}}">
+                                    <p1 class="timestamp">posted: {{.CreatedAt}}</p1>
+                                </a>
+                            </p1>
+                            <p1>
+                                <a onclick="like(this.id);" data-post-id="{{.PostID}}" id="likes-{{ $i }}"
+                                    href="#">{{.Likes}} Likes</a>
+                            </p1>
+                            <p1>
+                                <a onclick="dislike(this.id);" data-post-id="{{.PostID}}" id="dislikes-{{ $i }}"
+                                    href="#">{{.Dislikes}}
+                                    Dislikes</a>
+                            </p1>
+                        </div>
+                    </li> <br>
                     {{end}}
                 </ol>
-  </div>
-  </div>
-  <div class="activity"><a href= "profile"><h3>your recent activity, likes, posts, comments etc</h3> </a>
-      </div>
+            </div>
+        </div>
+        <div class="activity"><a href="profile">
+                <h3>your recent activity, likes, posts, comments etc</h3>
+            </a>
+        </div>
 
 
-      <br>
-      <br>
-      <br>
-      <br>
-                
-    <div class="rights">
+        <br>
+        <br>
+        <br>
+        <br>
+
+        <div class="rights">
             <br>
             <h6>Content Policy||Privacy Policy||User Agreement</h6>
             <h7>© DogeCo, inc, All rights reserved </h7>
@@ -123,4 +143,43 @@
             <a class="btn" href="/logout">Log out</a>
         </div>
 </body>
+<script>
+    const appURL = location.protocol + '//' + location.host;
+    const like = async (elementID) => {
+        const currLikes = document.getElementById(elementID);
+
+        const likes = await fetch(appURL + '/like?id=' + currLikes.getAttribute("data-post-id"));
+        const likesJson = await likes.json();
+        newLikesCount = likesJson.likes + 1;
+        currLikes.innerHTML = newLikesCount + " Likes";
+
+        const response = await fetch(appURL + '/like?id=' + currLikes.getAttribute("data-post-id"), {
+            method: 'POST',
+        });
+        const postResult = await response.json();
+        if (postResult.success != true) {
+            const currLikesNum = currLikes.split(" ")[0] - 1;
+            currLikes.value = currLikesNum + " Likes";
+        }
+    }
+
+    const dislike = async (elementID) => {
+        const currDislikes = document.getElementById(elementID);
+
+        const dislikes = await fetch(appURL + '/dislike?id=' + currDislikes.getAttribute("data-post-id"));
+        const dislikesJson = await dislikes.json();
+        newDislikesCount = dislikesJson.dislikes + 1;
+        currDislikes.innerHTML = newDislikesCount + " Dislikes";
+
+        const response = await fetch(appURL + '/dislike?id=' + currDislikes.getAttribute("data-post-id"), {
+            method: 'POST',
+        });
+        const postResult = await response.json();
+        if (postResult.success != true) {
+            const currDislikesNum = currDislikes.split(" ")[0] - 1;
+            currDislikes.value = currDislikesNum + " Dislikes";
+        }
+    }
+</script>
+
 </html>
