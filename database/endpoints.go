@@ -320,7 +320,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "text/html")
 
 	if err := request.ParseForm(); err != nil { // checks for errors parsing form
-		http.Error(writer, "500 Internal Server Error", 500)
+		http.Error(writer, "500 Internal Server Error", http.StatusInternalServerError)
 		fmt.Printf("ParseForm (HomePage) error:  %+v\n", err)
 		return
 	}
@@ -331,12 +331,12 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 	// 🐈
 	if !loggedIn {
 		fmt.Println(loggedIn)
-		err := tpl.ExecuteTemplate(writer, "guest.html", data.GetPost()) 
+
+		err := tpl.ExecuteTemplate(writer, "guest.html", data.GetPost())
 		if err != nil {
 			fmt.Printf("ExecuteTemplate guest error: %+v", err)
 		}
 		return
-
 	} else {
 
 		postCategory := request.FormValue("category")
@@ -676,7 +676,7 @@ func (data *Forum) Customization(writer http.ResponseWriter, request *http.Reque
 	}
 }
 
-func (data *Forum) AddLike(writer http.ResponseWriter, request *http.Request) {
+func (data *Forum) HandleLikeDislike(writer http.ResponseWriter, request *http.Request, isLike bool) {
 	items := data.GetPost()
 	reqItemIDraw := request.URL.Query().Get("id")
 	reqItemID, err := strconv.Atoi(reqItemIDraw)
@@ -720,15 +720,18 @@ func (data *Forum) AddLike(writer http.ResponseWriter, request *http.Request) {
 			fmt.Printf("unable to send json response for post %d\n", reqItemID)
 		}
 	case http.MethodPost:
-
-		requestedItem.Likes = requestedItem.Likes + 1
+		if isLike {
+			requestedItem.Likes = requestedItem.Likes + 1
+		} else {
+			requestedItem.Dislikes = requestedItem.Dislikes + 1
+		}
 
 		err := data.UpdatePost(requestedItem)
 		if err != nil {
-			fmt.Printf("unable increment likes for post %d: %v\n", reqItemID, err)
+			fmt.Printf("unable to modify dis-likes for post %d: %v\n", reqItemID, err)
 			writer.WriteHeader(http.StatusInternalServerError)
 			writer.Header().Set("Content-Type", "application/json")
-			writer.Write([]byte("{\"500\": \"Error incrementing likes for post\"}"))
+			writer.Write([]byte("{\"500\": \"Error modifying dis-likes for post\"}"))
 			return
 		}
 		writer.Header().Set("Content-Type", "application/json")
@@ -736,69 +739,7 @@ func (data *Forum) AddLike(writer http.ResponseWriter, request *http.Request) {
 		if err != nil {
 			fmt.Printf("unable to send json response for post %d\n", reqItemID)
 		}
-		fmt.Printf("added like to post %d\n", reqItemID)
-	}
-}
-
-func (data *Forum) AddDislike(writer http.ResponseWriter, request *http.Request) {
-	items := data.GetPost()
-	reqItemIDraw := request.URL.Query().Get("id")
-	reqItemID, err := strconv.Atoi(reqItemIDraw)
-	if err != nil {
-		fmt.Printf("unable to parse post id: %v\n", err)
-		writer.WriteHeader(http.StatusInternalServerError)
-		writer.Header().Set("Content-Type", "application/json")
-		writer.Write([]byte("{\"500\": \"Error parsing post id\"}"))
-		return
-	}
-	requestedItem := PostFeed{}
-
-	for _, item := range items {
-		if item.PostID == reqItemID {
-			requestedItem = item
-		}
-	}
-
-	if requestedItem.CreatedAt == "" {
-		fmt.Printf("unable to find post %d in db: %v\n", reqItemID, err)
-		writer.WriteHeader(http.StatusNotFound)
-		writer.Header().Set("Content-Type", "application/json")
-		writer.Write([]byte("{\"404\": \"Error finding post\"}"))
-		return
-	}
-
-	j, err := requestedItem.MarshallJSON()
-	if err != nil {
-		fmt.Printf("unable to marshal json for post %d: %v\n", reqItemID, err)
-		writer.WriteHeader(http.StatusInternalServerError)
-		writer.Header().Set("Content-Type", "application/json")
-		writer.Write([]byte("{\"500\": \"Error marshalling json for post\"}"))
-		return
-	}
-
-	switch request.Method {
-	case http.MethodGet:
-		writer.Header().Set("Content-Type", "application/json")
-		_, err := writer.Write(j)
-		if err != nil {
-			fmt.Printf("unable to send json response for post %d\n", reqItemID)
-		}
-	case http.MethodPost:
-		requestedItem.Dislikes = requestedItem.Dislikes + 1
-		err := data.UpdatePost(requestedItem)
-		if err != nil {
-			fmt.Printf("unable increment dislikes for post %d: %v\n", reqItemID, err)
-			writer.WriteHeader(http.StatusInternalServerError)
-			writer.Header().Set("Content-Type", "application/json")
-			writer.Write([]byte("{\"500\": \"Error incrementing dislikes for post\"}"))
-			return
-		}
-		writer.Header().Set("Content-Type", "application/json")
-		_, err = writer.Write([]byte("{\"success\":true}"))
-		if err != nil {
-			fmt.Printf("unable to send json response for post %d\n", reqItemID)
-		}
-		fmt.Printf("added dislike to post %d\n", reqItemID)
+		fmt.Printf("modified dis-likes on post %d\n", reqItemID)
 	}
 }
 
@@ -880,8 +821,8 @@ func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
 
 		// api handlers
 	case "/like":
-		data.AddLike(w, r)
+		data.HandleLikeDislike(w, r, true)
 	case "/dislike":
-		data.AddDislike(w, r)
+		data.HandleLikeDislike(w, r, false)
 	}
 }
