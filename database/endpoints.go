@@ -1,14 +1,13 @@
 package database
 
 import (
-	"crypto/sha1"
+	"crypto/md5"
 	"database/sql"
 	"fmt"
 	"html/template"
 	"io"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -537,67 +536,35 @@ func (data *Forum) Customization(writer http.ResponseWriter, request *http.Reque
 }
 
 func (data *Forum) ImgUpload(writer http.ResponseWriter, request *http.Request) {
-	err := request.ParseMultipartForm(5 << 20)
-	if err != nil {
-		http.Error(writer, "The uploaded image is too big. Please use an image less than 20mb in size", http.StatusBadRequest)
-		return
-	}
+	if request.Method == "GET" {
+		crutime := time.Now().Unix()
+		h := md5.New()
+		io.WriteString(h, strconv.FormatInt(crutime, 10))
+		token := fmt.Sprintf("%x", h.Sum(nil))
 
-	c := getCookie(writer, request)
-	if request.Method == http.MethodPost {
-		mf, fh, err := request.FormFile("nf")
+		t, _ := template.ParseFiles("upload.html")
+		t.Execute(writer, token)
+	} else {
+		err := request.ParseMultipartForm(5 << 20)
+		if err != nil {
+			http.Error(writer, "The uploaded image is too big. Please use an image less than 20mb in size", http.StatusBadRequest)
+			return
+		}
+		file, handler, err := request.FormFile("uploadfile")
 		if err != nil {
 			fmt.Println(err)
+			return
 		}
-		defer mf.Close()
-		// create sha for file name
-		ext := strings.Split(fh.Filename, ".")[1]
-		h := sha1.New()
-		io.Copy(h, mf)
-		fname := fmt.Sprintf("%x", h.Sum(nil)) + "." + ext
-		// create new file
-		wd, err := os.Getwd()
+		defer file.Close()
+		fmt.Fprintf(writer, "%v", handler.Header)
+		f, err := os.OpenFile("./test/"+handler.Filename, os.O_WRONLY|os.O_CREATE, 0666)
 		if err != nil {
 			fmt.Println(err)
+			return
 		}
-		path := filepath.Join(wd, "gallery", fname)
-		nf, err := os.Create(path)
-		if err != nil {
-			fmt.Println(err)
-		}
-		defer nf.Close()
-		// copy
-		mf.Seek(0, 0)
-		io.Copy(nf, mf)
-		// add filename to this user's cookie
-		c = appendValue(writer, c, fname)
+		defer f.Close()
+		io.Copy(f, file)
 	}
-	xs := strings.Split(c.Value, "|")
-	// sliced cookie values to only send over images
-	tpl.Execute(writer, xs[1:])
-}
-
-func getCookie(w http.ResponseWriter, r *http.Request) *http.Cookie {
-	c, err := r.Cookie("session")
-	if err != nil {
-		sID := uuid.NewV4()
-		c = &http.Cookie{
-			Name:  "session",
-			Value: sID.String(),
-		}
-		http.SetCookie(w, c)
-	}
-	return c
-}
-
-func appendValue(w http.ResponseWriter, c *http.Cookie, fname string) *http.Cookie {
-	s := c.Value
-	if !strings.Contains(s, fname) {
-		s += "|" + fname
-	}
-	c.Value = s
-	http.SetCookie(w, c)
-	return c
 }
 
 func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {

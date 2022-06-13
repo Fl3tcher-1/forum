@@ -3,11 +3,12 @@
 <body>
 <h4>Pictures:</h4>
 {{range .}}
-<img src="/gallery/{{.}}" width="400px">
+<img name ="uploadfile" src="{{.}}" width="400px">
 {{end}}
-<form method="post" enctype="multipart/form-data">
-    <input type="file" name="nf">
-    <input type="submit" value="submit" >
+
+<form enctype="multipart/form-data" action="/upload" method="post">
+    <input type="file" name="uploadfile" />
+    <input type="hidden" name="token" value="{{.}}"/>
 </form>
 </body>
 </html>
