@@ -1,7 +1,7 @@
 package sesman
 
 import (
-	// "crypto/sha1"
+	"crypto/sha1"
 	"fmt"
 	"html/template"
 	"io"
@@ -24,22 +24,19 @@ func init() {
 	http.ListenAndServe(":8080", nil)
 }
 
-func ind(w http.ResponseWriter, r *http.Request) {
-	c := getCookie(w, r)
-	if r.Method == http.MethodPost {
-		mf, fh, err := r.FormFile("nf")
+func ind(w http.ResponseWriter, req *http.Request) {
+	c := getCookie(w, req)
+	if req.Method == http.MethodPost {
+		mf, fh, err := req.FormFile("nf")
 		if err != nil {
 			fmt.Println(err)
 		}
 		defer mf.Close()
-
-		r.ParseMultipartForm(5 << 20)
-
 		// create sha for file name
-		ext := fh.Filename
-		// h := sha1.New()
-		// io.Copy(h, mf)
-		fname := ext
+		ext := strings.Split(fh.Filename, ".")[1]
+		h := sha1.New()
+		io.Copy(h, mf)
+		fname := fmt.Sprintf("%x", h.Sum(nil)) + "." + ext
 		// create new file
 		wd, err := os.Getwd()
 		if err != nil {
@@ -57,10 +54,9 @@ func ind(w http.ResponseWriter, r *http.Request) {
 		// add filename to this user's cookie
 		c = appendValue(w, c, fname)
 	}
-
 	xs := strings.Split(c.Value, "|")
 	// sliced cookie values to only send over images
-	t.ExecuteTemplate(w, "index.html", xs[1:])
+	tpl.ExecuteTemplate(w, "index.gohtml", xs[1:])
 }
 
 func getCookie(w http.ResponseWriter, r *http.Request) *http.Cookie {
@@ -85,3 +81,30 @@ func appendValue(w http.ResponseWriter, c *http.Cookie, fname string) *http.Cook
 	http.SetCookie(w, c)
 	return c
 }
+
+// if request.Method == "GET" {
+// 	crutime := time.Now().Unix()
+// 	h := md5.New()
+// 	io.WriteString(h, strconv.FormatInt(crutime, 10))
+// 	token := fmt.Sprintf("%x", h.Sum(nil))
+
+// 	t, _ := template.ParseFiles("upload.html")
+// 	t.Execute(writer, token)
+// } else {
+// 	file, handler, err := request.FormFile("uploadfile")
+// 	if err != nil {
+// 		fmt.Println(err)
+// 		return
+// 	}
+// 	defer file.Close()
+// 	fmt.Fprintf(writer, "%v", handler.Header)
+// 	f, err := os.OpenFile("./test/"+handler.Filename, os.O_WRONLY|os.O_CREATE, 0666)
+// 	if err != nil {
+// 		fmt.Println(err)
+// 		return
+// 	}
+// 	defer f.Close()
+// 	io.Copy(f, file)
+// }
+
+// https://astaxie.gitbooks.io/build-web-application-with-golang/content/en/04.5.html

@@ -62,9 +62,12 @@
   
                   <br>
                   <textarea name="content" id="postcontent" placeholder="Please enter post content here" required></textarea>
+                  <form method="post" enctype="multipart/form-data">
+                    <input type="file" name="nf">
+                    <input type="submit" value="submit" >
                   <br>
-                  
-                {{template "Upload"}}
+                  <br>
+                <!-- {{template "Upload"}} -->
                 <input type="submit" value="post" a href ="/home" value="reset form">
               </form>
           
@@ -98,6 +101,11 @@
         <p1 class ="timestamp">posted: {{.CreatedAt}}</p1>
         <p1 class="likes">likes: {{.Likes}}</p1>
         <p1 class="dislikes">dislikes: {{.Dislikes}}</p1>
+        <h4>Image:</h4>
+         {{range .}}
+         <img src="{{.Image}}" width="400px">
+        {{end}}
+             </form>
                           </a>
                     </p1>
                     </div>

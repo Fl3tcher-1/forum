@@ -335,7 +335,6 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 		postDislikes := 1
 		time := time.Now()
 		postCreated := time.Format("01-02-2006 15:04")
-
 		user := "1"
 
 		fmt.Println(postCategory)
@@ -354,6 +353,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 				Dislikes:  postDislikes,
 				Category:  postCategory,
 				CreatedAt: postCreated,
+				Image:     data.ImgUpload,
 			})
 
 			items := data.GetPost()
@@ -560,7 +560,7 @@ func (data *Forum) ImgUpload(writer http.ResponseWriter, request *http.Request) 
 		if err != nil {
 			fmt.Println(err)
 		}
-		path := filepath.Join(wd, "pics", fname)
+		path := filepath.Join(wd, "gallery", fname)
 		nf, err := os.Create(path)
 		if err != nil {
 			fmt.Println(err)
@@ -574,7 +574,7 @@ func (data *Forum) ImgUpload(writer http.ResponseWriter, request *http.Request) 
 	}
 	xs := strings.Split(c.Value, "|")
 	// sliced cookie values to only send over images
-	tpl.ExecuteTemplate(writer, "upload.html", xs[1:])
+	tpl.Execute(writer, xs[1:])
 }
 
 func getCookie(w http.ResponseWriter, r *http.Request) *http.Cookie {

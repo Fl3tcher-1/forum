@@ -3,15 +3,13 @@ package database
 import "time"
 
 type User struct {
-	UserID   int 
+	UserID   int
 	Uuid     string
 	Username string
 	Email    string
 	Password string
 	//	CreatedAt string
 }
-
-
 
 type PostFeed struct {
 	PostID    int
@@ -23,13 +21,14 @@ type PostFeed struct {
 	Dislikes  int
 	Category  string
 	CreatedAt string
+	Image     interface{}
 }
 
 type Session struct {
-   SessionID string 
-	Username string
-	Expiry time.Time
-//	UserID    int
+	SessionID string
+	Username  string
+	Expiry    time.Time
+	//	UserID    int
 	LoggedIn bool
 }
 
@@ -40,7 +39,6 @@ type Comment struct {
 	Content   string
 	CreatedAt string
 }
-
 
 type UsrProfile struct {
 	Name string
