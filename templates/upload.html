@@ -3,7 +3,7 @@
 <body>
 <h4>Pictures:</h4>
 {{range .}}
-<img name ="uploadfile" src="{{.}}" width="400px">
+<img src="{{.}}" width="400px">
 {{end}}
 
 <form enctype="multipart/form-data" action="/upload" method="post">
