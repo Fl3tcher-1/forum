@@ -57,5 +57,23 @@ type UsrProfile struct {
 	Shares   []string
 	Userinfo map[string]string
 	// custom   string
-
 }
+
+// holds details of user session-- used for cookies
+type Post struct {
+	Title    string
+	Content  string
+	Date     string
+	Comments int
+}
+
+// type Log struct {
+// 	Loggedin bool
+
+// type User struct {
+// 	Username string
+// 	Password string
+// 	Email    string
+// }
+
+// could it be used to store data for userprofile and use a single template execution???

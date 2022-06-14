@@ -4,64 +4,40 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"time"
-
 	"html/template"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 	"unicode"
 
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
-// type Log struct {
-// 	Loggedin bool
-
-// type User struct {
-// 	Username string
-// 	Password string
-// 	Email    string
-// }
-
-// could it be used to store data for userprofile and use a single template execution???
-
-// holds details of user session-- used for cookies
-
-type Post struct {
-	Title    string
-	Content  string
-	Date     string
-	Comments int
-}
-
 func (p PostFeed) MarshallJSON() ([]byte, error) {
 	return json.Marshal(p)
 }
 
 // creates all needed templates
-// will need to be reduced as there is too many at the moment
-var tpl *template.Template
+// will need to be reduced as there is too many at the moment.
+// var tpl *template.Template
 
-// parses files for all templates allowing them to be called
-func init() {
-	tpl = template.Must(template.ParseGlob("templates/*"))
-}
+// parses files for all templates allowing them to be called.
+// func init() {
+// 	tpl = template.Must(template.ParseGlob("templates/*"))
+// }
 
 // sessions
-
 // var sessions = map[string]Session{}
 
 func (s Session) isExpired() bool {
 	return s.Expiry.Before(time.Now())
-
 }
 
-// @TODO: error handling
-// login page
+// @TODO: error handling.
+// login page.
 func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
-
 	fmt.Println("*****loginUser is running********")
 
 	if r.URL.Path != "/login" {
@@ -97,6 +73,7 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 	row := data.DB.QueryRow("SELECT password FROM people WHERE Username = ?", user.Username)
 	err := row.Scan(&passwordHash)
 
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	if err != nil {
 		tpl.ExecuteTemplate(w, "login.html", "check username and password")
 		return
@@ -104,7 +81,6 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 	err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(user.Password))
 	// returns nil on succcess
 	if err == nil {
-
 		data.CreateSession(Session{
 			SessionID: sessionToken.String(),
 			Username:  user.Username,
@@ -127,8 +103,9 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// @TODO: error handling
+// @TODO: error handling.
 func (data *Forum) GetSignupPage(w http.ResponseWriter, r *http.Request) {
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	tpl.ExecuteTemplate(w, "signup.html", nil)
 }
 
@@ -140,7 +117,7 @@ func (data *Forum) GetSignupPage(w http.ResponseWriter, r *http.Request) {
 	 6. insert u.username and password hash in database
 */
 func (data *Forum) SignUpUser(w http.ResponseWriter, r *http.Request) {
-
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	r.ParseForm() // parses sign up form to fetch needed information
 
 	fmt.Println("****Sign-up new user is running ")
@@ -216,6 +193,7 @@ func (data *Forum) SignUpUser(w http.ResponseWriter, r *http.Request) {
 	err = row.Scan(&userEmail)
 	if err != sql.ErrNoRows {
 		fmt.Printf("sql scan row email error: %+v\n", err)
+		tpl := template.Must(template.ParseGlob("templates/*"))
 		tpl.ExecuteTemplate(w, "signup.html", "e-mail in use")
 	}
 
@@ -223,6 +201,7 @@ func (data *Forum) SignUpUser(w http.ResponseWriter, r *http.Request) {
 
 	passwordHash, err = bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
+		tpl := template.Must(template.ParseGlob("templates/*"))
 		tpl.ExecuteTemplate(w, "signup.html", "there was an error registering account")
 		fmt.Printf("Register Account (passwordHash) error:  %+v\n", err)
 		return
@@ -249,7 +228,6 @@ func (data *Forum) SignUpUser(w http.ResponseWriter, r *http.Request) {
 // check cookie
 
 func (data *Forum) CheckCookie(writer http.ResponseWriter, request *http.Request) bool {
-
 	c, err := request.Cookie("session_token")
 	if err != nil {
 		if err == http.ErrNoCookie {
@@ -315,9 +293,10 @@ func (data *Forum) Logout(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// home page
+// home page.
 func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "text/html")
+	tpl := template.Must(template.ParseGlob("templates/*"))
 
 	if err := request.ParseForm(); err != nil { // checks for errors parsing form
 		http.Error(writer, "500 Internal Server Error", http.StatusInternalServerError)
@@ -331,24 +310,19 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 	// 🐈
 	if !loggedIn {
 		fmt.Println(loggedIn)
-
 		err := tpl.ExecuteTemplate(writer, "guest.html", data.GetPost())
 		if err != nil {
 			fmt.Printf("ExecuteTemplate guest error: %+v", err)
 		}
 		return
 	} else {
-
 		postCategory := request.FormValue("category")
-
 		postTitle := request.FormValue("title")
-
 		postContent := request.FormValue("content")
 		postLikes := 0
 		postDislikes := 0
 		time := time.Now()
 		postCreated := time.Format("01-02-2006 15:04")
-
 		user := "1"
 
 		fmt.Println(postCategory)
@@ -356,7 +330,6 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 		fmt.Println(postContent)
 
 		if postTitle != "" || postContent != "" || postCategory != "" {
-
 			data.CreatePost(PostFeed{
 				//User:      sessionID.String(),
 
@@ -379,7 +352,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 }
 
 func (data *Forum) Guestview(writer http.ResponseWriter, r *http.Request) {
-
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	fmt.Println("here")
 	items := data.GetPost()
 	fmt.Println(data.GetPost())
@@ -387,9 +360,8 @@ func (data *Forum) Guestview(writer http.ResponseWriter, r *http.Request) {
 }
 
 func (data *Forum) CategoriesList(w http.ResponseWriter, r *http.Request) {
-
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	loggedIn := data.CheckCookie(w, r)
-
 	if !loggedIn {
 		tpl.ExecuteTemplate(w, "guestCategories.html", nil)
 		return
@@ -400,6 +372,7 @@ func (data *Forum) CategoriesList(w http.ResponseWriter, r *http.Request) {
 }
 
 func (data *Forum) CategoryDump(w http.ResponseWriter, r *http.Request) {
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	r.ParseForm()
 	loggedIn := data.CheckCookie(w, r)
 
@@ -445,12 +418,14 @@ func (data *Forum) CategoryDump(w http.ResponseWriter, r *http.Request) {
 }
 
 func (data *Forum) PwReset(writer http.ResponseWriter, request *http.Request) {
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	tpl.ExecuteTemplate(writer, "passwordReset.html", nil)
 }
 
 func (data *Forum) UserProfile(writer http.ResponseWriter, request *http.Request) {
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 
@@ -469,8 +444,9 @@ func (data *Forum) UserProfile(writer http.ResponseWriter, request *http.Request
 	tpl.ExecuteTemplate(writer, "profile.html", usrInfo)
 }
 
-//Threds handles posts and their comments-- and displays them on /threads
+//Threads handles posts and their comments-- and displays them on /threads.
 func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	w.WriteHeader(http.StatusOK)
 	//grab current url, parse the form to allow taking data from html
 	url := r.URL.Path
@@ -528,6 +504,7 @@ func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {
 
 }
 func (data *Forum) ThreadGuest(w http.ResponseWriter, r *http.Request) {
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	w.WriteHeader(http.StatusOK)
 	//grab current url, parse the form to allow taking data from html
 	url := r.URL.Path
@@ -576,11 +553,11 @@ func (data *Forum) ThreadGuest(w http.ResponseWriter, r *http.Request) {
 }
 
 func (data *Forum) AboutFunc(w http.ResponseWriter, r *http.Request) {
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	loggedIn := data.CheckCookie(w, r)
 	if !loggedIn {
 		tpl.ExecuteTemplate(w, "aboutGuest.html", nil)
 		return
-
 	} else {
 		err := tpl.ExecuteTemplate(w, "about.html", nil)
 		if err != nil {
@@ -591,11 +568,10 @@ func (data *Forum) AboutFunc(w http.ResponseWriter, r *http.Request) {
 
 func (data *Forum) ContactUs(w http.ResponseWriter, r *http.Request) {
 	loggedIn := data.CheckCookie(w, r)
-
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	if !loggedIn {
 		tpl.ExecuteTemplate(w, "contactGuest.html", nil)
 		return
-
 	} else {
 		err := tpl.ExecuteTemplate(w, "contact-us.html", nil)
 		if err != nil {
@@ -605,6 +581,7 @@ func (data *Forum) ContactUs(w http.ResponseWriter, r *http.Request) {
 }
 
 func (data *Forum) UserPhoto(writer http.ResponseWriter, request *http.Request) {
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	err := tpl.ExecuteTemplate(writer, "photo.html", nil)
@@ -614,6 +591,7 @@ func (data *Forum) UserPhoto(writer http.ResponseWriter, request *http.Request) 
 }
 
 func (data *Forum) UserPosts(writer http.ResponseWriter, request *http.Request) {
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	err := tpl.ExecuteTemplate(writer, "posts.html", nil)
@@ -623,6 +601,7 @@ func (data *Forum) UserPosts(writer http.ResponseWriter, request *http.Request) 
 }
 
 func (data *Forum) UserComments(writer http.ResponseWriter, request *http.Request) {
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	err := tpl.ExecuteTemplate(writer, "comments.html", nil)
@@ -632,6 +611,7 @@ func (data *Forum) UserComments(writer http.ResponseWriter, request *http.Reques
 }
 
 func (data *Forum) UserLikes(writer http.ResponseWriter, request *http.Request) {
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	err := tpl.ExecuteTemplate(writer, "likes.html", nil)
@@ -641,6 +621,7 @@ func (data *Forum) UserLikes(writer http.ResponseWriter, request *http.Request) 
 }
 
 func (data *Forum) UserDislikes(writer http.ResponseWriter, request *http.Request) {
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	err := tpl.ExecuteTemplate(writer, "likes.html", nil)
@@ -650,6 +631,7 @@ func (data *Forum) UserDislikes(writer http.ResponseWriter, request *http.Reques
 }
 
 func (data *Forum) UserShares(writer http.ResponseWriter, request *http.Request) {
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	err := tpl.ExecuteTemplate(writer, "shares.html", nil)
@@ -659,6 +641,7 @@ func (data *Forum) UserShares(writer http.ResponseWriter, request *http.Request)
 }
 
 func (data *Forum) UserInfo(writer http.ResponseWriter, request *http.Request) {
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	err := tpl.ExecuteTemplate(writer, "userinfo.html", nil)
@@ -668,6 +651,7 @@ func (data *Forum) UserInfo(writer http.ResponseWriter, request *http.Request) {
 }
 
 func (data *Forum) Customization(writer http.ResponseWriter, request *http.Request) {
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	err := tpl.ExecuteTemplate(writer, "customize.html", nil)

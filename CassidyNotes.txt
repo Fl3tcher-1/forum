@@ -19,10 +19,12 @@ Requirements:
       - Remove likes and dislikes from comments and posts (replace them with reactions)
         - remove from struct types and fix problems
 
-- the buttons for like/dislike need updating to use the png's from the cassidy branch and update the html
+- the buttons for like/dislike need updating to use the pngs from the cassidy branch and update the html
 
 - on a user's profile they need to be able to see the a list of their liked posts/comments (think, reddit)
   - needs to be based on reactions
   - likes.html needs some templating with range
   - links to likes.html need checking
   - needs a handler?
+
+- when viewing posts individually or through categories, user/guest cannot like/dislike the posts - needs to be changed
