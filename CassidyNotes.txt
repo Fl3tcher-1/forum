@@ -27,4 +27,4 @@ Requirements:
   - links to likes.html need checking
   - needs a handler?
 
-- when viewing posts individually or through categories, user/guest cannot like/dislike the posts - needs to be changed
+- when viewing posts individually or through categories, user/guest cannot like/dislike the posts - needs to be changed for just user
