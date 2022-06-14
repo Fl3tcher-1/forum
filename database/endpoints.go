@@ -734,6 +734,7 @@ func (data *Forum) Customization(writer http.ResponseWriter, request *http.Reque
 }
 
 func (data *Forum) HandleLikeDislike(writer http.ResponseWriter, request *http.Request, isLike bool) {
+	// add checkcookie here for logged in users
 	items, err := data.GetPost()
 	if err != nil {
 		fmt.Printf("HandleLikeDislike (GetPost) posts error: %+v\n", err)
