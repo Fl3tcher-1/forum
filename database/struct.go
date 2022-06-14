@@ -1,6 +1,9 @@
 package database
 
-import "time"
+import (
+	"database/sql"
+	"time"
+)
 
 type User struct {
 	UserID   int
@@ -59,12 +62,26 @@ type UsrProfile struct {
 	// custom   string
 }
 
-// holds details of user session-- used for cookies
+type Forum struct {
+	*sql.DB
+}
+
+// holds details of user session-- used for cookies.
 type Post struct {
 	Title    string
 	Content  string
 	Date     string
 	Comments int
+}
+
+type CategoryPost struct { // create a []post in order to store multiple posts
+	Post []PostFeed
+}
+
+//Databases holds our post and comment databases
+type Databases struct {
+	Post    PostFeed
+	Comment []Comment
 }
 
 // type Log struct {

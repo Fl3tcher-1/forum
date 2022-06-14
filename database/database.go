@@ -8,53 +8,59 @@ import (
 	_ "github.com/mattn/go-sqlite3" // sqlite3 driver connects go with sql
 )
 
-type Forum struct {
-	*sql.DB
-}
-
 var DB *sql.DB
 
-// func CheckErr(err error) {
-// 	fmt.Println(err)
-// 	log.Fatal(err)
-// }
-
 // @TODO: handle errors for all create funcs.
-func (forum *Forum) CreateUser(user User) {
+func (forum *Forum) CreateUser(user User) error {
 	stmt, err := forum.DB.Prepare("INSERT INTO people (uuid, username, email, password) VALUES (?, ?, ?, ?);")
 	if err != nil {
-		fmt.Printf("CreateUser DB Prepare error: %+v\n", err)
+		return fmt.Errorf("CreateUser DB Prepare error: %+v\n", err)
 	}
-	stmt.Exec(user.Uuid, user.Username, user.Email, user.Password)
+	_, err = stmt.Exec(user.Uuid, user.Username, user.Email, user.Password)
+	if err != nil {
+		return fmt.Errorf("CreateUser Exec error: %+v\n", err)
+	}
 	defer stmt.Close()
+	return nil
 }
 
-func (forum *Forum) CreateSession(session Session) {
+func (forum *Forum) CreateSession(session Session) error {
 	stmt, err := forum.DB.Prepare("INSERT INTO session (sessionID, userName, expiryTime) VALUES (?, ?, ?);")
 	if err != nil {
-		fmt.Printf("CreateSession DB Prepare error: %+v\n", err)
+		return fmt.Errorf("CreateSession DB Prepare error: %+v\n", err)
 	}
-	stmt.Exec(session.SessionID, session.Username, session.Expiry)
+	_, err = stmt.Exec(session.SessionID, session.Username, session.Expiry)
+	if err != nil {
+		return fmt.Errorf("CreateSession Exec error: %+v\n", err)
+	}
 	defer stmt.Close()
+	return nil
 }
 
-func (forum *Forum) CreatePost(post PostFeed) {
+func (forum *Forum) CreatePost(post PostFeed) error {
 	stmt, err := forum.DB.Prepare("INSERT INTO post (username, title, content, likes, dislikes, category, dateCreated) VALUES (?, ?, ?, ?, ?, ?, ?);")
 	if err != nil {
-		fmt.Printf("CreatePost DB Prepare error: %+v\n", err)
+		return fmt.Errorf("CreatePost DB Prepare error: %+v\n", err)
 	}
-	stmt.Exec(post.Username, post.Title, post.Content, post.Likes, post.Dislikes, post.Category, post.CreatedAt)
+	_, err = stmt.Exec(post.Username, post.Title, post.Content, post.Likes, post.Dislikes, post.Category, post.CreatedAt)
+	if err != nil {
+		return fmt.Errorf("CreatePost Exec error: %+v\n", err)
+	}
 	defer stmt.Close()
+	return nil
 }
 
-func (forum *Forum) CreateComment(comment Comment) {
+func (forum *Forum) CreateComment(comment Comment) error {
 	stmt, err := forum.DB.Prepare("INSERT INTO comments ( postID, userID, content, dateCreated) VALUES (?, ?, ?, ?);")
 	if err != nil {
-		fmt.Printf("CreateComment DB Prepare error: %+v\n", err)
+		return fmt.Errorf("CreateComment DB Prepare error: %+v\n", err)
 	}
-	stmt.Exec(comment.PostID, comment.UserId, comment.Content, comment.CreatedAt)
+	_, err = stmt.Exec(comment.PostID, comment.UserId, comment.Content, comment.CreatedAt)
+	if err != nil {
+		return fmt.Errorf("CreateComment Exec error: %+v\n", err)
+	}
 	defer stmt.Close()
-
+	return nil
 }
 
 // Update(Updates an item in a table).
@@ -74,7 +80,7 @@ func (feed *Forum) UpdatePost(item PostFeed) error {
 
 // ---------------------------------------------- TABLES ------------------------------- --//
 
-func userTable(db *sql.DB) {
+func userTable(db *sql.DB) error {
 	stmt, err := db.Prepare(`CREATE TABLE IF NOT EXISTS people (
 	userID INTEGER PRIMARY KEY,	
 	uuid TEXT, 
@@ -83,24 +89,32 @@ func userTable(db *sql.DB) {
 	password TEXT);
 `)
 	if err != nil {
-		fmt.Printf("userTable DB Prepare error: %+v\n", err)
+		return fmt.Errorf("userTable DB Prepare error: %+v\n", err)
 	}
-	stmt.Exec()
+	_, err = stmt.Exec()
+	if err != nil {
+		return fmt.Errorf("userTable Exec error: %+v\n", err)
+	}
+	return nil
 }
 
-func sessionTable(db *sql.DB) {
+func sessionTable(db *sql.DB) error {
 	stmt, err := db.Prepare(`CREATE TABLE IF NOT EXISTS session (
 	sessionID TEXT PRIMARY KEY REFERENCES people(uuid),	
 	userName TEXT REFERENCES people(username), 
 	expiryTime TEXT);
 	`)
 	if err != nil {
-		fmt.Printf("sessionTable DB Prepare error: %+v\n", err)
+		return fmt.Errorf("sessionTable DB Prepare error: %+v\n", err)
 	}
-	stmt.Exec()
+	_, err = stmt.Exec()
+	if err != nil {
+		return fmt.Errorf("sessionTable Exec error: %+v\n", err)
+	}
+	return nil
 }
 
-func postTable(db *sql.DB) {
+func postTable(db *sql.DB) error {
 	stmt, err := db.Prepare(`CREATE TABLE IF NOT EXISTS post (
  postID INTEGER PRIMARY KEY AUTOINCREMENT,
  username TEXT REFERENCES people(username),
@@ -112,13 +126,17 @@ func postTable(db *sql.DB) {
  dateCreated TEXT);
  `)
 	if err != nil {
-		fmt.Printf("postTable DB Prepare error: %+v\n", err)
+		return fmt.Errorf("postTable DB Prepare error: %+v\n", err)
 	}
-	stmt.Exec()
+	_, err = stmt.Exec()
+	if err != nil {
+		return fmt.Errorf("postTable Exec error: %+v\n", err)
+	}
+	return nil
 }
 
 // @TODO: add likes/dislikes to comments.
-func commentTable(db *sql.DB) {
+func commentTable(db *sql.DB) error {
 	stmt, err := db.Prepare(`CREATE TABLE IF NOT EXISTS comments (
    commentID INTEGER PRIMARY KEY AUTOINCREMENT, 
    postID INTEGER REFERENCES people(userID), 
@@ -127,9 +145,13 @@ func commentTable(db *sql.DB) {
 	dateCreated TEXT NOT NULL);
 	`)
 	if err != nil {
-		fmt.Printf("commentTable DB Prepare error: %+v\n", err)
+		return fmt.Errorf("commentTable DB Prepare error: %+v\n", err)
 	}
-	stmt.Exec()
+	_, err = stmt.Exec()
+	if err != nil {
+		return fmt.Errorf("commentTable Exec error: %+v\n", err)
+	}
+	return nil
 }
 
 func Connect(db *sql.DB) *Forum {
@@ -143,11 +165,11 @@ func Connect(db *sql.DB) *Forum {
 	}
 }
 
-func (data *Forum) GetPost() []PostFeed {
+func (data *Forum) GetPost() ([]PostFeed, error) {
 	posts := []PostFeed{}
 	rows, err := data.DB.Query(`SELECT * FROM post`)
 	if err != nil {
-		fmt.Printf("GetPost DB Query error: %+v\n", err)
+		return posts, fmt.Errorf("GetPost DB Query error: %+v\n", err)
 	}
 	var id int
 	var uiD string
@@ -161,7 +183,7 @@ func (data *Forum) GetPost() []PostFeed {
 	for rows.Next() {
 		err := rows.Scan(&id, &uiD, &title, &content, &likes, &dislikes, &category, &created)
 		if err != nil {
-			fmt.Printf("GetPost rows.Scan error: %+v\n", err)
+			return posts, fmt.Errorf("GetPost rows.Scan error: %+v\n", err)
 		}
 		posts = append(posts, PostFeed{
 			PostID:    id,
@@ -175,15 +197,15 @@ func (data *Forum) GetPost() []PostFeed {
 		})
 	}
 	// fmt.Println(posts)
-	return posts
+	return posts, nil
 }
 
 // @TODO: add likes/dislikes to comments.
-func (data *Forum) GetComments() []Comment {
+func (data *Forum) GetComments() ([]Comment, error) {
 	comments := []Comment{}
 	rows, err := data.DB.Query(`SELECT * FROM comments`)
 	if err != nil {
-		fmt.Printf("GetComments DB Query error: %+v\n", err)
+		return comments, fmt.Errorf("GetComments DB Query error: %+v\n", err)
 	}
 	var commentid int
 	var postid int
@@ -194,7 +216,7 @@ func (data *Forum) GetComments() []Comment {
 	for rows.Next() {
 		err := rows.Scan(&commentid, &postid, &userid, &content, &created)
 		if err != nil {
-			fmt.Printf("GetComments rows.Scan error: %+v\n", err)
+			return comments, fmt.Errorf("GetComments rows.Scan error: %+v\n", err)
 		}
 		comments = append(comments, Comment{
 			CommentID: commentid,
@@ -204,14 +226,14 @@ func (data *Forum) GetComments() []Comment {
 			CreatedAt: created,
 		})
 	}
-	return comments
+	return comments, nil
 }
 
-func (data *Forum) GetSession() []Session {
+func (data *Forum) GetSession() ([]Session, error) {
 	session := []Session{}
 	rows, err := data.DB.Query(`SELECT * FROM session`)
 	if err != nil {
-		fmt.Printf("GetSession DB Query error: %+v\n", err)
+		return session, fmt.Errorf("GetSession DB Query error: %+v\n", err)
 	}
 	var session_token string
 	var uName string
@@ -220,7 +242,7 @@ func (data *Forum) GetSession() []Session {
 	for rows.Next() {
 		err := rows.Scan(&session_token, &uName, &exTime)
 		if err != nil {
-			fmt.Printf("GetSession rows.Scan error: %+v\n", err)
+			return session, fmt.Errorf("GetSession rows.Scan error: %+v\n", err)
 		}
 		session = append(session, Session{
 			SessionID: session_token,
@@ -228,6 +250,5 @@ func (data *Forum) GetSession() []Session {
 			Expiry:    exTime,
 		})
 	}
-
-	return session
+	return session, nil
 }
