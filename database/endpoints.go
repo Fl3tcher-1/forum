@@ -87,7 +87,7 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 	err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(user.Password))
 	// returns nil on succcess
 	if err == nil {
-		data.CreateSession(Session{
+		err = data.CreateSession(Session{
 			SessionID: sessionToken.String(),
 			Username:  user.Username,
 			Expiry:    expiresAt,
@@ -245,11 +245,12 @@ func (data *Forum) SignUpUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // check cookie
-func (data *Forum) CheckCookie(writer http.ResponseWriter, request *http.Request) (bool, error) {
+func (data *Forum) CheckCookie(writer http.ResponseWriter, request *http.Request) bool {
 	c, err := request.Cookie("session_token")
 	if err != nil {
 		if err == http.ErrNoCookie {
-			return false, fmt.Errorf("CheckCookie (Cookie) error: %+v\n", err)
+			fmt.Printf("CheckCookie (Cookie) error: %+v\n", err)
+			return false
 		}
 	}
 
@@ -257,7 +258,7 @@ func (data *Forum) CheckCookie(writer http.ResponseWriter, request *http.Request
 	var currentSession Session
 	a, err := data.GetSession()
 	if err != nil {
-		return false, fmt.Errorf("CheckCookie (GetSession) error: %+v\n", err)
+		fmt.Printf("CheckCookie (GetSession) error: %+v\n", err)
 	}
 
 	//fmt.Println(sessionToken == a[0].SessionID)
@@ -280,8 +281,7 @@ func (data *Forum) CheckCookie(writer http.ResponseWriter, request *http.Request
 			data.DB.Exec("DELETE FROM session where sessionID ='" + currentSession.SessionID + "'")
 		}
 	}
-	return true, nil
-
+	return true
 }
 
 func (data *Forum) Logout(w http.ResponseWriter, r *http.Request) {
@@ -315,29 +315,27 @@ func (data *Forum) Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 // home page.
-func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) error {
+func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "text/html")
 	tpl := template.Must(template.ParseGlob("templates/*"))
 
 	if err := request.ParseForm(); err != nil { // checks for errors parsing form
 		http.Error(writer, "500 Internal Server Error", http.StatusInternalServerError)
-		return fmt.Errorf("HomePage (ParseForm) error:  %+v\n", err)
+		fmt.Printf("HomePage (ParseForm) error:  %+v\n", err)
+		return
 	}
-
-	loggedIn, err := data.CheckCookie(writer, request)
-	if err != nil {
-		return fmt.Errorf("HomePage (CheckCookie) error: %+v\n", err)
-	}
+	loggedIn := data.CheckCookie(writer, request)
 	// 🐈
 	if !loggedIn {
 		data, err := data.GetPost()
 		if err != nil {
-			return fmt.Errorf("HomePage (GetPost) error: %+v", err)
+			fmt.Printf("HomePage (GetPost) error: %+v\n", err)
 		}
 		err = tpl.ExecuteTemplate(writer, "guest.html", data)
 		if err != nil {
-			return fmt.Errorf("HomePage ExecuteTemplate (guest.html) error: %+v", err)
+			fmt.Printf("HomePage ExecuteTemplate (guest.html) error: %+v\n", err)
 		}
+		return
 	} else {
 		postCategory := request.FormValue("category")
 		postTitle := request.FormValue("title")
@@ -348,14 +346,9 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) e
 		postCreated := time.Format("01-02-2006 15:04")
 		user := "1"
 
-		// fmt.Println(postCategory)
-		// fmt.Println(postTitle)
-		// fmt.Println(postContent)
-
 		if postTitle != "" || postContent != "" || postCategory != "" {
 			err := data.CreatePost(PostFeed{
 				//User:      sessionID.String(),
-
 				Username:  user,
 				Title:     postTitle,
 				Content:   postContent,
@@ -364,74 +357,75 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) e
 				Category:  postCategory,
 				CreatedAt: postCreated,
 			})
-
+			if err != nil {
+				fmt.Printf("HomePage (CreatePost) items error: %+v\n", err)
+				return
+			}
 			items, err := data.GetPost()
 			if err != nil {
-				return fmt.Errorf("HomePage (GetPost) items error: %+v", err)
+				fmt.Printf("HomePage (GetPost) items error: %+v\n", err)
+				return
 			}
 			err = tpl.ExecuteTemplate(writer, "./home", items)
 			if err != nil {
-				return fmt.Errorf("HomePage ExecuteTemplate user homepage error: %+v", err)
+				fmt.Printf("HomePage ExecuteTemplate user homepage error: %+v\n", err)
+				return
 			}
 		}
 		data, err := data.GetPost()
 		if err != nil {
-			return fmt.Errorf("HomePage (GetPost) data error: %+v", err)
+			fmt.Printf("HomePage (GetPost) data error: %+v\n", err)
+			return
 		}
 		err = tpl.ExecuteTemplate(writer, "home.html", data)
 		if err != nil {
-			return fmt.Errorf("HomePage ExecuteTemplate (home.html) error: %+v", err)
+			fmt.Printf("HomePage ExecuteTemplate (home.html) error: %+v\n", err)
+			return
 		}
 	}
-	return nil
 }
 
-func (data *Forum) GuestView(writer http.ResponseWriter, r *http.Request) error {
+func (data *Forum) GuestView(writer http.ResponseWriter, r *http.Request) {
 	tpl := template.Must(template.ParseGlob("templates/*"))
 	items, err := data.GetPost()
 	if err != nil {
-		return fmt.Errorf("GuestView (GetPost) items error: %+v", err)
+		fmt.Printf("GuestView (GetPost) items error: %+v\n", err)
+		return
 	}
 	err = tpl.ExecuteTemplate(writer, "guest.html", items)
 	if err != nil {
-		return fmt.Errorf("GuestView ExecuteTemplate error: %+v", err)
+		fmt.Printf("GuestView ExecuteTemplate error: %+v\n", err)
+		return
 	}
-	return nil
 }
 
-func (data *Forum) CategoriesList(w http.ResponseWriter, r *http.Request) error {
+func (data *Forum) CategoriesList(w http.ResponseWriter, r *http.Request) {
 	tpl := template.Must(template.ParseGlob("templates/*"))
-	loggedIn, err := data.CheckCookie(w, r)
-	if err != nil {
-		return fmt.Errorf("CategoriesList (CheckCookie) error: %+v\n", err)
-	}
+	loggedIn := data.CheckCookie(w, r)
 	if !loggedIn {
 		err := tpl.ExecuteTemplate(w, "guestCategories.html", nil)
 		if err != nil {
-			return fmt.Errorf("CategoriesList ExecuteTemplate error: %+v", err)
+			fmt.Printf("CategoriesList ExecuteTemplate error: %+v\n", err)
+			return
 		}
 	}
-	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "text/html")
-	err = tpl.ExecuteTemplate(w, "categories.html", nil)
+	err := tpl.ExecuteTemplate(w, "categories.html", nil)
 	if err != nil {
-		return fmt.Errorf("CategoriesList ExecuteTemplate error: %+v", err)
+		fmt.Printf("CategoriesList ExecuteTemplate error: %+v\n", err)
+		return
 	}
-	return nil
 }
 
-func (data *Forum) CategoryDump(w http.ResponseWriter, r *http.Request) error {
+func (data *Forum) CategoryDump(w http.ResponseWriter, r *http.Request) {
 	tpl := template.Must(template.ParseGlob("templates/*"))
 	err := r.ParseForm()
 	if err != nil {
-		return fmt.Errorf("CategoryDump (ParseForm) error: %+v\n", err)
+		fmt.Printf("CategoryDump (ParseForm) error: %+v\n", err)
+		return
 	}
-	loggedIn, err := data.CheckCookie(w, r)
-	if err != nil {
-		return fmt.Errorf("CategoryDump (CheckCookie) error: %+v\n", err)
-	}
+	loggedIn := data.CheckCookie(w, r)
 	var postByCategory CategoryPost //create variable to link to our struct
-
 	category := r.URL.Path
 	cat := ""
 	if !loggedIn {
@@ -442,7 +436,8 @@ func (data *Forum) CategoryDump(w http.ResponseWriter, r *http.Request) error {
 
 	posts, err := data.GetPost() // get all posts
 	if err != nil {
-		return fmt.Errorf("CategoryDump (GetPost) posts error: %+v\n", err)
+		fmt.Printf("CategoryDump (GetPost) posts error: %+v\n", err)
+		return
 	}
 
 	// check every post to find ones whose category matches our url path
@@ -456,32 +451,29 @@ func (data *Forum) CategoryDump(w http.ResponseWriter, r *http.Request) error {
 	}
 	if !categoryFound {
 		http.Error(w, "404 category not found or has no posts", 404)
+		return
 	}
 
 	if !loggedIn {
 		err := tpl.ExecuteTemplate(w, "guestCategoryPosts.html", postByCategory)
 		if err != nil {
-			return fmt.Errorf("CategoryDump ExecuteTemplate (guestCategoryPosts.html) error: %+v", err)
+			fmt.Printf("CategoryDump ExecuteTemplate (guestCategoryPosts.html) error: %+v\n", err)
 		}
+		return
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "text/html")
-	err = tpl.ExecuteTemplate(w, "categoryPosts.html", postByCategory)
-	if err != nil {
-		return fmt.Errorf("CategoryDump ExecuteTemplate (categoryPosts.html) error: %+v", err)
+	err1 := tpl.ExecuteTemplate(w, "categoryPosts.html", postByCategory)
+	if err1 != nil {
+		fmt.Printf("CategoryDump ExecuteTemplate (categoryPosts.html) error: %+v\n", err1)
 	}
-	return nil
 }
 
 func (data *Forum) PwReset(writer http.ResponseWriter, request *http.Request) {
 	tpl := template.Must(template.ParseGlob("templates/*"))
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
-	err := tpl.ExecuteTemplate(writer, "passwordReset.html", nil)
-	if err != nil {
-		fmt.Printf("PwReset ExecuteTemplate (passwordReset.html) error: %+v", err)
-		return
-	}
+	tpl.ExecuteTemplate(writer, "passwordReset.html", nil)
 }
 
 func (data *Forum) UserProfile(writer http.ResponseWriter, request *http.Request) {
@@ -503,20 +495,21 @@ func (data *Forum) UserProfile(writer http.ResponseWriter, request *http.Request
 
 	err := tpl.ExecuteTemplate(writer, "profile.html", usrInfo)
 	if err != nil {
-		fmt.Printf("UserProfile ExecuteTemplate (profile.html) error: %+v", err)
+		fmt.Printf("UserProfile ExecuteTemplate (profile.html) error: %+v\n", err)
 		return
 	}
 }
 
 //Threads handles posts and their comments-- and displays them on /threads.
-func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) error {
+func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {
 	tpl := template.Must(template.ParseGlob("templates/*"))
 	w.WriteHeader(http.StatusOK)
 	//grab current url, parse the form to allow taking data from html
 	url := r.URL.Path
 	err := r.ParseForm()
 	if err != nil {
-		return fmt.Errorf("Threads ParseForm error: %+v", err)
+		fmt.Printf("Threads ParseForm error: %+v\n", err)
+		return
 	}
 	idstr := strings.Trim(url, "/thread") //trim text so  we are only left with the final end point (postID)
 	// fmt.Println(idstr)
@@ -531,7 +524,8 @@ func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) error {
 	var postWithComments Databases
 	post, err := data.GetPost() // get all posts
 	if err != nil {
-		return fmt.Errorf("CategoryDump (GetPost) posts error: %+v\n", err)
+		fmt.Printf("Threads (GetPost) posts error: %+v\n", err)
+		return
 	}
 	//if comment from html is not an empty string, add a new value to our comment database using the following structure
 	if comment != "" || comment == " " {
@@ -541,15 +535,19 @@ func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) error {
 			Content:   comment,
 			CreatedAt: postCreated,
 		})
-if err != nil {
-
-}
+		if err != nil {
+			fmt.Printf("Threads (CreateComment) error: %+v\n", err)
+			return
+		}
 	}
 	if id > len(post) { //checks so that a post that is not higher than total post amount and returns an error
 		http.Error(w, "404 post not found", 404)
 	}
-	commentdb := data.GetComments() // get data from comment database
-
+	commentdb, err := data.GetComments() // get data from comment database
+	if err != nil {
+		fmt.Printf("Threads (GetComments) error: %+v\n", err)
+		return
+	}
 	//only adds a comment into database if the post id matches the url id (post requested)--- to only fetch the same ids
 	for _, comment := range commentdb {
 		if comment.PostID == id {
@@ -560,7 +558,7 @@ if err != nil {
 
 	err = tpl.ExecuteTemplate(w, "thread.html", postWithComments)
 	if err != nil {
-		fmt.Printf("Threads ExecuteTemplate (thread.html) error: %+v", err)
+		fmt.Printf("Threads ExecuteTemplate (thread.html) error: %+v\n", err)
 		return
 	}
 }
@@ -572,7 +570,7 @@ func (data *Forum) ThreadGuest(w http.ResponseWriter, r *http.Request) {
 	url := r.URL.Path
 	err := r.ParseForm()
 	if err != nil {
-		fmt.Printf("Threads ParseForm error: %+v", err)
+		fmt.Printf("Threads ParseForm error: %+v\n", err)
 		return
 	}
 
@@ -583,14 +581,19 @@ func (data *Forum) ThreadGuest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var postWithComments Databases
-	post := data.GetPost() // get all posts
-
-	if id > len(post) { //checks so that a post that is not higher than total post amount and returns an error
-		http.Error(w, "404 post not found", 400)
+	post, err := data.GetPost() // get all posts
+	if err != nil {
+		fmt.Printf("ThreadGuest (GetPost) posts error: %+v\n\n", err)
 		return
 	}
-	commentdb := data.GetComments() // get data from comment database
-
+	if id > len(post) { //checks so that a post that is not higher than total post amount and returns an error
+		http.Error(w, "404 post not found", 400)
+	}
+	commentdb, err := data.GetComments() // get data from comment database
+	if err != nil {
+		fmt.Printf("ThreadGuest (GetComments) error: %+v\n", err)
+		return
+	}
 	//only adds a comment into database if the post id matches the url id (post requested)--- to only fetch the same ids
 	for _, comment := range commentdb {
 		// fmt.Println("value", v, "comment ", comment)
@@ -603,7 +606,7 @@ func (data *Forum) ThreadGuest(w http.ResponseWriter, r *http.Request) {
 	postWithComments.Post = post[id-1] //only allows us to send the requested post
 	err = tpl.ExecuteTemplate(w, "threadGuest.html", postWithComments)
 	if err != nil {
-		fmt.Printf("ThreadGuest ExecuteTemplate (threadGuest.html) error: %+v", err)
+		fmt.Printf("ThreadGuest ExecuteTemplate (threadGuest.html) error: %+v\n", err)
 		return
 	}
 }
@@ -614,7 +617,7 @@ func (data *Forum) AboutFunc(w http.ResponseWriter, r *http.Request) {
 	if !loggedIn {
 		err := tpl.ExecuteTemplate(w, "aboutGuest.html", nil)
 		if err != nil {
-			fmt.Printf("AboutFunc ExecuteTemplate (aboutGuest.html) error: %+v\n", err)
+			fmt.Printf("AboutFunc ExecuteTemplate (aboutGuest.html) error: %+v\n\n", err)
 			return
 		}
 	} else {
@@ -632,7 +635,7 @@ func (data *Forum) ContactUs(w http.ResponseWriter, r *http.Request) {
 	if !loggedIn {
 		err := tpl.ExecuteTemplate(w, "contactGuest.html", nil)
 		if err != nil {
-			fmt.Printf("ThreadGuest ExecuteTemplate (threadGuest.html) error: %+v", err)
+			fmt.Printf("ThreadGuest ExecuteTemplate (threadGuest.html) error: %+v\n", err)
 			return
 		}
 	} else {
@@ -731,14 +734,22 @@ func (data *Forum) Customization(writer http.ResponseWriter, request *http.Reque
 }
 
 func (data *Forum) HandleLikeDislike(writer http.ResponseWriter, request *http.Request, isLike bool) {
-	items := data.GetPost()
+	items, err := data.GetPost()
+	if err != nil {
+		fmt.Printf("HandleLikeDislike (GetPost) posts error: %+v\n", err)
+		return
+	}
 	reqItemIDraw := request.URL.Query().Get("id")
 	reqItemID, err := strconv.Atoi(reqItemIDraw)
 	if err != nil {
 		fmt.Printf("unable to parse post id: %v\n", err)
 		writer.WriteHeader(http.StatusInternalServerError)
 		writer.Header().Set("Content-Type", "application/json")
-		writer.Write([]byte("{\"500\": \"Error parsing post id\"}"))
+		_, err := writer.Write([]byte("{\"500\": \"Error parsing post id\"}"))
+		if err != nil {
+			fmt.Printf("unable to send json response for post %d\n", reqItemID)
+			return
+		}
 		return
 	}
 	requestedItem := PostFeed{}
@@ -753,7 +764,11 @@ func (data *Forum) HandleLikeDislike(writer http.ResponseWriter, request *http.R
 		fmt.Printf("unable to find post %d in db: %v\n", reqItemID, err)
 		writer.WriteHeader(http.StatusNotFound)
 		writer.Header().Set("Content-Type", "application/json")
-		writer.Write([]byte("{\"404\": \"Error finding post\"}"))
+		_, err := writer.Write([]byte("{\"404\": \"Error finding post\"}"))
+		if err != nil {
+			fmt.Printf("unable to send json response for post %d\n", reqItemID)
+			return
+		}
 		return
 	}
 
@@ -762,7 +777,11 @@ func (data *Forum) HandleLikeDislike(writer http.ResponseWriter, request *http.R
 		fmt.Printf("unable to marshal json for post %d: %v\n", reqItemID, err)
 		writer.WriteHeader(http.StatusInternalServerError)
 		writer.Header().Set("Content-Type", "application/json")
-		writer.Write([]byte("{\"500\": \"Error marshalling json for post\"}"))
+		_, err := writer.Write([]byte("{\"500\": \"Error marshalling json for post\"}"))
+		if err != nil {
+			fmt.Printf("unable to send json response for post %d\n", reqItemID)
+			return
+		}
 		return
 	}
 
@@ -785,13 +804,18 @@ func (data *Forum) HandleLikeDislike(writer http.ResponseWriter, request *http.R
 			fmt.Printf("unable to modify dis-likes for post %d: %v\n", reqItemID, err)
 			writer.WriteHeader(http.StatusInternalServerError)
 			writer.Header().Set("Content-Type", "application/json")
-			writer.Write([]byte("{\"500\": \"Error modifying dis-likes for post\"}"))
+			_, err := writer.Write([]byte("{\"500\": \"Error modifying dis-likes for post\"}"))
+			if err != nil {
+				fmt.Printf("unable to send json response for post %d\n", reqItemID)
+				return
+			}
 			return
 		}
 		writer.Header().Set("Content-Type", "application/json")
 		_, err = writer.Write([]byte("{\"success\":true}"))
 		if err != nil {
 			fmt.Printf("unable to send json response for post %d\n", reqItemID)
+			return
 		}
 		fmt.Printf("modified dis-likes on post %d\n", reqItemID)
 	}

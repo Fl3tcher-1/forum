@@ -83,14 +83,3 @@ type Databases struct {
 	Post    PostFeed
 	Comment []Comment
 }
-
-// type Log struct {
-// 	Loggedin bool
-
-// type User struct {
-// 	Username string
-// 	Password string
-// 	Email    string
-// }
-
-// could it be used to store data for userprofile and use a single template execution???

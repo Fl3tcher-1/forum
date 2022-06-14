@@ -237,17 +237,22 @@ func (data *Forum) GetSession() ([]Session, error) {
 	}
 	var session_token string
 	var uName string
-	var exTime time.Time
+	var exTime string
 
 	for rows.Next() {
 		err := rows.Scan(&session_token, &uName, &exTime)
 		if err != nil {
-			return session, fmt.Errorf("GetSession rows.Scan error: %+v\n", err)
+			return nil, fmt.Errorf("GetSession rows.Scan error: %+v\n", err)
+		}
+		// time.Format("01-02-2006 15:04")
+		convTime, err := time.Parse("2006-01-02 15:04:05.999999999Z07:00", exTime)
+		if err != nil {
+			return nil, fmt.Errorf("GetSession time.Parse(exTime) error: %+v\n", err)
 		}
 		session = append(session, Session{
 			SessionID: session_token,
 			Username:  uName,
-			Expiry:    exTime,
+			Expiry:    convTime,
 		})
 	}
 	return session, nil
