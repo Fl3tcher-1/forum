@@ -115,6 +115,7 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 			Expires: expiresAt,
 			//MaxAge:  2 * int(time.Hour),
 		})
+		fmt.Println(data.GetSession())
 		//w.WriteHeader(200)
 		http.Redirect(w, r, "/home", http.StatusFound)
 		//data.HomePage(w, r)
@@ -332,53 +333,63 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 		return
 
 	} else {
+		post := data.GetPost()
+		lastPost := post[len(post)-1]
 
 		postCategory := request.FormValue("category")
 
 		postTitle := request.FormValue("title")
 
 		postContent := request.FormValue("content")
+
 		postLikes := 0
 		postDislikes := 1
 		time := time.Now()
 		postCreated := time.Format("01-02-2006 15:04")
 
 		// checks session and selects the last one (the latest one)
-		currentSession :=(data.GetSession()[len(data.GetSession())-1])
+		currentSession := (data.GetSession()[len(data.GetSession())-1])
 
+		user := currentSession.Username //fetches username from session
 
-		user := currentSession.Username//fetches username from session
-
-		type postSessionStruct struct{
-			Post []PostFeed
+		type postSessionStruct struct {
+			Post        []PostFeed
 			UserSession Session
 		}
 
 		var postAndSession postSessionStruct
 
-		postAndSession.UserSession =currentSession
+		postAndSession.UserSession = currentSession
 
-		// postAndSession.UserSession = data.GetSession()[0]
-		
-		if postTitle != "" || postContent != "" || postCategory != "" {
-
-			data.CreatePost(PostFeed{
-				//User:      sessionID.String(),
-
-				Username:  user,
-				Title:     postTitle,
-				Content:   postContent,
-				Likes:     postLikes,
-				Dislikes:  postDislikes,
-				Category:  postCategory,
-				CreatedAt: postCreated,
-			})
-
+		//checks if last post == current submit values to prevent duplicate posts
+		if lastPost.Content == postContent {
+			fmt.Println("duplicate")
 			postAndSession.Post = data.GetPost()
-
 			tpl.ExecuteTemplate(writer, "./home", postAndSession)
+
+		} else {
+			// postAndSession.UserSession = data.GetSession()[0]
+
+			if postTitle != "" || postContent != "" || postCategory != "" {
+
+				data.CreatePost(PostFeed{
+					//User:      sessionID.String(),
+
+					Username:  user,
+					Title:     postTitle,
+					Content:   postContent,
+					Likes:     postLikes,
+					Dislikes:  postDislikes,
+					Category:  postCategory,
+					CreatedAt: postCreated,
+				})
+
+				postAndSession.Post = data.GetPost()
+
+				tpl.ExecuteTemplate(writer, "./home", postAndSession)
+			}
 		}
-			postAndSession.Post = data.GetPost()
+		postAndSession.Post = data.GetPost()
 
 		tpl.ExecuteTemplate(writer, "home.html", postAndSession)
 	}
@@ -393,7 +404,7 @@ func (data *Forum) Guestview(writer http.ResponseWriter, r *http.Request) {
 }
 
 func (data *Forum) CategoriesList(w http.ResponseWriter, r *http.Request) {
-	
+
 	loggedIn := data.CheckCookie(w, r)
 
 	if !loggedIn {
@@ -405,40 +416,39 @@ func (data *Forum) CategoriesList(w http.ResponseWriter, r *http.Request) {
 	tpl.ExecuteTemplate(w, "categories.html", nil)
 }
 
-func (data *Forum) CategoryDump(w http.ResponseWriter, r *http.Request){
+func (data *Forum) CategoryDump(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	loggedIn := data.CheckCookie(w, r)
 
-	
-	type CategoryPost struct{ // create a []post in order to store multiple posts
-		Post[] PostFeed
+	type CategoryPost struct { // create a []post in order to store multiple posts
+		Post []PostFeed
 	}
 	var postByCategory CategoryPost //create variable to link to our struct
 
 	category := r.URL.Path
-	cat :=""
-	if !loggedIn{
-		cat =  strings.Replace(category, "/categoryg/", "", -1)//we use replace instead of trim as we are working with strings-- and useful characters were being removed
-	} else{
-		cat =  strings.Replace(category, "/category/", "", -1)//we use replace instead of trim as we are working with strings-- and useful characters were being removed
+	cat := ""
+	if !loggedIn {
+		cat = strings.Replace(category, "/categoryg/", "", -1) //we use replace instead of trim as we are working with strings-- and useful characters were being removed
+	} else {
+		cat = strings.Replace(category, "/category/", "", -1) //we use replace instead of trim as we are working with strings-- and useful characters were being removed
 	}
 
-	posts:= data.GetPost() // get all posts
+	posts := data.GetPost() // get all posts
 	// fmt.Println(posts)
 	// check every post to find ones whose category matches our url path
 	categoryFound := false // used to check if a valid category was entered
-	for _,post :=range posts{
+	for _, post := range posts {
 		// fmt.Println(cat, post.Category)
 		fmt.Println(post.Category)
-		if cat == post.Category{
+		if cat == post.Category {
 			// fmt.Println(post)
-			categoryFound= true
-			postByCategory.Post =append(postByCategory.Post, post) // add the matching post to our post[] in struct
+			categoryFound = true
+			postByCategory.Post = append(postByCategory.Post, post) // add the matching post to our post[] in struct
 		}
 	}
 	if !categoryFound {
 		http.Error(w, "404 category not found or has no posts", 404)
-		return 
+		return
 	}
 
 	if !loggedIn {
@@ -461,8 +471,7 @@ func (data *Forum) UserProfile(writer http.ResponseWriter, request *http.Request
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 
-
-	type profile struct{
+	type profile struct {
 		Profile UsrProfile
 		// UserSession Session
 	}
@@ -474,11 +483,10 @@ func (data *Forum) UserProfile(writer http.ResponseWriter, request *http.Request
 
 	User.Profile.Name = currentSession.Username
 
-	User.Profile.Info ="Hello my name is panda and I like to sleep and eat bamboo--- nom"
-	User.Profile.Gender ="Panda"
-	User.Profile.Age= 7
-	User.Profile.Location= "Bamboo Forest"
-
+	User.Profile.Info = "Hello my name is panda and I like to sleep and eat bamboo--- nom"
+	User.Profile.Gender = "Panda"
+	User.Profile.Age = 7
+	User.Profile.Location = "Bamboo Forest"
 
 	tpl.ExecuteTemplate(writer, "profile.html", User)
 }
@@ -513,15 +521,22 @@ func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {
 	post := data.GetPost() // get all posts
 	currentSession := data.GetSession()[len(data.GetSession())-1]
 
-	//if comment from html is not an empty string, add a new value to our comment database using the following structure
-	if comment != "" || comment == " " {
-		data.CreateComment(Comment{
-			PostID:    post[id-1].PostID, //id-1 is used as items on database start at index 0, but start at 1 on html url
-			UserId:    currentSession.Username,
-			Content:   comment,
-			CreatedAt: postCreated,
-		})
+	lastComment := data.GetComments()[len(data.GetComments())-1]
+
+	//if last comment != current submitted values then create a comment, otherwise show comments
+	if lastComment.Content != comment {
+
+		//if comment from html is not an empty string, add a new value to our comment database using the following structure
+		if comment != "" || comment == " " {
+			data.CreateComment(Comment{
+				PostID:    post[id-1].PostID, //id-1 is used as items on database start at index 0, but start at 1 on html url
+				UserId:    currentSession.Username,
+				Content:   comment,
+				CreatedAt: postCreated,
+			})
+		}
 	}
+
 	if id > len(post) { //checks so that a post that is not higher than total post amount and returns an error
 		http.Error(w, "404 post not found", 404)
 		return
@@ -633,19 +648,19 @@ func (data *Forum) UserPosts(writer http.ResponseWriter, request *http.Request) 
 	writer.Header().Set("Content-Type", "text/html")
 
 	user := data.GetSession()
-	currentUser:= user[len(user)-1]
+	currentUser := user[len(user)-1]
 	// if user.session == user in post --- send this post
 
 	posts := data.GetPost()
 
-	type UserPosts struct{
-		Post[] PostFeed
+	type UserPosts struct {
+		Post []PostFeed
 	}
 	var usrPosts UserPosts
 
-	for _, post:= range posts{
-		if post.Username == currentUser.Username{
-			usrPosts.Post= append(usrPosts.Post, post)
+	for _, post := range posts {
+		if post.Username == currentUser.Username {
+			usrPosts.Post = append(usrPosts.Post, post)
 			// fmt.Println(currentUser.Username, post.Username)
 
 		}
