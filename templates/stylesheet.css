@@ -118,6 +118,7 @@ li{
 .head{
     border: var(--border-color) 5px solid;
   display: flex;
+
   background-color: var(--border-color-lighter);
   margin: 10;
   padding: 0 50px;
@@ -127,9 +128,13 @@ li{
   width: 100%;
   z-index: 1000;
 }
+
+
 .head > h4{
   border: var(--border-color);
   color: var(--text-color);
+    flex-shrink: 2;
+  flex-basis: auto;
 }
 .header{
   display: inline;
@@ -146,6 +151,8 @@ input[type=submit]{
   font-size: 15px;
   height: 50px;
   width: 250px;
+  flex-shrink: 1;
+  flex-basis: auto;
 }
 
 

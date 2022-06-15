@@ -345,6 +345,8 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 
 		// checks session and selects the last one (the latest one)
 		currentSession :=(data.GetSession()[len(data.GetSession())-1])
+
+
 		user := currentSession.Username//fetches username from session
 
 		type postSessionStruct struct{
