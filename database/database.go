@@ -185,15 +185,12 @@ func (data *Forum) GetPost() ([]PostFeed, error) {
 		return posts, fmt.Errorf("GetPost DB Query error: %+v\n", err)
 	}
 
-	reaction := Reaction{}
 	var id int
 	var uiD string
 	var title string
 	var content string
-	// var likes int
-	// var dislikes int
-	likes := reaction.Likes
-	dislikes := reaction.Dislikes
+	var likes int
+	var dislikes int
 	var created string
 	var category string
 
@@ -217,6 +214,7 @@ func (data *Forum) GetPost() ([]PostFeed, error) {
 	return posts, nil
 }
 
+// TODO: implement the get reaction(post, comment, etc)
 func (data *Forum) GetReaction() ([]Reaction, error) {
 	reactions := []Reaction{}
 	rows, err := data.DB.Query(`SELECT * FROM reaction`)
@@ -249,7 +247,7 @@ func (data *Forum) GetReaction() ([]Reaction, error) {
 	return reactions, nil
 }
 
-// @TODO: add likes/dislikes to comments.
+// @TODO: add likes/dislikes(reactions) to comments.
 func (data *Forum) GetComments() ([]Comment, error) {
 	comments := []Comment{}
 	rows, err := data.DB.Query(`SELECT * FROM comments`)

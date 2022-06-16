@@ -66,9 +66,9 @@ func CreateSessionCookie() http.Cookie {
 	}
 }
 
-func CheckSession(w http.ResponseWriter, r *http.Request, db *sql.DB, cookie *http.Cookie) bool {
-	var err error
-	cookie, err = r.Cookie("sessionCookie")
+func CheckSession(w http.ResponseWriter, r *http.Request, db *sql.DB) bool {
+	// var err error
+	cookie, err := r.Cookie("sessionCookie")
 	if err != nil {
 		return false
 	} else {

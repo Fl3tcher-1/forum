@@ -23,7 +23,6 @@ type session struct {
 }
 
 var (
-	tpl               *template.Template
 	dbUsers           = map[string]User{}    // user ID, user
 	dbSessions        = map[string]session{} // session ID, session
 	dbSessionsCleaned time.Time
@@ -32,7 +31,11 @@ var (
 const sessionLength int = 30
 
 func init() {
-	tpl, _ = template.ParseGlob("templates/*.html")
+	_, err := template.ParseGlob("templates/*.html")
+	if err != nil {
+		fmt.Printf("init (ParseGlob) error: %+v\n", err)
+		return
+	}
 	dbSessionsCleaned = time.Now()
 	http.HandleFunc("/", index)
 	http.HandleFunc("/signup", signup)
