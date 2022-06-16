@@ -50,6 +50,19 @@ func (forum *Forum) CreatePost(post PostFeed) error {
 	return nil
 }
 
+func (forum *Forum) CreateReaction(reaction Reaction) error {
+	stmt, err := forum.DB.Prepare("INSERT INTO reaction (postid, userid, reactionid, commentid, likes, dislikes) VALUES (?, ?, ?, ?, ?, ?);")
+	if err != nil {
+		return fmt.Errorf("CreateReaction DB Prepare error: %+v\n", err)
+	}
+	_, err = stmt.Exec(reaction.PostID, reaction.UserID, reaction.ReactionID, reaction.CommentID, reaction.Likes, reaction.Dislikes)
+	if err != nil {
+		return fmt.Errorf("CreateReactions Exec error: %+v\n", err)
+	}
+	defer stmt.Close()
+	return nil
+}
+
 func (forum *Forum) CreateComment(comment Comment) error {
 	stmt, err := forum.DB.Prepare("INSERT INTO comments ( postID, userID, content, dateCreated) VALUES (?, ?, ?, ?);")
 	if err != nil {
@@ -171,12 +184,16 @@ func (data *Forum) GetPost() ([]PostFeed, error) {
 	if err != nil {
 		return posts, fmt.Errorf("GetPost DB Query error: %+v\n", err)
 	}
+
+	reaction := Reaction{}
 	var id int
 	var uiD string
 	var title string
 	var content string
-	var likes int
-	var dislikes int
+	// var likes int
+	// var dislikes int
+	likes := reaction.Likes
+	dislikes := reaction.Dislikes
 	var created string
 	var category string
 
@@ -198,6 +215,38 @@ func (data *Forum) GetPost() ([]PostFeed, error) {
 	}
 	// fmt.Println(posts)
 	return posts, nil
+}
+
+func (data *Forum) GetReaction() ([]Reaction, error) {
+	reactions := []Reaction{}
+	rows, err := data.DB.Query(`SELECT * FROM reaction`)
+	if err != nil {
+		return reactions, fmt.Errorf("GetReaction DB Query error: %+v\n", err)
+	}
+	var postID string
+	var userID string
+	var reactionID string
+	var commentID string
+	// React      int
+	var likes int
+	var dislikes int
+
+	for rows.Next() {
+		err := rows.Scan(&postID, &userID, &reactionID, &commentID, &likes, &dislikes)
+		if err != nil {
+			return reactions, fmt.Errorf("GetPost rows.Scan error: %+v\n", err)
+		}
+		reactions = append(reactions, Reaction{
+			PostID:     postID,
+			UserID:     userID,
+			ReactionID: reactionID,
+			CommentID:  commentID,
+			Likes:      likes,
+			Dislikes:   dislikes,
+		})
+	}
+	fmt.Println(reactions)
+	return reactions, nil
 }
 
 // @TODO: add likes/dislikes to comments.

@@ -56,14 +56,10 @@ type UsrProfile struct {
 	Location string
 	Posts    []string
 	Comments []string
-	Likes    []string
+	Likes    []Reaction
 	Shares   []string
 	Userinfo map[string]string
 	// custom   string
-}
-
-type Forum struct {
-	*sql.DB
 }
 
 // holds details of user session-- used for cookies.
@@ -72,13 +68,30 @@ type Post struct {
 	Content  string
 	Date     string
 	Comments int
+	PostID   string
+	UserID   string
+	Reaction Reaction
+}
+
+type Reaction struct {
+	PostID     string
+	UserID     string
+	ReactionID string
+	CommentID  string
+	// React      int
+	Likes    int
+	Dislikes int
+}
+
+type Forum struct {
+	*sql.DB
 }
 
 type CategoryPost struct { // create a []post in order to store multiple posts
 	Post []PostFeed
 }
 
-//Databases holds our post and comment databases
+// Databases holds our post and comment databases
 type Databases struct {
 	Post    PostFeed
 	Comment []Comment
