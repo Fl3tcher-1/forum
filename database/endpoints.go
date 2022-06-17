@@ -2,54 +2,33 @@ package database
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
-	"strconv"
-	"time"
-
 	"html/template"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 	"unicode"
 
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
-// type Log struct {
-// 	Loggedin bool
-type Log struct {
-	Loggedin bool
-}
-
-// type User struct {
-// 	Username string
-// 	Password string
-// 	Email    string
-// }
-
-// could it be used to store data for userprofile and use a single template execution???
-
-// holds details of user session-- used for cookies
-
-type Post struct {
-	Title    string
-	Content  string
-	Date     string
-	Comments int
+func (p PostFeed) MarshallJSON() ([]byte, error) {
+	return json.Marshal(p)
 }
 
 // creates all needed templates
-// will need to be reduced as there is too many at the moment
+// will need to be reduced as there is too many at the moment.
+// var tpl *template.Template
 
-var tpl *template.Template
-
-// parses files for all templates allowing them to be called
-func init() {
-	tpl = template.Must(template.ParseGlob("templates/*"))
-}
+// parses files for all templates allowing them to be called.
+// func init() {
+// 	tpl = template.Must(template.ParseGlob("templates/*"))
+// }
 
 // sessions
-
 // var sessions = map[string]Session{}
 
 // func (s Session) isExpired() bool {
@@ -57,19 +36,21 @@ func init() {
 
 // }
 
-// login page
+// @TODO: error handling.
+// login page.
 func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
-
 	fmt.Println("*****loginUser is running********")
-
 	if r.URL.Path != "/login" {
 		http.Error(w, "404 not found.", http.StatusNotFound)
 		return
 	}
-
 	// switch r.Method {
 	// case "POST":
-	r.ParseForm()
+	err := r.ParseForm()
+	if err != nil {
+		fmt.Printf("LoginWeb ParseForm error: %+v\n", err)
+		return
+	}
 
 	var user User
 	// sessionToken := uuid.NewV4()
@@ -93,17 +74,21 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 	var passwordHash string
 
 	row := data.DB.QueryRow("SELECT password FROM people WHERE Username = ?", user.Username)
-	err := row.Scan(&passwordHash)
+	err = row.Scan(&passwordHash)
 
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	if err != nil {
-		tpl.ExecuteTemplate(w, "login.html", "check username and password")
+		err := tpl.ExecuteTemplate(w, "login.html", "check username and password")
+		if err != nil {
+			fmt.Printf("LoginWeb ExecuteTemplate error: %+v\n", err)
+			return
+		}
 		return
 	}
 	err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(user.Password))
-	// returns nill on succcess
+	// returns nil on succcess
 	if err == nil {
-
-		data.CreateSession(Session{
+		err = data.CreateSession(Session{
 			SessionID: sessionToken.String(),
 			Username:  user.Username,
 			Expiry:    expiresAt,
@@ -121,12 +106,17 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 		//data.HomePage(w, r)
 	} else {
 		fmt.Println("incorrect password")
-		tpl.ExecuteTemplate(w, "login.html", "check username and password")
+		err := tpl.ExecuteTemplate(w, "login.html", "check username and password")
+		if err != nil {
+			fmt.Printf("LoginWeb ExecuteTemplate error: %+v\n", err)
+			return
+		}
 	}
-
 }
 
+// @TODO: error handling.
 func (data *Forum) GetSignupPage(w http.ResponseWriter, r *http.Request) {
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	tpl.ExecuteTemplate(w, "signup.html", nil)
 }
 
@@ -138,7 +128,7 @@ func (data *Forum) GetSignupPage(w http.ResponseWriter, r *http.Request) {
 	 6. insert u.username and password hash in database
 */
 func (data *Forum) SignUpUser(w http.ResponseWriter, r *http.Request) {
-
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	r.ParseForm() // parses sign up form to fetch needed information
 
 	fmt.Println("****Sign-up new user is running ")
@@ -196,39 +186,49 @@ func (data *Forum) SignUpUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !pwLower || !pwUpper || !pwNumber || !pwLength || pwSpace || !isAlphaNumeric || !nameLength {
-		tpl.ExecuteTemplate(w, "signup.html", "please check usrname and/or password criteria")
+		err := tpl.ExecuteTemplate(w, "signup.html", "please check username and/or password criteria")
+		if err != nil {
+			fmt.Printf("SignUpUser ExecuteTemplate signup.html error: %+v\n", err)
+			return
+		}
 		return
 	}
 
-	row := data.DB.QueryRow("SELECT uuid FROM people where username = ?", user.Username)
+	row := data.DB.QueryRow("SELECT uuid FROM people where username =?", user.Username)
 	var username string
 	err := row.Scan(&username)
 	if err != sql.ErrNoRows {
-		// fmt.Println("user exists", err)
-		tpl.ExecuteTemplate(w, "signup.html", "username taken")
-		fmt.Printf("sql scan row id error: %+v\n", err)
-		return
+		fmt.Printf("sql scan row user error: %+v\n", err)
+		err1 := tpl.ExecuteTemplate(w, "signup.html", "username taken")
+		if err1 != nil {
+			fmt.Printf("SignUpUser ExecuteTemplate (username) error1: %+v\n", err1)
+			return
+		}
 	}
 	row = data.DB.QueryRow("SELECT uuid FROM people where email =?", user.Email)
 	var userEmail string
 	err = row.Scan(&userEmail)
 	if err != sql.ErrNoRows {
 		fmt.Printf("sql scan row email error: %+v\n", err)
-		tpl.ExecuteTemplate(w, "signup.html", "e-mail in use")
+		err2 := tpl.ExecuteTemplate(w, "signup.html", "e-mail in use")
+		if err2 != nil {
+			fmt.Printf("SignUpUser ExecuteTemplate (email) error2: %+v\n", err2)
+			return
+		}
 	}
 
-	var passwordHash []byte
-
-	passwordHash, err = bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		tpl.ExecuteTemplate(w, "signup.html", "there was an error registering account")
-		fmt.Printf("Register Account (passwordHash) error:  %+v\n", err)
+		err3 := tpl.ExecuteTemplate(w, "signup.html", "there was an error registering account")
+		if err3 != nil {
+			fmt.Printf("SignUpUser ExecuteTemplate (password) error:  %+v\n", err3)
+			return
+		}
 		return
 	}
 
 	sessionID := uuid.NewV4()
-
-	data.CreateUser(User{
+	err = data.CreateUser(User{
 		Uuid:     sessionID.String(),
 		Username: user.Username,
 		Email:    user.Email,
@@ -236,31 +236,33 @@ func (data *Forum) SignUpUser(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
-		tpl.ExecuteTemplate(w, "signup.html", "there was an error registering account")
-		return
-	} else {
-		http.Redirect(w, r, "/login", 302)
-		return
+		err4 := tpl.ExecuteTemplate(w, "signup.html", "there was an error registering account")
+		if err4 != nil {
+			fmt.Printf("SignUpUser ExecuteTemplate (password) error:  %+v\n", err4)
+			return
+		}
 	}
+	http.Redirect(w, r, "/login", 302)
+	return
 }
 
 // check cookie
-
 func (data *Forum) CheckCookie(writer http.ResponseWriter, request *http.Request) bool {
-
 	c, err := request.Cookie("session_token")
 	if err != nil {
 		if err == http.ErrNoCookie {
-			fmt.Println(err)
+			fmt.Printf("CheckCookie (Cookie) error: %+v\n", err)
 			return false
 		}
 	}
 
 	sessionToken := c.Value
 	// var currentSession Session
-	a := data.GetSession()
+	a, err := data.GetSession()
+	if err != nil {
+		fmt.Printf("CheckCookie (GetSession) error: %+v\n", err)
+	}
 
-	fmt.Println(sessionToken)
 	//fmt.Println(sessionToken == a[0].SessionID)
 	//sessFound := false
 
@@ -282,19 +284,20 @@ func (data *Forum) CheckCookie(writer http.ResponseWriter, request *http.Request
 		// }
 	}
 	return true
-
 }
 
 func (data *Forum) Logout(w http.ResponseWriter, r *http.Request) {
-	c, _ := r.Cookie("session_token")
+	c, err := r.Cookie("session_token")
+	if err != nil {
+		fmt.Printf("Logout Cookie error: %+v\n", err)
+	}
 
 	sessionToken := c.Value
 	var currentSession Session
-	a := data.GetSession()
-
-	fmt.Println(sessionToken)
-
-	fmt.Println("here")
+	a, err := data.GetSession()
+	if err != nil {
+		fmt.Printf("Logout GetSession error: %+v\n", err)
+	}
 
 	for _, sess := range a {
 		if sessionToken == sess.SessionID {
@@ -313,42 +316,45 @@ func (data *Forum) Logout(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// home page
+// home page.
 func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "text/html")
+	tpl := template.Must(template.ParseGlob("templates/*"))
 
 	if err := request.ParseForm(); err != nil { // checks for errors parsing form
-		http.Error(writer, "500 Internal Server Error", 500)
-		fmt.Printf("ParseForm (HomePage) error:  %+v\n", err)
+		http.Error(writer, "500 Internal Server Error", http.StatusInternalServerError)
+		fmt.Printf("HomePage (ParseForm) error:  %+v\n", err)
 		return
 	}
-
 	loggedIn := data.CheckCookie(writer, request)
-	fmt.Println(loggedIn)
-
 	// 🐈
 	if !loggedIn {
-		fmt.Println(loggedIn)
-		tpl.ExecuteTemplate(writer, "guest.html", data.GetPost())
+		data, err := data.GetPost()
+		if err != nil {
+			fmt.Printf("HomePage (GetPost) error: %+v\n", err)
+		}
+		err = tpl.ExecuteTemplate(writer, "guest.html", data)
+		if err != nil {
+			fmt.Printf("HomePage ExecuteTemplate (guest.html) error: %+v\n", err)
+		}
 		return
 
 	} else {
-		post := data.GetPost()
+		post,_ := data.GetPost()
 		lastPost := post[len(post)-1]
 
 		postCategory := request.FormValue("category")
-
 		postTitle := request.FormValue("title")
-
 		postContent := request.FormValue("content")
 
 		postLikes := 0
-		postDislikes := 1
+		postDislikes := 0
 		time := time.Now()
 		postCreated := time.Format("01-02-2006 15:04")
 
 		// checks session and selects the last one (the latest one)
-		currentSession := (data.GetSession()[len(data.GetSession())-1])
+		sess,_ := data.GetSession()
+		currentSession := sess[len(sess)-1]
 
 		user := currentSession.Username //fetches username from session
 
@@ -360,11 +366,11 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 		var postAndSession postSessionStruct
 
 		postAndSession.UserSession = currentSession
-
+		
 		//checks if last post == current submit values to prevent duplicate posts
 		if lastPost.Content == postContent {
 			fmt.Println("duplicate")
-			postAndSession.Post = data.GetPost()
+			postAndSession.Post,_ = data.GetPost()
 			tpl.ExecuteTemplate(writer, "./home", postAndSession)
 
 		} else {
@@ -372,7 +378,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 
 			if postTitle != "" || postContent != "" || postCategory != "" {
 
-				data.CreatePost(PostFeed{
+				err :=data.CreatePost(PostFeed{
 					//User:      sessionID.String(),
 
 					Username:  user,
@@ -383,48 +389,86 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 					Category:  postCategory,
 					CreatedAt: postCreated,
 				})
-
-				postAndSession.Post = data.GetPost()
-
-				tpl.ExecuteTemplate(writer, "./home", postAndSession)
+				if err != nil {
+				fmt.Printf("HomePage (CreatePost) items error: %+v\n", err)
+				return
 			}
-		}
-		postAndSession.Post = data.GetPost()
 
-		tpl.ExecuteTemplate(writer, "home.html", postAndSession)
+				postAndSession.Post, err = data.GetPost()
+				if err != nil {
+				fmt.Printf("HomePage (GetPost) items error: %+v\n", err)
+				return
+			}
+
+			err = tpl.ExecuteTemplate(writer, "./home", postAndSession)
+			if err != nil {
+				fmt.Printf("HomePage ExecuteTemplate user homepage error: %+v\n", err)
+				return
+			}
+			
+		}			
+		}
+		data, err := data.GetPost()
+		postAndSession.Post =data
+		if err != nil {
+			fmt.Printf("HomePage (GetPost) data error: %+v\n", err)
+			return
+		}
+		err = tpl.ExecuteTemplate(writer, "home.html", postAndSession)
+		if err != nil {
+			fmt.Printf("HomePage ExecuteTemplate (home.html) error: %+v\n", err)
+			return
+		}
 	}
 }
 
-func (data *Forum) Guestview(writer http.ResponseWriter, r *http.Request) {
-
-	fmt.Println("here")
-	items := data.GetPost()
-	fmt.Println(data.GetPost())
-	tpl.ExecuteTemplate(writer, "guest.html", items)
+func (data *Forum) GuestView(writer http.ResponseWriter, r *http.Request) {
+	tpl := template.Must(template.ParseGlob("templates/*"))
+	items, err := data.GetPost()
+	if err != nil {
+		fmt.Printf("GuestView (GetPost) items error: %+v\n", err)
+		return
+	}
+	err = tpl.ExecuteTemplate(writer, "guest.html", items)
+	if err != nil {
+		fmt.Printf("GuestView ExecuteTemplate error: %+v\n", err)
+		return
+	}
 }
 
 func (data *Forum) CategoriesList(w http.ResponseWriter, r *http.Request) {
-
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	loggedIn := data.CheckCookie(w, r)
-
 	if !loggedIn {
-		tpl.ExecuteTemplate(w, "guestCategories.html", nil)
+		err := tpl.ExecuteTemplate(w, "guestCategories.html", nil)
+		if err != nil {
+			fmt.Printf("CategoriesList ExecuteTemplate error: %+v\n", err)
+			return
+		}
+	}
+	w.Header().Set("Content-Type", "text/html")
+	err := tpl.ExecuteTemplate(w, "categories.html", nil)
+	if err != nil {
+		fmt.Printf("CategoriesList ExecuteTemplate error: %+v\n", err)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "text/html")
-	tpl.ExecuteTemplate(w, "categories.html", nil)
 }
 
 func (data *Forum) CategoryDump(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
+tpl := template.Must(template.ParseGlob("templates/*"))
+	err :=r.ParseForm()
+		if err != nil {
+		fmt.Printf("CategoryDump (ParseForm) error: %+v\n", err)
+		return
+		}
+
 	loggedIn := data.CheckCookie(w, r)
 
 	type CategoryPost struct { // create a []post in order to store multiple posts
 		Post []PostFeed
 	}
-	var postByCategory CategoryPost //create variable to link to our struct
 
+	var postByCategory CategoryPost //create variable to link to our struct
 	category := r.URL.Path
 	cat := ""
 	if !loggedIn {
@@ -433,7 +477,11 @@ func (data *Forum) CategoryDump(w http.ResponseWriter, r *http.Request) {
 		cat = strings.Replace(category, "/category/", "", -1) //we use replace instead of trim as we are working with strings-- and useful characters were being removed
 	}
 
-	posts := data.GetPost() // get all posts
+	posts, err := data.GetPost() 
+	if err != nil {
+		fmt.Printf("CategoryDump (GetPost) posts error: %+v\n", err)
+		return
+	}// get all posts
 	// fmt.Println(posts)
 	// check every post to find ones whose category matches our url path
 	categoryFound := false // used to check if a valid category was entered
@@ -452,22 +500,29 @@ func (data *Forum) CategoryDump(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !loggedIn {
-		tpl.ExecuteTemplate(w, "guestCategoryPosts.html", postByCategory)
+		err := tpl.ExecuteTemplate(w, "guestCategoryPosts.html", postByCategory)
+		if err != nil {
+			fmt.Printf("CategoryDump ExecuteTemplate (guestCategoryPosts.html) error: %+v\n", err)
+		}
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "text/html")
-	tpl.ExecuteTemplate(w, "categoryPosts.html", postByCategory)
-
+	err1 := tpl.ExecuteTemplate(w, "categoryPosts.html", postByCategory)
+	if err1 != nil {
+		fmt.Printf("CategoryDump ExecuteTemplate (categoryPosts.html) error: %+v\n", err1)
+	}
 }
 
 func (data *Forum) PwReset(writer http.ResponseWriter, request *http.Request) {
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	tpl.ExecuteTemplate(writer, "passwordReset.html", nil)
 }
 
 func (data *Forum) UserProfile(writer http.ResponseWriter, request *http.Request) {
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 
@@ -475,7 +530,9 @@ func (data *Forum) UserProfile(writer http.ResponseWriter, request *http.Request
 		Profile UsrProfile
 		// UserSession Session
 	}
-	currentSession := data.GetSession()[len(data.GetSession())-1]
+	sess,_ := data.GetSession()
+	currentSession := sess[len(sess)-1]
+	// data.GetSession()[len(data.GetSession())-1]
 
 	var User profile
 
@@ -488,19 +545,26 @@ func (data *Forum) UserProfile(writer http.ResponseWriter, request *http.Request
 	User.Profile.Age = 7
 	User.Profile.Location = "Bamboo Forest"
 
-	tpl.ExecuteTemplate(writer, "profile.html", User)
+	err := tpl.ExecuteTemplate(writer, "profile.html", User)
+	if err != nil {
+		fmt.Printf("UserProfile ExecuteTemplate (profile.html) error: %+v\n", err)
+		return
+	}
 }
 
-//Threds handles posts and their comments-- and displays them on /threads
+//Threads handles posts and their comments-- and displays them on /threads.
 func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	w.WriteHeader(http.StatusOK)
 	//grab current url, parse the form to allow taking data from html
 	url := r.URL.Path
-	r.ParseForm()
-
+	err := r.ParseForm()
+	if err != nil {
+		fmt.Printf("Threads ParseForm error: %+v\n", err)
+		return
+	}
 	idstr := strings.Trim(url, "/thread") //trim text so  we are only left with the final end point (postID)
 	// fmt.Println(idstr)
-
 	id, err := strconv.Atoi(idstr) //convert to number as postID is stored as an int on our database
 	if err != nil {
 		http.Error(w, "400 Bad Request", 400)
@@ -509,83 +573,92 @@ func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {
 	comment := r.FormValue("comment") //take "comment" id value from html form
 	time := time.Now()                //create a new time variable using following format
 	postCreated := time.Format("01-02-2006 15:04")
-
-	//Databases holds our post and comment databases
-	type Databases struct {
-		Post    PostFeed
-		Comment []Comment
-	}
-
 	var postWithComments Databases
 
-	post := data.GetPost() // get all posts
-	currentSession := data.GetSession()[len(data.GetSession())-1]
-
-	lastComment := data.GetComments()[len(data.GetComments())-1]
+	post, err := data.GetPost() // get all posts
+	if err != nil {
+		fmt.Printf("Threads (GetPost) posts error: %+v\n", err)
+		return
+	}
+	sess, _ := data.GetSession()
+	currentSession := sess[len(sess)-1]
+	// data.GetSession()[len(data.GetSession())-1]
+	cmnt,_ :=data.GetComments()
+	lastComment := cmnt[len(cmnt)-1]
+	// data.GetComments()[len(data.GetComments())-1]
 
 	//if last comment != current submitted values then create a comment, otherwise show comments
 	if lastComment.Content != comment {
 
 		//if comment from html is not an empty string, add a new value to our comment database using the following structure
 		if comment != "" || comment == " " {
-			data.CreateComment(Comment{
+			err =data.CreateComment(Comment{
 				PostID:    post[id-1].PostID, //id-1 is used as items on database start at index 0, but start at 1 on html url
 				UserId:    currentSession.Username,
 				Content:   comment,
 				CreatedAt: postCreated,
 			})
+			if err != nil {
+			fmt.Printf("Threads (CreateComment) error: %+v\n", err)
+			return
+			}
 		}
 	}
 
 	if id > len(post) { //checks so that a post that is not higher than total post amount and returns an error
 		http.Error(w, "404 post not found", 404)
+	}
+	commentdb, err := data.GetComments() // get data from comment database
+	if err != nil {
+		fmt.Printf("Threads (GetComments) error: %+v\n", err)
 		return
 	}
-	commentdb := data.GetComments() // get data from comment database
-
 	//only adds a comment into database if the post id matches the url id (post requested)--- to only fetch the same ids
 	for _, comment := range commentdb {
-		// fmt.Println("value", v, "comment ", comment)
 		if comment.PostID == id {
 			postWithComments.Comment = append(postWithComments.Comment, comment) //only adds matching comments to the database to be called only for specific posts
-			// fmt.Println(comment)
 		}
 	}
-
 	postWithComments.Post = post[id-1] //only allows us to send the requested post
 
-	tpl.ExecuteTemplate(w, "thread.html", postWithComments)
-
+	err = tpl.ExecuteTemplate(w, "thread.html", postWithComments)
+	if err != nil {
+		fmt.Printf("Threads ExecuteTemplate (thread.html) error: %+v\n", err)
+		return
+	}
 }
+
 func (data *Forum) ThreadGuest(w http.ResponseWriter, r *http.Request) {
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	w.WriteHeader(http.StatusOK)
 	//grab current url, parse the form to allow taking data from html
 	url := r.URL.Path
-	r.ParseForm()
+	err := r.ParseForm()
+	if err != nil {
+		fmt.Printf("Threads ParseForm error: %+v\n", err)
+		return
+	}
 
 	idstr := strings.Trim(url, "/threadg") //trim text so  we are only left with the final end point (postID)
-	// fmt.Println(idstr)
-
-	id, err := strconv.Atoi(idstr) //convert to number as postID is stored as an int on our database
+	id, err := strconv.Atoi(idstr)         //convert to number as postID is stored as an int on our database
 	if err != nil {
 		http.Error(w, "400 Bad Request", 400)
 	}
 
-	type Databases struct {
-		Post    PostFeed
-		Comment []Comment
-	}
-
 	var postWithComments Databases
-
-	post := data.GetPost() // get all posts
-
-	if id > len(post) { //checks so that a post that is not higher than total post amount and returns an error
-		http.Error(w, "404 post not found", 400)
+	post, err := data.GetPost() // get all posts
+	if err != nil {
+		fmt.Printf("ThreadGuest (GetPost) posts error: %+v\n\n", err)
 		return
 	}
-	commentdb := data.GetComments() // get data from comment database
-
+	if id > len(post) { //checks so that a post that is not higher than total post amount and returns an error
+		http.Error(w, "404 post not found", 400)
+	}
+	commentdb, err := data.GetComments() // get data from comment database
+	if err != nil {
+		fmt.Printf("ThreadGuest (GetComments) error: %+v\n", err)
+		return
+	}
 	//only adds a comment into database if the post id matches the url id (post requested)--- to only fetch the same ids
 	for _, comment := range commentdb {
 		// fmt.Println("value", v, "comment ", comment)
@@ -596,62 +669,70 @@ func (data *Forum) ThreadGuest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	postWithComments.Post = post[id-1] //only allows us to send the requested post
-
-	tpl.ExecuteTemplate(w, "threadGuest.html", postWithComments)
-
-	// fmt.Println("here")
-	// items:= data.GetPost()
-	// fmt.Println(data.GetPost())
-	// tpl.ExecuteTemplate(w,"threadGuest.html", items)
+	err = tpl.ExecuteTemplate(w, "threadGuest.html", postWithComments)
+	if err != nil {
+		fmt.Printf("ThreadGuest ExecuteTemplate (threadGuest.html) error: %+v\n", err)
+		return
+	}
 }
 
 func (data *Forum) AboutFunc(w http.ResponseWriter, r *http.Request) {
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	loggedIn := data.CheckCookie(w, r)
 	if !loggedIn {
-		tpl.ExecuteTemplate(w, "aboutGuest.html", nil)
-		return
-
+		err := tpl.ExecuteTemplate(w, "aboutGuest.html", nil)
+		if err != nil {
+			fmt.Printf("AboutFunc ExecuteTemplate (aboutGuest.html) error: %+v\n\n", err)
+			return
+		}
 	} else {
 		err := tpl.ExecuteTemplate(w, "about.html", nil)
 		if err != nil {
-			fmt.Printf("AboutFunc Execute.Template error: %+v\n", err)
+			fmt.Printf("AboutFunc ExecuteTemplate (about.html) error: %+v\n", err)
+			return
 		}
 	}
 }
 
 func (data *Forum) ContactUs(w http.ResponseWriter, r *http.Request) {
 	loggedIn := data.CheckCookie(w, r)
-
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	if !loggedIn {
-		tpl.ExecuteTemplate(w, "contactGuest.html", nil)
-		return
-
+		err := tpl.ExecuteTemplate(w, "contactGuest.html", nil)
+		if err != nil {
+			fmt.Printf("ThreadGuest ExecuteTemplate (threadGuest.html) error: %+v\n", err)
+			return
+		}
 	} else {
 		err := tpl.ExecuteTemplate(w, "contact-us.html", nil)
 		if err != nil {
-			fmt.Printf("ContactUs Execute.Template error: %+v\n", err)
+			fmt.Printf("ContactUs ExecuteTemplate (contact-us.html) error: %+v\n", err)
+			return
 		}
 	}
 }
 
 func (data *Forum) UserPhoto(writer http.ResponseWriter, request *http.Request) {
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	err := tpl.ExecuteTemplate(writer, "photo.html", nil)
 	if err != nil {
-		fmt.Printf("UserPhoto Execute.Template error: %+v\n", err)
+		fmt.Printf("UserPhoto ExecuteTemplate (photo.html) error: %+v\n", err)
+		return
 	}
 }
 
 func (data *Forum) UserPosts(writer http.ResponseWriter, request *http.Request) {
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 
-	user := data.GetSession()
+	user,_ := data.GetSession()
 	currentUser := user[len(user)-1]
 	// if user.session == user in post --- send this post
 
-	posts := data.GetPost()
+	posts,_ := data.GetPost()
 
 	type UserPosts struct {
 		Post []PostFeed
@@ -667,52 +748,160 @@ func (data *Forum) UserPosts(writer http.ResponseWriter, request *http.Request) 
 	}
 	err := tpl.ExecuteTemplate(writer, "posts.html", usrPosts)
 	if err != nil {
-		fmt.Printf("UserPosts Execute.Template error: %+v\n", err)
+		fmt.Printf("UserPosts ExecuteTemplate (posts.html) error: %+v\n", err)
+		return
 	}
 }
 
 func (data *Forum) UserComments(writer http.ResponseWriter, request *http.Request) {
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	err := tpl.ExecuteTemplate(writer, "comments.html", nil)
 	if err != nil {
-		fmt.Printf("UserComments Execute.Template error: %+v\n", err)
+		fmt.Printf("UserComments ExecuteTemplate (comments.html) error: %+v\n", err)
+		return
 	}
 }
 
 func (data *Forum) UserLikes(writer http.ResponseWriter, request *http.Request) {
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	err := tpl.ExecuteTemplate(writer, "likes.html", nil)
 	if err != nil {
-		fmt.Printf("UserLikes Execute.Template error: %+v\n", err)
+		fmt.Printf("UserLikes ExecuteTemplate (likes.html) error: %+v\n", err)
+	}
+}
+
+func (data *Forum) UserDislikes(writer http.ResponseWriter, request *http.Request) {
+	tpl := template.Must(template.ParseGlob("templates/*"))
+	writer.WriteHeader(http.StatusOK)
+	writer.Header().Set("Content-Type", "text/html")
+	err := tpl.ExecuteTemplate(writer, "likes.html", nil)
+	if err != nil {
+		fmt.Printf("UserDislikes ExecuteTemplate (likes.html) error: %+v\n", err)
 	}
 }
 
 func (data *Forum) UserShares(writer http.ResponseWriter, request *http.Request) {
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	err := tpl.ExecuteTemplate(writer, "shares.html", nil)
 	if err != nil {
-		fmt.Printf("UserShares Execute.Template error: %+v\n", err)
+		fmt.Printf("UserShares ExecuteTemplate (shares.html) error: %+v\n", err)
+		return
 	}
 }
 
 func (data *Forum) UserInfo(writer http.ResponseWriter, request *http.Request) {
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	err := tpl.ExecuteTemplate(writer, "userinfo.html", nil)
 	if err != nil {
-		fmt.Printf("UserInfo Execute.Template error: %+v\n", err)
+		fmt.Printf("UserInfo ExecuteTemplate (userinfo.html) error: %+v\n", err)
+		return
 	}
 }
 
 func (data *Forum) Customization(writer http.ResponseWriter, request *http.Request) {
+	tpl := template.Must(template.ParseGlob("templates/*"))
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 	err := tpl.ExecuteTemplate(writer, "customize.html", nil)
 	if err != nil {
-		fmt.Printf("Customization Execute.Template error: %+v\n", err)
+		fmt.Printf("Customization ExecuteTemplate (customize.html) error: %+v\n", err)
+		return
+	}
+}
+
+func (data *Forum) HandleLikeDislike(writer http.ResponseWriter, request *http.Request, isLike bool) {
+	items, err := data.GetPost()
+	if err != nil {
+		fmt.Printf("HandleLikeDislike (GetPost) posts error: %+v\n", err)
+		return
+	}
+	reqItemIDraw := request.URL.Query().Get("id")
+	reqItemID, err := strconv.Atoi(reqItemIDraw)
+	if err != nil {
+		fmt.Printf("unable to parse post id: %v\n", err)
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Header().Set("Content-Type", "application/json")
+		_, err := writer.Write([]byte("{\"500\": \"Error parsing post id\"}"))
+		if err != nil {
+			fmt.Printf("unable to send json response for post %d\n", reqItemID)
+			return
+		}
+		return
+	}
+	requestedItem := PostFeed{}
+
+	for _, item := range items {
+		if item.PostID == reqItemID {
+			requestedItem = item
+		}
+	}
+
+	if requestedItem.CreatedAt == "" {
+		fmt.Printf("unable to find post %d in db: %v\n", reqItemID, err)
+		writer.WriteHeader(http.StatusNotFound)
+		writer.Header().Set("Content-Type", "application/json")
+		_, err := writer.Write([]byte("{\"404\": \"Error finding post\"}"))
+		if err != nil {
+			fmt.Printf("unable to send json response for post %d\n", reqItemID)
+			return
+		}
+		return
+	}
+
+	j, err := requestedItem.MarshallJSON()
+	if err != nil {
+		fmt.Printf("unable to marshal json for post %d: %v\n", reqItemID, err)
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Header().Set("Content-Type", "application/json")
+		_, err := writer.Write([]byte("{\"500\": \"Error marshalling json for post\"}"))
+		if err != nil {
+			fmt.Printf("unable to send json response for post %d\n", reqItemID)
+			return
+		}
+		return
+	}
+
+	switch request.Method {
+	case http.MethodGet:
+		writer.Header().Set("Content-Type", "application/json")
+		_, err := writer.Write(j)
+		if err != nil {
+			fmt.Printf("unable to send json response for post %d\n", reqItemID)
+		}
+	case http.MethodPost:
+		if isLike {
+			requestedItem.Likes = requestedItem.Likes + 1
+		} else {
+			requestedItem.Dislikes = requestedItem.Dislikes + 1
+		}
+
+		err := data.UpdatePost(requestedItem)
+		if err != nil {
+			fmt.Printf("unable to modify dis-likes for post %d: %v\n", reqItemID, err)
+			writer.WriteHeader(http.StatusInternalServerError)
+			writer.Header().Set("Content-Type", "application/json")
+			_, err := writer.Write([]byte("{\"500\": \"Error modifying dis-likes for post\"}"))
+			if err != nil {
+				fmt.Printf("unable to send json response for post %d\n", reqItemID)
+				return
+			}
+			return
+		}
+		writer.Header().Set("Content-Type", "application/json")
+		_, err = writer.Write([]byte("{\"success\":true}"))
+		if err != nil {
+			fmt.Printf("unable to send json response for post %d\n", reqItemID)
+			return
+		}
+		fmt.Printf("modified dis-likes on post %d\n", reqItemID)
 	}
 }
 
@@ -754,7 +943,7 @@ func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
 	case "/contact-us":
 		data.ContactUs(w, r)
 	case "/guest":
-		data.Guestview(w, r)
+		data.GuestView(w, r)
 
 		// user handlers
 	case "/photo":
@@ -791,5 +980,11 @@ func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./images/doge.jpg")
 	case "/question":
 		http.ServeFile(w, r, "./images/question.jpg")
+
+		// api handlers
+	case "/like":
+		data.HandleLikeDislike(w, r, true)
+	case "/dislike":
+		data.HandleLikeDislike(w, r, false)
 	}
 }

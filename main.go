@@ -6,24 +6,22 @@ import (
 	"forum/database"
 	"log"
 	"net/http"
+	"os"
 
 	// "forum/database"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// func cssHandler(w http.ResponseWriter, r *http.Request){
-// 	http.ServeFile(w, r, "./templates/stylesheet.css")
-// }
-
 func cssHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "./templates/stylesheet.css")
 }
-func main() {
 
+func main() {
 	db, err := sql.Open("sqlite3", "./database/userdata.db")
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Printf("main (sql.Open) error: %+v\n", err)
+		os.Exit(1)
 	}
 	data := database.Connect(db)
 

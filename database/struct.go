@@ -1,9 +1,12 @@
 package database
 
-import "time"
+import (
+	"database/sql"
+	"time"
+)
 
 type User struct {
-	UserID   int 
+	UserID   int
 	Uuid     string
 	Username string
 	Email    string
@@ -11,25 +14,27 @@ type User struct {
 	//	CreatedAt string
 }
 
-
+type Log struct {
+	Loggedin bool
+}
 
 type PostFeed struct {
-	PostID    int
+	PostID    int `json:"postid,omitempty"`
 	Username  string
 	Uuid      string
 	Title     string
 	Content   string
-	Likes     int
-	Dislikes  int
+	Likes     int `json:"likes"`
+	Dislikes  int `json:"dislikes"`
 	Category  string
 	CreatedAt string
 }
 
 type Session struct {
-   SessionID string 
-	Username string
-	Expiry time.Time
-//	UserID    int
+	SessionID string
+	Username  string
+	Expiry    time.Time
+	//	UserID    int
 	LoggedIn bool
 }
 
@@ -40,7 +45,6 @@ type Comment struct {
 	Content   string
 	CreatedAt string
 }
-
 
 type UsrProfile struct {
 	Name string
@@ -56,5 +60,26 @@ type UsrProfile struct {
 	Shares   []string
 	Userinfo map[string]string
 	// custom   string
+}
 
+type Forum struct {
+	*sql.DB
+}
+
+// holds details of user session-- used for cookies.
+type Post struct {
+	Title    string
+	Content  string
+	Date     string
+	Comments int
+}
+
+type CategoryPost struct { // create a []post in order to store multiple posts
+	Post []PostFeed
+}
+
+//Databases holds our post and comment databases
+type Databases struct {
+	Post    PostFeed
+	Comment []Comment
 }
