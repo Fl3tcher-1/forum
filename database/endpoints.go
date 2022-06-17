@@ -103,16 +103,10 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 			Expires: expiresAt,
 			// MaxAge:  2 * int(time.Hour),
 		})
-<<<<<<< HEAD
-		// w.WriteHeader(200)
-		http.Redirect(w, r, "/home", http.StatusFound)
-		// data.HomePage(w, r)
-=======
 		fmt.Println(data.GetSession())
 		//w.WriteHeader(200)
 		http.Redirect(w, r, "/home", http.StatusFound)
 		//data.HomePage(w, r)
->>>>>>> master
 	} else {
 		fmt.Println("incorrect password")
 		err := tpl.ExecuteTemplate(w, "login.html", "check username and password")
@@ -277,21 +271,15 @@ func (data *Forum) CheckCookie(writer http.ResponseWriter, request *http.Request
 	for _, sess := range a {
 		fmt.Println(sessionToken, " : ", sess.SessionID)
 		if sessionToken == sess.SessionID {
-<<<<<<< HEAD
-			// fmt.Println(sessionToken, " : ", sess.SessionID)
-			currentSession = sess
-			// sessFound = true
-=======
 			//fmt.Println(sessionToken, " : ", sess.SessionID)
 			// currentSession = sess
 			//sessFound = true
->>>>>>> master
 		}
 
 		// if !sessFound {
-		// // // 	//writer.WriteHeader(http.StatusUnauthorized)
-		// // 	return
-		// // }
+		//writer.WriteHeader(http.StatusUnauthorized)
+		// 	return
+		//  }
 
 		// if currentSession.isExpired() {
 		// 	data.DB.Exec("DELETE FROM session where sessionID ='" + currentSession.SessionID + "'")
@@ -364,22 +352,6 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 		postDislikes := 0
 		time := time.Now()
 		postCreated := time.Format("01-02-2006 15:04")
-<<<<<<< HEAD
-		user := "1"
-
-		if postTitle != "" || postContent != "" || postCategory != "" {
-			err := data.CreatePost(PostFeed{
-				// User:      sessionID.String(),
-				Username:  user,
-				Title:     postTitle,
-				Content:   postContent,
-				Likes:     postLikes,
-				Dislikes:  postDislikes,
-				Category:  postCategory,
-				CreatedAt: postCreated,
-			})
-			if err != nil {
-=======
 
 		// checks session and selects the last one (the latest one)
 		sess,_ := data.GetSession()
@@ -407,7 +379,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 
 			if postTitle != "" || postContent != "" || postCategory != "" {
 
-				err :=data.CreatePost(PostFeed{
+				err := data.CreatePost(PostFeed{
 					//User:      sessionID.String(),
 
 					Username:  user,
@@ -419,7 +391,6 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 					CreatedAt: postCreated,
 				})
 				if err != nil {
->>>>>>> master
 				fmt.Printf("HomePage (CreatePost) items error: %+v\n", err)
 				return
 			}
@@ -493,16 +464,12 @@ tpl := template.Must(template.ParseGlob("templates/*"))
 		}
 
 	loggedIn := data.CheckCookie(w, r)
-<<<<<<< HEAD
-	var postByCategory CategoryPost // create variable to link to our struct
-=======
 
 	type CategoryPost struct { // create a []post in order to store multiple posts
 		Post []PostFeed
 	}
 
 	var postByCategory CategoryPost //create variable to link to our struct
->>>>>>> master
 	category := r.URL.Path
 	cat := ""
 	if !loggedIn {
@@ -614,21 +581,11 @@ func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("Threads (GetPost) posts error: %+v\n", err)
 		return
 	}
-<<<<<<< HEAD
-	// if comment from html is not an empty string, add a new value to our comment database using the following structure
-	if comment != "" || comment == " " {
-		err = data.CreateComment(Comment{
-			PostID:    post[id-1].PostID, // id-1 is used as items on database start at index 0, but start at 1 on html url
-			UserId:    post[0].PostID,
-			Content:   comment,
-			CreatedAt: postCreated,
-		})
-		if err != nil {
-=======
+	// TODO: ERROR HANDLING
 	sess, _ := data.GetSession()
 	currentSession := sess[len(sess)-1]
 	// data.GetSession()[len(data.GetSession())-1]
-	cmnt,_ :=data.GetComments()
+	cmnt, _ := data.GetComments()
 	lastComment := cmnt[len(cmnt)-1]
 	// data.GetComments()[len(data.GetComments())-1]
 
@@ -637,25 +594,20 @@ func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {
 
 		//if comment from html is not an empty string, add a new value to our comment database using the following structure
 		if comment != "" || comment == " " {
-			err =data.CreateComment(Comment{
+			err = data.CreateComment(Comment{
 				PostID:    post[id-1].PostID, //id-1 is used as items on database start at index 0, but start at 1 on html url
 				UserId:    currentSession.Username,
 				Content:   comment,
 				CreatedAt: postCreated,
 			})
 			if err != nil {
->>>>>>> master
 			fmt.Printf("Threads (CreateComment) error: %+v\n", err)
 			return
 			}
 		}
 	}
-<<<<<<< HEAD
-	if id > len(post) { // checks so that a post that is not higher than total post amount and returns an error
-=======
 
-	if id > len(post) { //checks so that a post that is not higher than total post amount and returns an error
->>>>>>> master
+	if id > len(post) { // checks so that a post that is not higher than total post amount and returns an error
 		http.Error(w, "404 post not found", 404)
 	}
 	commentdb, err := data.GetComments() // get data from comment database
