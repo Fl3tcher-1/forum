@@ -9,38 +9,43 @@
     <title>Categories</title>
 </head>
 <body>
-         <div class="head">
+               <div class="head">
               <h4>
-                  <form action= "home">
+                  <form action= "/guest">
                 <input type ="submit" value="Home"/>
              </form>
             </h4>
-              <h4><form action = "categories">
+              <h4><form action = "/guestcategories">
                 <input type="submit" value=" Categories"/>
             </form> 
           </h4>
                <h4> 
-                   <form action = "about">
+                   <form action = "/about">
              <input type="submit" value=" About"/>
           </form> 
          </h4>
-             <h4> <form action = "profile">
-              <input type="submit" value=" Profile"/>
+              <h4> <form action = "/login">
+              <input type="submit" value="Members area"/>
            </form>
           </h4>
-             <h4> <form action = "logout">
-                 <input type="submit" value=" Logout"/>
+             <h4> <form action = "/login">
+                 <input type="submit" value="Login"/>
             </form> 
          </h4>
-            <h4>  <form action = "contact-us">
+            <h4>  <form action = "/contact-us">
                 <input type="submit" value=" Contact Us"/>
             </form>
         </h4>
-         </div>
+        </div>
+        
+     <div class="banner"><h2> YOU ARE NOT LOGGED IN, PLEASE LOG IN TO ACCESS ALL FEATURES</h2> 
+        <form action = "login">
+            <input type="submit" value=" Click here to login"/>
+        </form>
+    </div>
 
-         {{.}}
-    <section class ="category-grid">
-        <a href ="category/Health">
+     <section class ="category-grid">
+        <a href ="categoryg/Health">
         <div class="category">Health
            <div class="image"> 
              <img src ="shark"  >
@@ -48,35 +53,35 @@
         </div>  
         </a>   
 
-     <a href ="category/Finance">
+     <a href ="categoryg/Finance">
         <div class="category">Finance
            <div class="image"> 
              <img src ="cow"  > 
            </div>
         </div> 
      </a>
-       <a href ="category/Animals">
+       <a href ="categoryg/Animals">
         <div class="category">Animals
              <div class="image"> 
               <img src ="hamster" >
              </div>
         </div> 
        </a>
-  <a href ="category/Fitness">
+  <a href ="categoryg/Fitness">
         <div class="category">Fitness
              <div class="image"> 
                  <img src ="owl" >
                 </div>
         </div>
   </a>
-  <a href ="category/Technology">
+  <a href ="categoryg/Technology">
         <div class="category">Technology
              <div class="image"> 
                 <img src ="panda" >
                 </div>
          </div>
   </a>
-  <a href ="category/Travel">
+  <a href ="categoryg/Travel">
         <div class="category">Travel
              <div class="image"> 
                  <img src ="cat" >

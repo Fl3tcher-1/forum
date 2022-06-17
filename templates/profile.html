@@ -6,7 +6,7 @@
                 <link rel="stylesheet" href ="stylesheet" type ="text/css">
 
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{{.Name}}</title>
+        <title>{{.Profile.Name}}</title>
 </head>
 <body>
                   <div class="head">
@@ -36,12 +36,12 @@
                 <input type="submit" value=" Contact Us"/>
             </form>
         </h4>
+                  </div>
         
-     <div class="banner"><h2> YOU ARE NOT LOGGED IN, PLEASE LOG IN TO ACCESS ALL FEATURES</h2> 
-        <form action = "login">
-            <input type="submit" value=" Click here to login"/>
-        </form>
-    </div>
+        <div class="welcome"><h2> 
+            Welcome {{.Profile.Name}}, hope you enjoy your stay :)
+        </h2> 
+         </div>
     <br>
 
     <section class="profilenav">
@@ -54,43 +54,43 @@
                 <input type="submit" value=" posts"/>
             </form>
         
-            <form action = "comments">
+            <!-- <form action = "comments">
                 <input type="submit" value=" comments"/>
             </form>
-        
+         -->
         <form action = "likes">
-                <input type="submit" value=" likes and dislikes"/>
+                <input type="submit" value=" likes"/>
             </form>
         
-            <form action = "shares">
+            <!-- <form action = "shares">
                 <input type="submit" value=" Shares"/>
             </form>
-        
-        <form action = "info">
+         -->
+        <!-- <form action = "info">
                 <input type="submit" value=" user info"/>
             </form>
         
         <form action = "custom">
                 <input type="submit" value=" custom time"/>
             </form>
-        
+         -->
             <form action = "home">
                 <input type="submit" value=" Back"/>
             </form>
 </div>
 <div class="profile-grid">
-    <div class="user"> {{.Name}}
+    <div class="user"> {{.Profile.Name}}
         <br><br>
      <div class="image">
         <img src="panda"> 
         </div><br>
         <div class="about">
-            {{.Info}}
+            {{.Profile.Info}}
         </div>
         <br>
-        <div class="gender">Gender: {{.Gender}}</div>
-        <div class="age">Age: {{.Age}}</div>
-        <div class="location">Location: {{.Location}}</div>
+        <div class="gender">Gender: {{.Profile.Gender}}</div>
+        <div class="age">Age: {{.Profile.Age}}</div>
+        <div class="location">Location: {{.Profile.Location}}</div>
         <br>
     </div>
 </div>

@@ -3,65 +3,84 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3" // sqlite3 driver connects go with sql
 )
 
-type Forum struct {
-	*sql.DB
-}
-
 var DB *sql.DB
 
-func CheckErr(err error) {
-	fmt.Println(err)
-	log.Fatal(err)
-}
-
-func (forum *Forum) CreateUser(user User) {
-
+// @TODO: handle errors for all create funcs.
+func (forum *Forum) CreateUser(user User) error {
 	stmt, err := forum.DB.Prepare("INSERT INTO people (uuid, username, email, password) VALUES (?, ?, ?, ?);")
 	if err != nil {
-		CheckErr(err)
+		return fmt.Errorf("CreateUser DB Prepare error: %+v\n", err)
 	}
-	stmt.Exec(user.Uuid, user.Username, user.Email, user.Password)
+	_, err = stmt.Exec(user.Uuid, user.Username, user.Email, user.Password)
+	if err != nil {
+		return fmt.Errorf("CreateUser Exec error: %+v\n", err)
+	}
 	defer stmt.Close()
+	return nil
 }
 
-func (forum *Forum) CreateSession(session Session) {
+func (forum *Forum) CreateSession(session Session) error {
 	stmt, err := forum.DB.Prepare("INSERT INTO session (sessionID, userName, expiryTime) VALUES (?, ?, ?);")
 	if err != nil {
-		CheckErr(err)
+		return fmt.Errorf("CreateSession DB Prepare error: %+v\n", err)
 	}
-	stmt.Exec(session.SessionID, session.Username, session.Expiry)
+	_, err = stmt.Exec(session.SessionID, session.Username, session.Expiry)
+	if err != nil {
+		return fmt.Errorf("CreateSession Exec error: %+v\n", err)
+	}
 	defer stmt.Close()
+	return nil
 }
 
-func (forum *Forum) CreatePost(post PostFeed) {
-
+func (forum *Forum) CreatePost(post PostFeed) error {
 	stmt, err := forum.DB.Prepare("INSERT INTO post (username, title, content, likes, dislikes, category, dateCreated) VALUES (?, ?, ?, ?, ?, ?, ?);")
 	if err != nil {
-		CheckErr(err)
+		return fmt.Errorf("CreatePost DB Prepare error: %+v\n", err)
 	}
-	stmt.Exec(post.Username, post.Title, post.Content, post.Likes, post.Dislikes, post.Category, post.CreatedAt)
+	_, err = stmt.Exec(post.Username, post.Title, post.Content, post.Likes, post.Dislikes, post.Category, post.CreatedAt)
+	if err != nil {
+		return fmt.Errorf("CreatePost Exec error: %+v\n", err)
+	}
 	defer stmt.Close()
+	return nil
 }
 
-func (forum *Forum) CreateComment(comment Comment) {
+func (forum *Forum) CreateComment(comment Comment) error {
 	stmt, err := forum.DB.Prepare("INSERT INTO comments ( postID, userID, content, dateCreated) VALUES (?, ?, ?, ?);")
 	if err != nil {
-		CheckErr(err)
+		return fmt.Errorf("CreateComment DB Prepare error: %+v\n", err)
 	}
-	stmt.Exec(comment.PostID, comment.UserId, comment.Content,comment.CreatedAt)
+	_, err = stmt.Exec(comment.PostID, comment.UserId, comment.Content, comment.CreatedAt)
+	if err != nil {
+		return fmt.Errorf("CreateComment Exec error: %+v\n", err)
+	}
 	defer stmt.Close()
+	return nil
+}
 
+// Update(Updates an item in a table).
+func (feed *Forum) UpdatePost(item PostFeed) error {
+	stmt, err := feed.DB.Prepare("UPDATE post SET title = ?, content = ?, likes = ?, dislikes = ?, category = ? WHERE postID = ?;")
+	if err != nil {
+		return fmt.Errorf("UpdatePost DB Prepare error: %+v", err)
+	}
+	defer stmt.Close()
+	// stmt.QueryRow(stmt, item.Title, item.Content, item.Category)
+	_, err = stmt.Exec(item.Title, item.Content, item.Likes, item.Dislikes, item.Category, item.PostID)
+	if err != nil {
+		return fmt.Errorf("unable to insert item into post: %w", err)
+	}
+	return nil
 }
 
 // ---------------------------------------------- TABLES ------------------------------- --//
 
-func userTable(db *sql.DB) {
+func userTable(db *sql.DB) error {
 	stmt, err := db.Prepare(`CREATE TABLE IF NOT EXISTS people (
 	userID INTEGER PRIMARY KEY,	
 	uuid TEXT, 
@@ -70,28 +89,35 @@ func userTable(db *sql.DB) {
 	password TEXT);
 `)
 	if err != nil {
-		fmt.Println(err)
+		return fmt.Errorf("userTable DB Prepare error: %+v\n", err)
 	}
-	stmt.Exec()
+	_, err = stmt.Exec()
+	if err != nil {
+		return fmt.Errorf("userTable Exec error: %+v\n", err)
+	}
+	return nil
 }
 
-func sessionTable(db *sql.DB) {
+func sessionTable(db *sql.DB) error {
 	stmt, err := db.Prepare(`CREATE TABLE IF NOT EXISTS session (
 	sessionID TEXT PRIMARY KEY REFERENCES people(uuid),	
 	userName TEXT REFERENCES people(username), 
 	expiryTime TEXT);
 	`)
 	if err != nil {
-		fmt.Println(err)
+		return fmt.Errorf("sessionTable DB Prepare error: %+v\n", err)
 	}
-	stmt.Exec()
-
+	_, err = stmt.Exec()
+	if err != nil {
+		return fmt.Errorf("sessionTable Exec error: %+v\n", err)
+	}
+	return nil
 }
 
-func postTabe(db *sql.DB) {
+func postTable(db *sql.DB) error {
 	stmt, err := db.Prepare(`CREATE TABLE IF NOT EXISTS post (
  postID INTEGER PRIMARY KEY AUTOINCREMENT,
- username TEXT REFERENCES people(username),
+ username TEXT REFERENCES session(userName),
  title TEXT,
  content TEXT, 
  likes INTEGER,
@@ -100,31 +126,38 @@ func postTabe(db *sql.DB) {
  dateCreated TEXT);
  `)
 	if err != nil {
-		fmt.Println(err)
+		return fmt.Errorf("postTable DB Prepare error: %+v\n", err)
 	}
-	stmt.Exec()
-
+	_, err = stmt.Exec()
+	if err != nil {
+		return fmt.Errorf("postTable Exec error: %+v\n", err)
+	}
+	return nil
 }
 
-func commentTable(db *sql.DB) {
+// @TODO: add likes/dislikes to comments.
+func commentTable(db *sql.DB) error {
 	stmt, err := db.Prepare(`CREATE TABLE IF NOT EXISTS comments (
    commentID INTEGER PRIMARY KEY AUTOINCREMENT, 
    postID INTEGER REFERENCES people(userID), 
-	userID INTEGER REFERENCES people(userID),
+	userID STRING REFERENCES session(userName),
 	content TEXT NOT NULL, 
 	dateCreated TEXT NOT NULL);
 	`)
 	if err != nil {
-		fmt.Println(err)
+		return fmt.Errorf("commentTable DB Prepare error: %+v\n", err)
 	}
-	stmt.Exec()
-
+	_, err = stmt.Exec()
+	if err != nil {
+		return fmt.Errorf("commentTable Exec error: %+v\n", err)
+	}
+	return nil
 }
 
 func Connect(db *sql.DB) *Forum {
 	userTable(db)
 	sessionTable(db)
-	postTabe(db)
+	postTable(db)
 	commentTable(db)
 
 	return &Forum{
@@ -132,14 +165,12 @@ func Connect(db *sql.DB) *Forum {
 	}
 }
 
-func (data *Forum) GetPost() []PostFeed {
-
+func (data *Forum) GetPost() ([]PostFeed, error) {
 	posts := []PostFeed{}
-
-	rows, _ := data.DB.Query(`
-	SELECT * FROM post
-`)
-
+	rows, err := data.DB.Query(`SELECT * FROM post`)
+	if err != nil {
+		return posts, fmt.Errorf("GetPost DB Query error: %+v\n", err)
+	}
 	var id int
 	var uiD string
 	var title string
@@ -150,8 +181,10 @@ func (data *Forum) GetPost() []PostFeed {
 	var category string
 
 	for rows.Next() {
-		rows.Scan(&id, &uiD, &title, &content, &likes, &dislikes, &category, &created)
-
+		err := rows.Scan(&id, &uiD, &title, &content, &likes, &dislikes, &category, &created)
+		if err != nil {
+			return posts, fmt.Errorf("GetPost rows.Scan error: %+v\n", err)
+		}
 		posts = append(posts, PostFeed{
 			PostID:    id,
 			Username:  uiD,
@@ -163,22 +196,28 @@ func (data *Forum) GetPost() []PostFeed {
 			CreatedAt: created,
 		})
 	}
-	//fmt.Println(posts)
-	return posts
+	// fmt.Println(posts)
+	return posts, nil
 }
 
-func (data *Forum) GetComments() []Comment {
+// @TODO: add likes/dislikes to comments.
+func (data *Forum) GetComments() ([]Comment, error) {
 	comments := []Comment{}
-	rows, _ := data.DB.Query(`SELECT * FROM comments`)
-
+	rows, err := data.DB.Query(`SELECT * FROM comments`)
+	if err != nil {
+		return comments, fmt.Errorf("GetComments DB Query error: %+v\n", err)
+	}
 	var commentid int
 	var postid int
-	var userid int
+	var userid string
 	var content string
 	var created string
 
 	for rows.Next() {
-		rows.Scan(&commentid, &postid, &userid, &content, &created)
+		err := rows.Scan(&commentid, &postid, &userid, &content, &created)
+		if err != nil {
+			return comments, fmt.Errorf("GetComments rows.Scan error: %+v\n", err)
+		}
 		comments = append(comments, Comment{
 			CommentID: commentid,
 			PostID:    postid,
@@ -187,78 +226,34 @@ func (data *Forum) GetComments() []Comment {
 			CreatedAt: created,
 		})
 	}
-	return comments
+	return comments, nil
 }
 
-func (data *Forum) GetSession() []Session {
-
+func (data *Forum) GetSession() ([]Session, error) {
 	session := []Session{}
-
-	rows, _ := data.DB.Query(`
- SELECT * FROM session
- `)
-
- var session_token string 
+	rows, err := data.DB.Query(`SELECT * FROM session`)
+	if err != nil {
+		return session, fmt.Errorf("GetSession DB Query error: %+v\n", err)
+	}
+	var session_token string
 	var uName string
-	var exTime time.Time
+	var exTime string
 
 	for rows.Next() {
-		rows.Scan(&session_token,&uName, &exTime)
+		err := rows.Scan(&session_token, &uName, &exTime)
+		if err != nil {
+			return nil, fmt.Errorf("GetSession rows.Scan error: %+v\n", err)
+		}
+		// time.Format("01-02-2006 15:04")
+		convTime, err := time.Parse("2006-01-02 15:04:05.999999999Z07:00", exTime)
+		if err != nil {
+			return nil, fmt.Errorf("GetSession time.Parse(exTime) error: %+v\n", err)
+		}
 		session = append(session, Session{
 			SessionID: session_token,
-			Username: uName,
-			Expiry:   exTime,
+			Username:  uName,
+			Expiry:    convTime,
 		})
 	}
-
-	return session
+	return session, nil
 }
-
-
-// Get() dumps all values from a selected table
-// func (feed *Forum) Get() []PostFeed {
-// 	// variable init
-// 	var id int
-// 	var title string
-// 	var content string
-// 	// var comments []string
-// 	var likes int
-// 	var created string
-// 	var category string
-
-// 	posts := []PostFeed{}
-
-// 	rows, err := feed.DB.Query("SELECT * FROM feed")
-// 	if err != nil {
-// 		fmt.Printf("Feed DB Query error: %+v\n", err)
-// 	}
-
-// 	// scan rows in database, update variable using memory addresses and link to struct
-// 	for rows.Next() {
-// 		rows.Scan(&id, &title, &content, &likes, &created, &category)
-// 		newPost := PostFeed{ // explicit values
-// 			PostID:    id,
-// 			Title:     title,
-// 			Content:   content,
-// 			Likes:     likes,
-// 			CreatedAt: created,
-// 			// Comments: comments,
-// 			Category: category,
-// 		}
-// 		posts = append(posts, newPost)
-// 	}
-// 	return posts
-// }
-
-// Add(adds an item into a table)
-// func (feed *Forum) Add(item PostFeed) {
-// 	stmt, err := feed.DB.Prepare("INSERT INTO feed (title, content, likes, created, category) VALUES (?, ?, ?, ?, ?);")
-// 	if err != nil {
-// 		fmt.Printf("feed DB Prepare error: %+v\n", err)
-// 	}
-// 	// stmt.QueryRow(stmt, item.Title, item.Content, item.Category)
-
-// 	stmt.Exec(item.Title, item.Content, item.Likes, item.CreatedAt, item.Category)
-
-// 	defer stmt.Close()
-// }
