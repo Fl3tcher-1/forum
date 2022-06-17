@@ -44,10 +44,11 @@
     </div>
     <!-- </div> -->
     <!-- <div class="guest"> -->
-        <div class="welcome"><h2> 
+    <div class="welcome">
+        <h2>
             Welcome {{.UserSession.Username}}, hope you enjoy your stay :)
-        </h2> 
-         </div>
+        </h2>
+    </div>
     <form>
 
         <div class="homeLayout">
@@ -75,24 +76,25 @@
                 </form>
 
             </div>
-            
-    <div class="featured"><h3> featured/trending posts</h3>
-        
-        <ol> 
-            {{range $i, $e := .Post}}
-            <li class ="row">
-                <h3 class="title2">
-                    <a href ="thread/{{.PostID}}">
-                        <!-- {{.PostID}} -->
-                        {{.Title}} 
-                        <br>
-                        Posted by: {{.Username}}                       
-                    </a>
-                </h3>
-                <div class="content">
-                    <a href ="thread/{{.PostID}}">
-                    <p1>{{.Content}} </p1> 
-                    <!-- <br> <br>
+
+            <div class="featured">
+                <h3> featured/trending posts</h3>
+
+                <ol>
+                    {{range $i, $e := .Post}}
+                    <li class="row">
+                        <h3 class="title2">
+                            <a href="thread/{{.PostID}}">
+                                <!-- {{.PostID}} -->
+                                {{.Title}}
+                                <br>
+                                Posted by: {{.Username}}
+                            </a>
+                        </h3>
+                        <div class="content">
+                            <a href="thread/{{.PostID}}">
+                                <p1>{{.Content}} </p1>
+                                <!-- <br> <br>
                     <p1> likes: {{.Likes}} </p1>
                     <p1> dislikes: {{.Dislikes}}</p1>  -->
                             </a>
