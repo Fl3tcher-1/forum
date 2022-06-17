@@ -31,9 +31,10 @@ func (p PostFeed) MarshallJSON() ([]byte, error) {
 // sessions
 // var sessions = map[string]Session{}
 
-func (s Session) isExpired() bool {
-	return s.Expiry.Before(time.Now())
-}
+// func (s Session) isExpired() bool {
+// 	return s.Expiry.Before(time.Now())
+
+// }
 
 // @TODO: error handling.
 // login page.
@@ -99,8 +100,9 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 			Expires: expiresAt,
 			//MaxAge:  2 * int(time.Hour),
 		})
+		fmt.Println(data.GetSession())
 		//w.WriteHeader(200)
-		http.Redirect(w, r, "/home", 302)
+		http.Redirect(w, r, "/home", http.StatusFound)
 		//data.HomePage(w, r)
 	} else {
 		fmt.Println("incorrect password")
@@ -255,7 +257,7 @@ func (data *Forum) CheckCookie(writer http.ResponseWriter, request *http.Request
 	}
 
 	sessionToken := c.Value
-	var currentSession Session
+	// var currentSession Session
 	a, err := data.GetSession()
 	if err != nil {
 		fmt.Printf("CheckCookie (GetSession) error: %+v\n", err)
@@ -268,7 +270,7 @@ func (data *Forum) CheckCookie(writer http.ResponseWriter, request *http.Request
 		fmt.Println(sessionToken, " : ", sess.SessionID)
 		if sessionToken == sess.SessionID {
 			//fmt.Println(sessionToken, " : ", sess.SessionID)
-			currentSession = sess
+			// currentSession = sess
 			//sessFound = true
 		}
 
@@ -277,9 +279,9 @@ func (data *Forum) CheckCookie(writer http.ResponseWriter, request *http.Request
 		// // 	return
 		// // }
 
-		if currentSession.isExpired() {
-			data.DB.Exec("DELETE FROM session where sessionID ='" + currentSession.SessionID + "'")
-		}
+		// if currentSession.isExpired() {
+		// 	data.DB.Exec("DELETE FROM session where sessionID ='" + currentSession.SessionID + "'")
+		// }
 	}
 	return true
 }
@@ -336,48 +338,83 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 			fmt.Printf("HomePage ExecuteTemplate (guest.html) error: %+v\n", err)
 		}
 		return
+
 	} else {
+		post,_ := data.GetPost()
+		lastPost := post[len(post)-1]
+
 		postCategory := request.FormValue("category")
 		postTitle := request.FormValue("title")
 		postContent := request.FormValue("content")
+
 		postLikes := 0
 		postDislikes := 0
 		time := time.Now()
 		postCreated := time.Format("01-02-2006 15:04")
-		user := "1"
 
-		if postTitle != "" || postContent != "" || postCategory != "" {
-			err := data.CreatePost(PostFeed{
-				//User:      sessionID.String(),
-				Username:  user,
-				Title:     postTitle,
-				Content:   postContent,
-				Likes:     postLikes,
-				Dislikes:  postDislikes,
-				Category:  postCategory,
-				CreatedAt: postCreated,
-			})
-			if err != nil {
+		// checks session and selects the last one (the latest one)
+		sess,_ := data.GetSession()
+		currentSession := sess[len(sess)-1]
+
+		user := currentSession.Username //fetches username from session
+
+		type postSessionStruct struct {
+			Post        []PostFeed
+			UserSession Session
+		}
+
+		var postAndSession postSessionStruct
+
+		postAndSession.UserSession = currentSession
+		
+		//checks if last post == current submit values to prevent duplicate posts
+		if lastPost.Content == postContent {
+			fmt.Println("duplicate")
+			postAndSession.Post,_ = data.GetPost()
+			tpl.ExecuteTemplate(writer, "./home", postAndSession)
+
+		} else {
+			// postAndSession.UserSession = data.GetSession()[0]
+
+			if postTitle != "" || postContent != "" || postCategory != "" {
+
+				err :=data.CreatePost(PostFeed{
+					//User:      sessionID.String(),
+
+					Username:  user,
+					Title:     postTitle,
+					Content:   postContent,
+					Likes:     postLikes,
+					Dislikes:  postDislikes,
+					Category:  postCategory,
+					CreatedAt: postCreated,
+				})
+				if err != nil {
 				fmt.Printf("HomePage (CreatePost) items error: %+v\n", err)
 				return
 			}
-			items, err := data.GetPost()
-			if err != nil {
+
+				postAndSession.Post, err = data.GetPost()
+				if err != nil {
 				fmt.Printf("HomePage (GetPost) items error: %+v\n", err)
 				return
 			}
-			err = tpl.ExecuteTemplate(writer, "./home", items)
+
+			err = tpl.ExecuteTemplate(writer, "./home", postAndSession)
 			if err != nil {
 				fmt.Printf("HomePage ExecuteTemplate user homepage error: %+v\n", err)
 				return
 			}
+			
+		}			
 		}
 		data, err := data.GetPost()
+		postAndSession.Post =data
 		if err != nil {
 			fmt.Printf("HomePage (GetPost) data error: %+v\n", err)
 			return
 		}
-		err = tpl.ExecuteTemplate(writer, "home.html", data)
+		err = tpl.ExecuteTemplate(writer, "home.html", postAndSession)
 		if err != nil {
 			fmt.Printf("HomePage ExecuteTemplate (home.html) error: %+v\n", err)
 			return
@@ -418,13 +455,19 @@ func (data *Forum) CategoriesList(w http.ResponseWriter, r *http.Request) {
 }
 
 func (data *Forum) CategoryDump(w http.ResponseWriter, r *http.Request) {
-	tpl := template.Must(template.ParseGlob("templates/*"))
-	err := r.ParseForm()
-	if err != nil {
+tpl := template.Must(template.ParseGlob("templates/*"))
+	err :=r.ParseForm()
+		if err != nil {
 		fmt.Printf("CategoryDump (ParseForm) error: %+v\n", err)
 		return
-	}
+		}
+
 	loggedIn := data.CheckCookie(w, r)
+
+	type CategoryPost struct { // create a []post in order to store multiple posts
+		Post []PostFeed
+	}
+
 	var postByCategory CategoryPost //create variable to link to our struct
 	category := r.URL.Path
 	cat := ""
@@ -434,15 +477,17 @@ func (data *Forum) CategoryDump(w http.ResponseWriter, r *http.Request) {
 		cat = strings.Replace(category, "/category/", "", -1) //we use replace instead of trim as we are working with strings-- and useful characters were being removed
 	}
 
-	posts, err := data.GetPost() // get all posts
+	posts, err := data.GetPost() 
 	if err != nil {
 		fmt.Printf("CategoryDump (GetPost) posts error: %+v\n", err)
 		return
-	}
-
+	}// get all posts
+	// fmt.Println(posts)
 	// check every post to find ones whose category matches our url path
 	categoryFound := false // used to check if a valid category was entered
 	for _, post := range posts {
+		// fmt.Println(cat, post.Category)
+		fmt.Println(post.Category)
 		if cat == post.Category {
 			// fmt.Println(post)
 			categoryFound = true
@@ -481,19 +526,26 @@ func (data *Forum) UserProfile(writer http.ResponseWriter, request *http.Request
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 
-	var users User
+	type profile struct {
+		Profile UsrProfile
+		// UserSession Session
+	}
+	sess,_ := data.GetSession()
+	currentSession := sess[len(sess)-1]
+	// data.GetSession()[len(data.GetSession())-1]
 
-	users.Username = "test"
+	var User profile
 
-	var usrInfo UsrProfile
+	// User.UserSession =currentSession
 
-	usrInfo.Name = "Panda"
-	usrInfo.Info = "Hello my name is panda and I like to sleep and eat bamboo--- nom"
-	usrInfo.Gender = "Panda"
-	usrInfo.Age = 7
-	usrInfo.Location = "Bamboo Forest"
+	User.Profile.Name = currentSession.Username
 
-	err := tpl.ExecuteTemplate(writer, "profile.html", usrInfo)
+	User.Profile.Info = "Hello my name is panda and I like to sleep and eat bamboo--- nom"
+	User.Profile.Gender = "Panda"
+	User.Profile.Age = 7
+	User.Profile.Location = "Bamboo Forest"
+
+	err := tpl.ExecuteTemplate(writer, "profile.html", User)
 	if err != nil {
 		fmt.Printf("UserProfile ExecuteTemplate (profile.html) error: %+v\n", err)
 		return
@@ -522,24 +574,37 @@ func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {
 	time := time.Now()                //create a new time variable using following format
 	postCreated := time.Format("01-02-2006 15:04")
 	var postWithComments Databases
+
 	post, err := data.GetPost() // get all posts
 	if err != nil {
 		fmt.Printf("Threads (GetPost) posts error: %+v\n", err)
 		return
 	}
-	//if comment from html is not an empty string, add a new value to our comment database using the following structure
-	if comment != "" || comment == " " {
-		err = data.CreateComment(Comment{
-			PostID:    post[id-1].PostID, //id-1 is used as items on database start at index 0, but start at 1 on html url
-			UserId:    post[0].PostID,
-			Content:   comment,
-			CreatedAt: postCreated,
-		})
-		if err != nil {
+	sess, _ := data.GetSession()
+	currentSession := sess[len(sess)-1]
+	// data.GetSession()[len(data.GetSession())-1]
+	cmnt,_ :=data.GetComments()
+	lastComment := cmnt[len(cmnt)-1]
+	// data.GetComments()[len(data.GetComments())-1]
+
+	//if last comment != current submitted values then create a comment, otherwise show comments
+	if lastComment.Content != comment {
+
+		//if comment from html is not an empty string, add a new value to our comment database using the following structure
+		if comment != "" || comment == " " {
+			err =data.CreateComment(Comment{
+				PostID:    post[id-1].PostID, //id-1 is used as items on database start at index 0, but start at 1 on html url
+				UserId:    currentSession.Username,
+				Content:   comment,
+				CreatedAt: postCreated,
+			})
+			if err != nil {
 			fmt.Printf("Threads (CreateComment) error: %+v\n", err)
 			return
+			}
 		}
 	}
+
 	if id > len(post) { //checks so that a post that is not higher than total post amount and returns an error
 		http.Error(w, "404 post not found", 404)
 	}
@@ -662,7 +727,26 @@ func (data *Forum) UserPosts(writer http.ResponseWriter, request *http.Request) 
 	tpl := template.Must(template.ParseGlob("templates/*"))
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
-	err := tpl.ExecuteTemplate(writer, "posts.html", nil)
+
+	user,_ := data.GetSession()
+	currentUser := user[len(user)-1]
+	// if user.session == user in post --- send this post
+
+	posts,_ := data.GetPost()
+
+	type UserPosts struct {
+		Post []PostFeed
+	}
+	var usrPosts UserPosts
+
+	for _, post := range posts {
+		if post.Username == currentUser.Username {
+			usrPosts.Post = append(usrPosts.Post, post)
+			// fmt.Println(currentUser.Username, post.Username)
+
+		}
+	}
+	err := tpl.ExecuteTemplate(writer, "posts.html", usrPosts)
 	if err != nil {
 		fmt.Printf("UserPosts ExecuteTemplate (posts.html) error: %+v\n", err)
 		return
