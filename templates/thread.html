@@ -36,11 +36,11 @@
                 <input type="submit" value=" Contact Us"/>
             </form>
         </h4>
-        </div>
+        </div> <br> <br>
 
  <div class="thread-layout">
     <h4 class="title2">
-        {{.Post.Title}} Posted by:
+        {{.Post.Title}} Posted by: {{.Post.Username}}
     </h4> <br>
     <div class="content">
         <p1> {{.Post.Content}}</p1>
@@ -67,7 +67,7 @@
                                         Comment by: {{.UserId}}
                                     </p2> <br>
                                     <div class = "comment-content">
-                                        Comment: {{.Content}}
+                                     {{.Content}}
                                     </div> 
                                     <br>
                                 <p2 class="timestamp">

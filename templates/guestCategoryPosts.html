@@ -24,12 +24,12 @@
              <input type="submit" value=" About"/>
           </form> 
          </h4>
-             <h4> <form action = "/profile">
-              <input type="submit" value=" Profile"/>
+             <h4> <form action = "/login">
+              <input type="submit" value="Members area"/>
            </form>
           </h4>
-             <h4> <form action = "/logout">
-                 <input type="submit" value=" Logout"/>
+               <h4> <form action = "/login">
+                 <input type="submit" value="Login"/>
             </form> 
          </h4>
             <h4>  <form action = "/contact-us">
@@ -41,18 +41,20 @@
  <div class="thread-layout">
      {{range .Post}}
 
-    <h4 class="title2">
+    <h3 class="title2">
         {{.Title}} Posted by: {{.Username}}
-    </h4> <br>
+    </h3> <br>
     <div class="content">
+         <a href ="/thread/{{.PostID}}">
         <p1> {{.Content}}</p1>
-        <br>
-        <p1> {{.Category}}</p1>
+         </a>
     </div><br>
     <bottom>
-        <p1 class ="timestamp">posted: {{.CreatedAt}}</p1>
-        <p1 class="likes">likes: {{.Likes}}</p1>
-        <p1 class="dislikes">dislikes: {{.Dislikes}}</p1> 
+                <a href ="/thread/{{.PostID}}">
+                    <p1 class ="timestamp">posted: {{.CreatedAt}}</p1>
+                    <p1 class="likes">likes: {{.Likes}}</p1>
+                    <p1 class="dislikes">dislikes: {{.Dislikes}}</p1> 
+                </a>
         
     </bottom> <br> 
     {{end}}

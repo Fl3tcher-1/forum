@@ -130,7 +130,7 @@ func sessionTable(db *sql.DB) error {
 func postTable(db *sql.DB) error {
 	stmt, err := db.Prepare(`CREATE TABLE IF NOT EXISTS post (
  postID INTEGER PRIMARY KEY AUTOINCREMENT,
- username TEXT REFERENCES people(username),
+ username TEXT REFERENCES session(userName),
  title TEXT,
  content TEXT, 
  likes INTEGER,
@@ -153,7 +153,7 @@ func commentTable(db *sql.DB) error {
 	stmt, err := db.Prepare(`CREATE TABLE IF NOT EXISTS comments (
    commentID INTEGER PRIMARY KEY AUTOINCREMENT, 
    postID INTEGER REFERENCES people(userID), 
-	userID INTEGER REFERENCES people(userID),
+	userID STRING REFERENCES session(userName),
 	content TEXT NOT NULL, 
 	dateCreated TEXT NOT NULL);
 	`)
@@ -256,7 +256,7 @@ func (data *Forum) GetComments() ([]Comment, error) {
 	}
 	var commentid int
 	var postid int
-	var userid int
+	var userid string
 	var content string
 	var created string
 
