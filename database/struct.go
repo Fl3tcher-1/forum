@@ -62,25 +62,13 @@ type UsrProfile struct {
 	// custom   string
 }
 
-// holds details of user session-- used for cookies.
-type Post struct {
-	Title    string
-	Content  string
-	Date     string
-	Comments int
-	PostID   string
-	UserID   string
-	Reaction Reaction
-}
-
 type Reaction struct {
-	PostID     string
-	UserID     string
-	ReactionID string
-	CommentID  string
-	// React      int
-	Likes    int
-	Dislikes int
+	ReactionID int
+	PostID     int
+	UserID     int
+	CommentID  int
+	Liked      bool
+	Disliked   bool
 }
 
 type Forum struct {
