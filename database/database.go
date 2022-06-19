@@ -10,7 +10,6 @@ import (
 
 var DB *sql.DB
 
-// @TODO: handle errors for all create funcs.
 func (forum *Forum) CreateUser(user User) error {
 	stmt, err := forum.DB.Prepare("INSERT INTO people (uuid, username, email, password) VALUES (?, ?, ?, ?);")
 	if err != nil {
@@ -179,7 +178,7 @@ func commentTable(db *sql.DB) error {
 }
 
 func reactionsTable(db *sql.DB) error {
-	stmt, err := db.Prepare(`CREATE TABLE IF NOT EXISTS reactions (
+	stmt, err := db.Prepare(`CREATE TABLE IF NOT EXISTS reaction (
    reactionID INTEGER PRIMARY KEY AUTOINCREMENT,
    postID INTEGER REFERENCES posts(postID),
    userID INTEGER REFERENCES people(userID),
@@ -228,6 +227,17 @@ func (data *Forum) GetPost() ([]PostFeed, error) {
 		if err != nil {
 			return posts, fmt.Errorf("GetPost rows.Scan error: %+v\n", err)
 		}
+
+		likes, err := getLikesForPost(data.DB, id)
+		if err != nil {
+			return posts, fmt.Errorf("GetPost getLikesForPost error: %+v\n", err)
+		}
+
+		dislikes, err := getDislikesForPost(data.DB, id)
+		if err != nil {
+			return posts, fmt.Errorf("GetPost getDislikesForPost error: %+v\n", err)
+		}
+
 		posts = append(posts, PostFeed{
 			PostID:    id,
 			Username:  uiD,
@@ -235,10 +245,49 @@ func (data *Forum) GetPost() ([]PostFeed, error) {
 			Content:   content,
 			Category:  category,
 			CreatedAt: created,
+			Likes:     likes,
+			Dislikes:  dislikes,
 		})
 	}
+
 	// fmt.Println(posts)
 	return posts, nil
+}
+
+func getLikesForPost(db *sql.DB, id int) (int, error) {
+	stmt, err := db.Prepare("SELECT liked FROM reaction WHERE liked = TRUE AND postID = ?")
+	if err != nil {
+		return 0, fmt.Errorf("getLikesForPost DB Prepare error: %+v\n", err)
+	}
+	defer stmt.Close()
+	rows, err := stmt.Query(id)
+	if err != nil {
+		return 0, fmt.Errorf("getLikesForPost DB Query error: %+v\n", err)
+	}
+
+	counter := 0
+	for rows.Next() {
+		counter++
+	}
+	return counter, nil
+}
+
+func getDislikesForPost(db *sql.DB, id int) (int, error) {
+	stmt, err := db.Prepare("SELECT disliked FROM reaction WHERE disliked = TRUE AND postID = ?")
+	if err != nil {
+		return 0, fmt.Errorf("getDislikesForPost DB Prepare error: %+v\n", err)
+	}
+	defer stmt.Close()
+	rows, err := stmt.Query(id)
+	if err != nil {
+		return 0, fmt.Errorf("getDislikesForPost DB Query error: %+v\n", err)
+	}
+
+	counter := 0
+	for rows.Next() {
+		counter++
+	}
+	return counter, nil
 }
 
 // TODO: implement the get reaction(post, comment, etc)

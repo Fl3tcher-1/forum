@@ -341,7 +341,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 		return
 
 	} else {
-		post,_ := data.GetPost()
+		post, _ := data.GetPost()
 		lastPost := post[len(post)-1]
 
 		postCategory := request.FormValue("category")
@@ -354,7 +354,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 		postCreated := time.Format("01-02-2006 15:04")
 
 		// checks session and selects the last one (the latest one)
-		sess,_ := data.GetSession()
+		sess, _ := data.GetSession()
 		currentSession := sess[len(sess)-1]
 
 		user := currentSession.Username //fetches username from session
@@ -367,11 +367,11 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 		var postAndSession postSessionStruct
 
 		postAndSession.UserSession = currentSession
-		
+
 		//checks if last post == current submit values to prevent duplicate posts
 		if lastPost.Content == postContent {
 			fmt.Println("duplicate")
-			postAndSession.Post,_ = data.GetPost()
+			postAndSession.Post, _ = data.GetPost()
 			tpl.ExecuteTemplate(writer, "./home", postAndSession)
 
 		} else {
@@ -391,26 +391,26 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 					CreatedAt: postCreated,
 				})
 				if err != nil {
-				fmt.Printf("HomePage (CreatePost) items error: %+v\n", err)
-				return
-			}
+					fmt.Printf("HomePage (CreatePost) items error: %+v\n", err)
+					return
+				}
 
 				postAndSession.Post, err = data.GetPost()
 				if err != nil {
-				fmt.Printf("HomePage (GetPost) items error: %+v\n", err)
-				return
-			}
+					fmt.Printf("HomePage (GetPost) items error: %+v\n", err)
+					return
+				}
 
-			err = tpl.ExecuteTemplate(writer, "./home", postAndSession)
-			if err != nil {
-				fmt.Printf("HomePage ExecuteTemplate user homepage error: %+v\n", err)
-				return
+				err = tpl.ExecuteTemplate(writer, "./home", postAndSession)
+				if err != nil {
+					fmt.Printf("HomePage ExecuteTemplate user homepage error: %+v\n", err)
+					return
+				}
+
 			}
-			
-		}			
 		}
 		data, err := data.GetPost()
-		postAndSession.Post =data
+		postAndSession.Post = data
 		if err != nil {
 			fmt.Printf("HomePage (GetPost) data error: %+v\n", err)
 			return
@@ -456,12 +456,12 @@ func (data *Forum) CategoriesList(w http.ResponseWriter, r *http.Request) {
 }
 
 func (data *Forum) CategoryDump(w http.ResponseWriter, r *http.Request) {
-tpl := template.Must(template.ParseGlob("templates/*"))
-	err :=r.ParseForm()
-		if err != nil {
+	tpl := template.Must(template.ParseGlob("templates/*"))
+	err := r.ParseForm()
+	if err != nil {
 		fmt.Printf("CategoryDump (ParseForm) error: %+v\n", err)
 		return
-		}
+	}
 
 	loggedIn := data.CheckCookie(w, r)
 
@@ -478,11 +478,11 @@ tpl := template.Must(template.ParseGlob("templates/*"))
 		cat = strings.Replace(category, "/category/", "", -1) // we use replace instead of trim as we are working with strings-- and useful characters were being removed
 	}
 
-	posts, err := data.GetPost() 
+	posts, err := data.GetPost()
 	if err != nil {
 		fmt.Printf("CategoryDump (GetPost) posts error: %+v\n", err)
 		return
-	}// get all posts
+	} // get all posts
 	// fmt.Println(posts)
 	// check every post to find ones whose category matches our url path
 	categoryFound := false // used to check if a valid category was entered
@@ -531,7 +531,7 @@ func (data *Forum) UserProfile(writer http.ResponseWriter, request *http.Request
 		Profile UsrProfile
 		// UserSession Session
 	}
-	sess,_ := data.GetSession()
+	sess, _ := data.GetSession()
 	currentSession := sess[len(sess)-1]
 	// data.GetSession()[len(data.GetSession())-1]
 
@@ -601,8 +601,8 @@ func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {
 				CreatedAt: postCreated,
 			})
 			if err != nil {
-			fmt.Printf("Threads (CreateComment) error: %+v\n", err)
-			return
+				fmt.Printf("Threads (CreateComment) error: %+v\n", err)
+				return
 			}
 		}
 	}
@@ -730,11 +730,11 @@ func (data *Forum) UserPosts(writer http.ResponseWriter, request *http.Request) 
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 
-	user,_ := data.GetSession()
+	user, _ := data.GetSession()
 	currentUser := user[len(user)-1]
 	// if user.session == user in post --- send this post
 
-	posts,_ := data.GetPost()
+	posts, _ := data.GetPost()
 
 	type UserPosts struct {
 		Post []PostFeed
@@ -766,6 +766,7 @@ func (data *Forum) UserComments(writer http.ResponseWriter, request *http.Reques
 	}
 }
 
+// TODO: implement the all liked posts/comments per user here
 func (data *Forum) UserLikes(writer http.ResponseWriter, request *http.Request) {
 	tpl := template.Must(template.ParseGlob("templates/*"))
 	writer.WriteHeader(http.StatusOK)
@@ -773,16 +774,6 @@ func (data *Forum) UserLikes(writer http.ResponseWriter, request *http.Request) 
 	err := tpl.ExecuteTemplate(writer, "likes.html", nil)
 	if err != nil {
 		fmt.Printf("UserLikes ExecuteTemplate (likes.html) error: %+v\n", err)
-	}
-}
-
-func (data *Forum) UserDislikes(writer http.ResponseWriter, request *http.Request) {
-	tpl := template.Must(template.ParseGlob("templates/*"))
-	writer.WriteHeader(http.StatusOK)
-	writer.Header().Set("Content-Type", "text/html")
-	err := tpl.ExecuteTemplate(writer, "likes.html", nil)
-	if err != nil {
-		fmt.Printf("UserDislikes ExecuteTemplate (likes.html) error: %+v\n", err)
 	}
 }
 
