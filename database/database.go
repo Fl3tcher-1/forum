@@ -323,15 +323,15 @@ func (data *Forum) GetReactions() ([]Reaction, error) {
 	return reactions, nil
 }
 
-func (data *Forum) GetReactionByPostID(targetPostID, targetUserID string) (Reaction, error) {
+func (data *Forum) GetReactionByPostID(targetPostID, targetUserID string) (*Reaction, error) {
 	stmt, err := data.DB.Prepare("SELECT * FROM reaction WHERE postID = ? AND userID = ?")
 	if err != nil {
-		return Reaction{}, fmt.Errorf("GetReactionByPostID DB Prepare error: %+v", err)
+		return nil, fmt.Errorf("GetReactionByPostID DB Prepare error: %+v", err)
 	}
 	defer stmt.Close()
 	rows, err := stmt.Query(targetPostID, targetUserID)
 	if err != nil {
-		return Reaction{}, fmt.Errorf("GetReactionByPostID DB Query error: %+v", err)
+		return nil, fmt.Errorf("GetReactionByPostID DB Query error: %+v", err)
 	}
 
 	var reactionID int
@@ -344,9 +344,9 @@ func (data *Forum) GetReactionByPostID(targetPostID, targetUserID string) (React
 	for rows.Next() {
 		err := rows.Scan(&reactionID, &postID, &userID, &commentID, &liked, &disliked)
 		if err != nil {
-			return Reaction{}, fmt.Errorf("GetReactionByPostID rows.Scan error: %+v\n", err)
+			return nil, fmt.Errorf("GetReactionByPostID rows.Scan error: %+v\n", err)
 		}
-		return Reaction{
+		return &Reaction{
 			ReactionID: reactionID,
 			PostID:     postID,
 			UserID:     userID,
@@ -355,7 +355,7 @@ func (data *Forum) GetReactionByPostID(targetPostID, targetUserID string) (React
 			Disliked:   disliked,
 		}, nil
 	}
-	return Reaction{}, nil
+	return nil, nil
 }
 
 // @TODO: add likes/dislikes(reactions) to comments.
