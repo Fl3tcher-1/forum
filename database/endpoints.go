@@ -104,9 +104,9 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 			// MaxAge:  2 * int(time.Hour),
 		})
 		fmt.Println(data.GetSession())
-		//w.WriteHeader(200)
+		// w.WriteHeader(200)
 		http.Redirect(w, r, "/home", http.StatusFound)
-		//data.HomePage(w, r)
+		// data.HomePage(w, r)
 	} else {
 		fmt.Println("incorrect password")
 		err := tpl.ExecuteTemplate(w, "login.html", "check username and password")
@@ -271,13 +271,13 @@ func (data *Forum) CheckCookie(writer http.ResponseWriter, request *http.Request
 	for _, sess := range a {
 		fmt.Println(sessionToken, " : ", sess.SessionID)
 		if sessionToken == sess.SessionID {
-			//fmt.Println(sessionToken, " : ", sess.SessionID)
+			// fmt.Println(sessionToken, " : ", sess.SessionID)
 			// currentSession = sess
-			//sessFound = true
+			// sessFound = true
 		}
 
 		// if !sessFound {
-		//writer.WriteHeader(http.StatusUnauthorized)
+		// writer.WriteHeader(http.StatusUnauthorized)
 		// 	return
 		//  }
 
@@ -342,7 +342,10 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 
 	} else {
 		post, _ := data.GetPost()
-		lastPost := post[len(post)-1]
+		var lastPost PostFeed
+		if len(post) > 0 {
+			lastPost = post[len(post)-1]
+		}
 
 		postCategory := request.FormValue("category")
 		postTitle := request.FormValue("title")
@@ -357,7 +360,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 		sess, _ := data.GetSession()
 		currentSession := sess[len(sess)-1]
 
-		user := currentSession.Username //fetches username from session
+		user := currentSession.Username // fetches username from session
 
 		type postSessionStruct struct {
 			Post        []PostFeed
@@ -368,7 +371,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 
 		postAndSession.UserSession = currentSession
 
-		//checks if last post == current submit values to prevent duplicate posts
+		// checks if last post == current submit values to prevent duplicate posts
 		if lastPost.Content == postContent {
 			fmt.Println("duplicate")
 			postAndSession.Post, _ = data.GetPost()
@@ -380,7 +383,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 			if postTitle != "" || postContent != "" || postCategory != "" {
 
 				err := data.CreatePost(PostFeed{
-					//User:      sessionID.String(),
+					// User:      sessionID.String(),
 
 					Username:  user,
 					Title:     postTitle,
@@ -401,7 +404,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 					return
 				}
 
-				err = tpl.ExecuteTemplate(writer, "./home", postAndSession)
+				err = tpl.ExecuteTemplate(writer, "home.html", postAndSession)
 				if err != nil {
 					fmt.Printf("HomePage ExecuteTemplate user homepage error: %+v\n", err)
 					return
@@ -469,7 +472,7 @@ func (data *Forum) CategoryDump(w http.ResponseWriter, r *http.Request) {
 		Post []PostFeed
 	}
 
-	var postByCategory CategoryPost //create variable to link to our struct
+	var postByCategory CategoryPost // create variable to link to our struct
 	category := r.URL.Path
 	cat := ""
 	if !loggedIn {
@@ -589,13 +592,12 @@ func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {
 	lastComment := cmnt[len(cmnt)-1]
 	// data.GetComments()[len(data.GetComments())-1]
 
-	//if last comment != current submitted values then create a comment, otherwise show comments
+	// if last comment != current submitted values then create a comment, otherwise show comments
 	if lastComment.Content != comment {
-
-		//if comment from html is not an empty string, add a new value to our comment database using the following structure
+		// if comment from html is not an empty string, add a new value to our comment database using the following structure
 		if comment != "" || comment == " " {
 			err = data.CreateComment(Comment{
-				PostID:    post[id-1].PostID, //id-1 is used as items on database start at index 0, but start at 1 on html url
+				PostID:    post[id-1].PostID, // id-1 is used as items on database start at index 0, but start at 1 on html url
 				UserId:    currentSession.Username,
 				Content:   comment,
 				CreatedAt: postCreated,
@@ -745,7 +747,6 @@ func (data *Forum) UserPosts(writer http.ResponseWriter, request *http.Request) 
 		if post.Username == currentUser.Username {
 			usrPosts.Post = append(usrPosts.Post, post)
 			// fmt.Println(currentUser.Username, post.Username)
-
 		}
 	}
 	err := tpl.ExecuteTemplate(writer, "posts.html", usrPosts)
