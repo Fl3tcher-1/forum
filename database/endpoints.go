@@ -47,6 +47,7 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 	}
 		
 	loggedIn := data.CheckCookie(w, r)
+	fmt.Println(data.CheckCookie(w,r))
 	// 🐈
 	if loggedIn {
 		http.Redirect(w, r, "/home", http.StatusFound)
@@ -349,7 +350,11 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 
 	} else {
 		post, _ := data.GetPost()
-		lastPost := post[len(post)-1]
+		var lastPost PostFeed
+		if len(post) >0{
+
+			lastPost = post[len(post)-1]
+		}
 
 		postCategory := request.FormValue("category")
 		// fmt.Println(postCategory)
@@ -380,7 +385,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 		if lastPost.Content == postContent {
 			fmt.Println("duplicate")
 			postAndSession.Post, _ = data.GetPost()
-			tpl.ExecuteTemplate(writer, "./home", postAndSession)
+			tpl.ExecuteTemplate(writer, "/home", postAndSession)
 
 		} else {
 			// postAndSession.UserSession = data.GetSession()[0]
@@ -409,11 +414,12 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 					return
 				}
 
-				err = tpl.ExecuteTemplate(writer, "./home", postAndSession)
+				err = tpl.ExecuteTemplate(writer, "home.html", postAndSession)
 				if err != nil {
 					fmt.Printf("HomePage ExecuteTemplate user homepage error: %+v\n", err)
 					return
 				}
+				return
 
 			}
 		}
