@@ -1,0 +1,7 @@
+client id
+
+311778546298-bkphdtktfc9v07oq8cgoqldkvl7k4tg7.apps.googleusercontent.com
+
+client secret
+
+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
