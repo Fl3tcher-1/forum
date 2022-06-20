@@ -1,15 +1,17 @@
 {{define "Upload"}}
-<html>
+<!doctype html>
+<html lang="en">
 <body>
-<h4>Pictures:</h4>
+  
+<!-- <h4>Pictures:</h4>
 {{range .}}
 <img src="{{.}}" width="400px">
-{{end}}
+{{end}} -->
 
-<form enctype="multipart/form-data" action="/upload" method="post">
-    <input type="file" name="uploadfile" />
-    <input type="hidden" name="token" value="{{.}}"/>
+<form method="post" enctype="multipart/form-data">
+    <input type="file" name="nf">
+    <!-- <input type="submit" value="upload"> -->
 </form>
+
 </body>
-</html>
 {{end}}

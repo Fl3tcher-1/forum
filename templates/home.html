@@ -71,6 +71,9 @@
                     <textarea name="content" id="postcontent" placeholder="Please enter post content here"
                         required></textarea>
                     <br>
+                    <br>
+                    <br>
+                    {{template "Upload"}}
                     <input type="submit" value="post" a href="/home" value="reset form">
                 </form>
 
@@ -97,6 +100,9 @@
                     <p1> dislikes: {{.Dislikes}}</p1>  -->
                             </a>
                             <br>
+                            <p1> Image: 
+                                <img src="{{.}}" width="400px">
+                            </p1>
                             <p1>Category: {{.Category}}</p1>
                         </div>
                         <div class="bottom">

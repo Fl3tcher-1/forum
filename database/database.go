@@ -38,11 +38,11 @@ func (forum *Forum) CreateSession(session Session) error {
 }
 
 func (forum *Forum) CreatePost(post PostFeed) error {
-	stmt, err := forum.DB.Prepare("INSERT INTO post (username, title, content, likes, dislikes, category, dateCreated) VALUES (?, ?, ?, ?, ?, ?, ?);")
+	stmt, err := forum.DB.Prepare("INSERT INTO post (username, title, content, likes, dislikes, category, dateCreated, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?);")
 	if err != nil {
 		return fmt.Errorf("CreatePost DB Prepare error: %+v\n", err)
 	}
-	_, err = stmt.Exec(post.Username, post.Title, post.Content, post.Likes, post.Dislikes, post.Category, post.CreatedAt)
+	_, err = stmt.Exec(post.Username, post.Title, post.Content, post.Likes, post.Dislikes, post.Category, post.CreatedAt, post.Image)
 	if err != nil {
 		return fmt.Errorf("CreatePost Exec error: %+v\n", err)
 	}
@@ -124,6 +124,7 @@ func postTable(db *sql.DB) error {
  dislikes INTEGER,
  category TEXT,
  dateCreated TEXT);
+ image TEXT;
  `)
 	if err != nil {
 		return fmt.Errorf("postTable DB Prepare error: %+v\n", err)
@@ -179,6 +180,7 @@ func (data *Forum) GetPost() ([]PostFeed, error) {
 	var dislikes int
 	var created string
 	var category string
+	var image interface{}
 
 	for rows.Next() {
 		err := rows.Scan(&id, &uiD, &title, &content, &likes, &dislikes, &category, &created)
@@ -194,6 +196,7 @@ func (data *Forum) GetPost() ([]PostFeed, error) {
 			Dislikes:  dislikes,
 			Category:  category,
 			CreatedAt: created,
+			Image:     image,
 		})
 	}
 	// fmt.Println(posts)

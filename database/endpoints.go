@@ -1,7 +1,6 @@
 package database
 
 import (
-	"crypto/md5"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -343,7 +342,10 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 
 	} else {
 		post, _ := data.GetPost()
-		lastPost := post[len(post)-1]
+		var lastPost PostFeed
+		if len(post) > 0 {
+			lastPost = post[len(post)-1]
+		}
 
 		postCategory := request.FormValue("category")
 		postTitle := request.FormValue("title")
@@ -390,6 +392,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 					Dislikes:  postDislikes,
 					Category:  postCategory,
 					CreatedAt: postCreated,
+					Image:     data.ImgUpload,
 				})
 				if err != nil {
 					fmt.Printf("HomePage (CreatePost) items error: %+v\n", err)
@@ -402,7 +405,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 					return
 				}
 
-				err = tpl.ExecuteTemplate(writer, "./home", postAndSession)
+				err = tpl.ExecuteTemplate(writer, "home.html", postAndSession)
 				if err != nil {
 					fmt.Printf("HomePage ExecuteTemplate user homepage error: %+v\n", err)
 					return
@@ -905,36 +908,35 @@ func (data *Forum) HandleLikeDislike(writer http.ResponseWriter, request *http.R
 	}
 }
 
-func (data *Forum) ImgUpload(writer http.ResponseWriter, request *http.Request) {
-	if request.Method == "GET" {
-		crutime := time.Now().Unix()
-		h := md5.New()
-		io.WriteString(h, strconv.FormatInt(crutime, 10))
-		token := fmt.Sprintf("%x", h.Sum(nil))
-
-		t, _ := template.ParseFiles("upload.html")
-		t.Execute(writer, token)
-	} else {
-		err := request.ParseMultipartForm(5 << 20)
-		if err != nil {
-			http.Error(writer, "The uploaded image is too big. Please use an image less than 20mb in size", http.StatusBadRequest)
-			return
-		}
-		file, handler, err := request.FormFile("uploadfile")
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		defer file.Close()
-		fmt.Fprintf(writer, "%v", handler.Header)
-		f, err := os.OpenFile("./test/"+handler.Filename, os.O_WRONLY|os.O_CREATE, 0666)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		defer f.Close()
-		io.Copy(f, file)
+func (data *Forum) ImgUpload(w http.ResponseWriter, r *http.Request) {
+	r.ParseMultipartForm(10 << 20)
+	// ParseMultipartForm parses a request body as multipart/form-data
+	file, handler, err := r.FormFile("nf") // retrieve the file from form data
+	// replace file with the key your sent your image with
+	if err != nil {
+		fmt.Printf("replace file with key for image: %+v", err)
 	}
+	defer file.Close() // close the file when we finish
+	// this is path which  we want to store the file
+	var forum *Forum
+	var fn string = "../pics/" + handler.Filename
+	stmt, err := forum.DB.Prepare("INSERT INTO post (image) value(?)")
+
+	_, err = stmt.Exec(fn)
+	if err != nil {
+		fmt.Printf("CreatePost Exec error: %+v\n", err)
+	}
+	defer stmt.Close()
+
+	f, err := os.OpenFile("/pics/"+handler.Filename, os.O_WRONLY|os.O_CREATE, 0o666)
+	if err != nil {
+		fmt.Printf("open file for image upload error: %+v", err)
+	}
+	defer f.Close()
+	io.Copy(f, file)
+	// here we save our file to our path
+	var t *template.Template
+	t.Execute(w, "upload.html")
 }
 
 func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
