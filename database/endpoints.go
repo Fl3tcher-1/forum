@@ -919,9 +919,9 @@ func (data *Forum) ImgUpload(w http.ResponseWriter, r *http.Request) {
 	defer file.Close() // close the file when we finish
 	// this is path which  we want to store the file
 	var forum *Forum
-	var fn string = "../pics/" + handler.Filename
+	// <img src="/pics/%7b1%20xscenex%20%20qww%20qq%200%200%20Fitness%2006-20-2022%2015:10%20%3cnil%3e%7d" width="400px">
+	var fn string = "/pics/" + handler.Filename
 	stmt, err := forum.DB.Prepare("INSERT INTO post (image) value(?)")
-
 	_, err = stmt.Exec(fn)
 	if err != nil {
 		fmt.Printf("CreatePost Exec error: %+v\n", err)
