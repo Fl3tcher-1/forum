@@ -248,6 +248,31 @@ func (data *Forum) SignUpUser(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/login", http.StatusFound)
 }
 
+func (data *Forum) GetUsernameFromSessionID(writer http.ResponseWriter, request *http.Request) string {
+	c, err := request.Cookie("session_token")
+	if err != nil {
+		if err == http.ErrNoCookie {
+			fmt.Printf("GetUsernameFromSessionID (Cookie) error: %+v\n", err)
+			return ""
+		}
+	}
+
+	sessionToken := c.Value
+	a, err := data.GetSession()
+	if err != nil {
+		fmt.Printf("GetUsernameFromSessionID (GetSession) error: %+v\n", err)
+		return ""
+	}
+
+	for _, sess := range a {
+		// fmt.Println(sessionToken, " : ", sess.SessionID)
+		if sessionToken == sess.SessionID {
+			return sess.Username
+		}
+	}
+	return ""
+}
+
 // check cookie
 func (data *Forum) CheckCookie(writer http.ResponseWriter, request *http.Request) bool {
 	c, err := request.Cookie("session_token")
@@ -269,7 +294,7 @@ func (data *Forum) CheckCookie(writer http.ResponseWriter, request *http.Request
 	// sessFound := false
 
 	for _, sess := range a {
-		fmt.Println(sessionToken, " : ", sess.SessionID)
+		// fmt.Println(sessionToken, " : ", sess.SessionID)
 		if sessionToken == sess.SessionID {
 			// fmt.Println(sessionToken, " : ", sess.SessionID)
 			// currentSession = sess
@@ -876,31 +901,41 @@ func (data *Forum) HandleLikeDislike(writer http.ResponseWriter, request *http.R
 			fmt.Printf("unable to send json response for post %d\n", reqItemID)
 		}
 	case http.MethodPost:
-		if isLike {
-			requestedItem.Likes = requestedItem.Likes + 1
-		} else {
-			requestedItem.Dislikes = requestedItem.Dislikes + 1
+		username := data.GetUsernameFromSessionID(writer, request)
+		reaction, error := data.GetReactionByPostID(strconv.Itoa(requestedItem.PostID), username)
+		if error != nil {
+			fmt.Printf("HandleLikeDislike (GetReactionByPostID) error: %v\n", error)
+		}
+		if reaction == nil {
+			err := data.CreateReaction(Reaction{
+				PostID:   requestedItem.PostID,
+				Username: username,
+				Liked:    isLike,
+				Disliked: !isLike,
+			})
+			if err != nil {
+				fmt.Printf("HandleLikeDislike (CreateReaction) error: %v\n", err)
+			}
+		}
+		if reaction != nil {
+			err := data.UpdateReaction(Reaction{
+				PostID:   requestedItem.PostID,
+				Username: username,
+				Liked:    isLike,
+				Disliked: !isLike,
+			})
+			if err != nil {
+				fmt.Printf("HandleLikeDislike (UpdateReaction) error: %v\n", err)
+			}
 		}
 
-		err := data.UpdatePost(requestedItem)
-		if err != nil {
-			fmt.Printf("unable to modify dis-likes for post %d: %v\n", reqItemID, err)
-			writer.WriteHeader(http.StatusInternalServerError)
-			writer.Header().Set("Content-Type", "application/json")
-			_, err := writer.Write([]byte("{\"500\": \"Error modifying dis-likes for post\"}"))
-			if err != nil {
-				fmt.Printf("unable to send json response for post %d\n", reqItemID)
-				return
-			}
-			return
-		}
 		writer.Header().Set("Content-Type", "application/json")
 		_, err = writer.Write([]byte("{\"success\":true}"))
 		if err != nil {
 			fmt.Printf("unable to send json response for post %d\n", reqItemID)
 			return
 		}
-		fmt.Printf("modified dis-likes on post %d\n", reqItemID)
+		fmt.Printf("modified dis/likes on post %d\n", reqItemID)
 	}
 }
 

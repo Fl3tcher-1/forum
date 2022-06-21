@@ -143,40 +143,35 @@
         </div>
 </body>
 <script>
+    // get the url of the webserver
     const appURL = location.protocol + '//' + location.host;
     const like = async (elementID) => {
-        const currLikes = document.getElementById(elementID);
-
-        const likes = await fetch(appURL + '/like?id=' + currLikes.getAttribute("data-post-id"));
-        const likesJson = await likes.json();
-        newLikesCount = likesJson.likes + 1;
-        currLikes.innerHTML = newLikesCount + " Likes";
-
-        const response = await fetch(appURL + '/like?id=' + currLikes.getAttribute("data-post-id"), {
+        // get the likes element <a> tag
+        const likesElement = document.getElementById(elementID);
+        // run a POST request to the webserver, this sends the postID and matches MethodPost
+        const response = await fetch(appURL + '/like?id=' + likesElement.getAttribute("data-post-id"), {
             method: 'POST',
         });
+        // transform the webserver's response into json
         const postResult = await response.json();
-        if (postResult.success != true) {
-            const currLikesNum = currLikes.split(" ")[0] - 1;
-            currLikes.value = currLikesNum + " Likes";
+        // if the post wasn't successful
+        if (postResult.success == true) {
+            // get the number of likes that are currently being displayed to the user and decrement it by one
+            const likesElementNum = likesElement.split(" ")[0] + 1;
+            // update the number of likes that the user can see
+            likesElement.innerHTML = likesElementNum + " Likes";
         }
     }
 
     const dislike = async (elementID) => {
-        const currDislikes = document.getElementById(elementID);
-
-        const dislikes = await fetch(appURL + '/dislike?id=' + currDislikes.getAttribute("data-post-id"));
-        const dislikesJson = await dislikes.json();
-        newDislikesCount = dislikesJson.dislikes + 1;
-        currDislikes.innerHTML = newDislikesCount + " Dislikes";
-
-        const response = await fetch(appURL + '/dislike?id=' + currDislikes.getAttribute("data-post-id"), {
+        const dislikesElement = document.getElementById(elementID);
+        const response = await fetch(appURL + '/dislike?id=' + dislikesElement.getAttribute("data-post-id"), {
             method: 'POST',
         });
         const postResult = await response.json();
-        if (postResult.success != true) {
-            const currDislikesNum = currDislikes.split(" ")[0] - 1;
-            currDislikes.value = currDislikesNum + " Dislikes";
+        if (postResult.success == true) {
+            const dislikesElementNum = dislikesElement.split(" ")[0] + 1;
+            dislikesElement.innerHTML = dislikesElementNum + " Dislikes";
         }
     }
 </script>

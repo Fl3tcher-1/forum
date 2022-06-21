@@ -13,6 +13,7 @@ import (
 type user struct {
 	LoginUuid string
 	userName  string
+	userID    string
 	Email     string
 	Password  string
 }

@@ -23,7 +23,11 @@ func main() {
 		fmt.Printf("main (sql.Open) error: %+v\n", err)
 		os.Exit(1)
 	}
-	data := database.Connect(db)
+	db.Exec("PRAGMA journal_mode=WAL;")
+	data, err := database.Connect(db)
+	if err != nil {
+		fmt.Printf("main func ConnectTables error: %+v\n", err)
+	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", data.Handler)

@@ -34,7 +34,7 @@ type Session struct {
 	SessionID string
 	Username  string
 	Expiry    time.Time
-	//	UserID    int
+	// UserID    int
 	LoggedIn bool
 }
 
@@ -65,7 +65,7 @@ type UsrProfile struct {
 type Reaction struct {
 	ReactionID int
 	PostID     int
-	UserID     int
+	Username   string
 	CommentID  int
 	Liked      bool
 	Disliked   bool
