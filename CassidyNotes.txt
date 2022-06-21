@@ -10,14 +10,6 @@ Requirements:
   - links to likes.html need checking
   - needs a handler?
 
-- there needs to be a way of tracking if a specific user has liked/disliked a specific post
-  - reactions:
-    - New getter and setter (comments)
-
-- Remove likes and dislikes from comments and posts (replace them with reactions)
-  - remove from struct types and fix problems
-
-
 optional extras:
   - guests should get an error when they try to like/dislike
   - the buttons for like/dislike need updating to use the pngs from the cassidy branch and update the html
