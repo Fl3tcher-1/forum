@@ -213,11 +213,11 @@ func Connect(db *sql.DB) (*Forum, error) {
 	}, nil
 }
 
-func (data *Forum) GetPost() ([]PostFeed, error) {
+func (data *Forum) GetPosts() ([]PostFeed, error) {
 	posts := []PostFeed{}
 	rows, err := data.DB.Query(`SELECT * FROM post`)
 	if err != nil {
-		return posts, fmt.Errorf("GetPost DB Query error: %+v\n", err)
+		return posts, fmt.Errorf("GetPosts DB Query error: %+v\n", err)
 	}
 
 	var id int
@@ -230,17 +230,17 @@ func (data *Forum) GetPost() ([]PostFeed, error) {
 	for rows.Next() {
 		err := rows.Scan(&id, &uiD, &title, &content, &category, &created)
 		if err != nil {
-			return posts, fmt.Errorf("GetPost rows.Scan error: %+v\n", err)
+			return posts, fmt.Errorf("GetPosts rows.Scan error: %+v\n", err)
 		}
 
 		likes, err := getLikesForPost(data.DB, id)
 		if err != nil {
-			return posts, fmt.Errorf("GetPost getLikesForPost error: %+v\n", err)
+			return posts, fmt.Errorf("GetPosts getLikesForPost error: %+v\n", err)
 		}
 
 		dislikes, err := getDislikesForPost(data.DB, id)
 		if err != nil {
-			return posts, fmt.Errorf("GetPost getDislikesForPost error: %+v\n", err)
+			return posts, fmt.Errorf("GetPosts getDislikesForPost error: %+v\n", err)
 		}
 
 		posts = append(posts, PostFeed{
@@ -295,7 +295,42 @@ func getDislikesForPost(db *sql.DB, id int) (int, error) {
 	return counter, nil
 }
 
-// TODO: implement the get reaction(post, comment, etc)
+func getLikesForComment(db *sql.DB, id int) (int, error) {
+	stmt, err := db.Prepare("SELECT liked FROM reaction WHERE liked = TRUE AND commentID = ?")
+	defer stmt.Close()
+	if err != nil {
+		return 0, fmt.Errorf("getLikesForComment DB Prepare error: %+v\n", err)
+	}
+	rows, err := stmt.Query(id)
+	if err != nil {
+		return 0, fmt.Errorf("getLikesForComment DB Query error: %+v\n", err)
+	}
+
+	counter := 0
+	for rows.Next() {
+		counter++
+	}
+	return counter, nil
+}
+
+func getDislikesForComment(db *sql.DB, id int) (int, error) {
+	stmt, err := db.Prepare("SELECT disliked FROM reaction WHERE disliked = TRUE AND commentID = ?")
+	defer stmt.Close()
+	if err != nil {
+		return 0, fmt.Errorf("getDislikesForComment DB Prepare error: %+v\n", err)
+	}
+	rows, err := stmt.Query(id)
+	if err != nil {
+		return 0, fmt.Errorf("getDislikesForComment DB Query error: %+v\n", err)
+	}
+
+	counter := 0
+	for rows.Next() {
+		counter++
+	}
+	return counter, nil
+}
+
 func (data *Forum) GetReactions() ([]Reaction, error) {
 	reactions := []Reaction{}
 	rows, err := data.DB.Query(`SELECT * FROM reaction`)
@@ -363,6 +398,41 @@ func (data *Forum) GetReactionByPostID(targetPostID, targetUsername string) (*Re
 	return nil, nil
 }
 
+func (data *Forum) GetReactionByCommentID(targetCommentID, targetUsername string) (*Reaction, error) {
+	stmt, err := data.DB.Prepare("SELECT * FROM reaction WHERE commentID = ? AND username = ?")
+	defer stmt.Close()
+	if err != nil {
+		return nil, fmt.Errorf("GetReactionByCommentID DB Prepare error: %+v", err)
+	}
+	rows, err := stmt.Query(targetCommentID, targetUsername)
+	if err != nil {
+		return nil, fmt.Errorf("GetReactionByCommentID DB Query error: %+v", err)
+	}
+
+	var reactionID int
+	var postID int
+	var username string
+	var commentID int
+	var liked bool
+	var disliked bool
+
+	for rows.Next() {
+		err := rows.Scan(&reactionID, &postID, &username, &commentID, &liked, &disliked)
+		if err != nil {
+			return nil, fmt.Errorf("GetReactionByCommentID rows.Scan error: %+v\n", err)
+		}
+		return &Reaction{
+			ReactionID: reactionID,
+			PostID:     postID,
+			Username:   username,
+			CommentID:  commentID,
+			Liked:      liked,
+			Disliked:   disliked,
+		}, nil
+	}
+	return nil, nil
+}
+
 // @TODO: add likes/dislikes(reactions) to comments.
 func (data *Forum) GetComments() ([]Comment, error) {
 	comments := []Comment{}
@@ -381,12 +451,24 @@ func (data *Forum) GetComments() ([]Comment, error) {
 		if err != nil {
 			return comments, fmt.Errorf("GetComments rows.Scan error: %+v\n", err)
 		}
+		likes, err := getLikesForComment(data.DB, commentid)
+		if err != nil {
+			return comments, fmt.Errorf("GetComments getLikesForComment error: %+v\n", err)
+		}
+
+		dislikes, err := getDislikesForComment(data.DB, commentid)
+		if err != nil {
+			return comments, fmt.Errorf("GetComments getDislikesForComment error: %+v\n", err)
+		}
+
 		comments = append(comments, Comment{
 			CommentID: commentid,
 			PostID:    postid,
 			UserId:    userid,
 			Content:   content,
 			CreatedAt: created,
+			Likes:     likes,
+			Dislikes:  dislikes,
 		})
 	}
 	return comments, nil

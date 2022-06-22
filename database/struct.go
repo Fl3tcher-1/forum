@@ -44,6 +44,8 @@ type Comment struct {
 	UserId    string
 	Content   string
 	CreatedAt string
+	Likes     int `json:"likes"`
+	Dislikes  int `json:"dislikes"`
 }
 
 type UsrProfile struct {

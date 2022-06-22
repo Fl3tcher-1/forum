@@ -109,11 +109,11 @@
                                 </a>
                             </p1>
                             <p1>
-                                <a onclick="like(this.id);" data-post-id="{{.PostID}}" id="likes-{{ $i }}"
+                                <a onclick="likePost(this.id);" data-post-id="{{.PostID}}" id="likes-{{ $i }}"
                                     href="#">{{.Likes}} Likes</a>
                             </p1>
                             <p1>
-                                <a onclick="dislike(this.id);" data-post-id="{{.PostID}}" id="dislikes-{{ $i }}"
+                                <a onclick="dislikePost(this.id);" data-post-id="{{.PostID}}" id="dislikes-{{ $i }}"
                                     href="#">{{.Dislikes}}
                                     Dislikes</a>
                             </p1>
@@ -145,11 +145,11 @@
 <script>
     // get the url of the webserver
     const appURL = location.protocol + '//' + location.host;
-    const like = async (elementID) => {
+    const likePost = async (elementID) => {
         // get the likes element <a> tag
         const likesElement = document.getElementById(elementID);
         // run a POST request to the webserver, this sends the postID and matches MethodPost
-        const response = await fetch(appURL + '/like?id=' + likesElement.getAttribute("data-post-id"), {
+        const response = await fetch(appURL + '/likePost?id=' + likesElement.getAttribute("data-post-id"), {
             method: 'POST',
         });
         // transform the webserver's response into json
@@ -163,9 +163,9 @@
         }
     }
 
-    const dislike = async (elementID) => {
+    const dislikePost = async (elementID) => {
         const dislikesElement = document.getElementById(elementID);
-        const response = await fetch(appURL + '/dislike?id=' + dislikesElement.getAttribute("data-post-id"), {
+        const response = await fetch(appURL + '/dislikePost?id=' + dislikesElement.getAttribute("data-post-id"), {
             method: 'POST',
         });
         const postResult = await response.json();

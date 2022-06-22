@@ -3,6 +3,7 @@ kMW3x8QEPqy4wny
 Requirements:
 - when viewing posts individually or through categories, user/guest cannot like/dislike the posts - needs to be changed for just user, also comments needs to have like/dislike feature
 - if post is liked then by pressing like the post is set to 0 likes and by pressing dislike the post is set to 0 likes & 1 dislike
+- anywhere in the html files where likes are displayed needs to have the code in it
 
 - on a user's profile they need to be able to see the a list of their liked posts/comments (think, reddit)
   - needs to be based on reactions
@@ -13,9 +14,3 @@ Requirements:
 optional extras:
   - guests should get an error when they try to like/dislike
   - the buttons for like/dislike need updating to use the pngs from the cassidy branch and update the html
-
-
-
-
-
-

@@ -19,22 +19,9 @@ func (p PostFeed) MarshallJSON() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-// creates all needed templates
-// will need to be reduced as there is too many at the moment.
-// var tpl *template.Template
-
-// parses files for all templates allowing them to be called.
-// func init() {
-// 	tpl = template.Must(template.ParseGlob("templates/*"))
-// }
-
-// sessions
-// var sessions = map[string]Session{}
-
-// func (s Session) isExpired() bool {
-// 	return s.Expiry.Before(time.Now())
-
-// }
+func (c Comment) MarshallJSON() ([]byte, error) {
+	return json.Marshal(c)
+}
 
 // @TODO: error handling.
 // login page.
@@ -355,9 +342,9 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 	loggedIn := data.CheckCookie(writer, request)
 	// 🐈
 	if !loggedIn {
-		data, err := data.GetPost()
+		data, err := data.GetPosts()
 		if err != nil {
-			fmt.Printf("HomePage (GetPost) error: %+v\n", err)
+			fmt.Printf("HomePage (GetPosts) error: %+v\n", err)
 		}
 		err = tpl.ExecuteTemplate(writer, "guest.html", data)
 		if err != nil {
@@ -366,7 +353,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 		return
 
 	} else {
-		post, _ := data.GetPost()
+		post, _ := data.GetPosts()
 		var lastPost PostFeed
 		if len(post) > 0 {
 			lastPost = post[len(post)-1]
@@ -399,7 +386,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 		// checks if last post == current submit values to prevent duplicate posts
 		if lastPost.Content == postContent {
 			fmt.Println("duplicate")
-			postAndSession.Post, _ = data.GetPost()
+			postAndSession.Post, _ = data.GetPosts()
 			tpl.ExecuteTemplate(writer, "./home", postAndSession)
 
 		} else {
@@ -423,9 +410,9 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 					return
 				}
 
-				postAndSession.Post, err = data.GetPost()
+				postAndSession.Post, err = data.GetPosts()
 				if err != nil {
-					fmt.Printf("HomePage (GetPost) items error: %+v\n", err)
+					fmt.Printf("HomePage (GetPosts) items error: %+v\n", err)
 					return
 				}
 
@@ -437,10 +424,10 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 
 			}
 		}
-		data, err := data.GetPost()
+		data, err := data.GetPosts()
 		postAndSession.Post = data
 		if err != nil {
-			fmt.Printf("HomePage (GetPost) data error: %+v\n", err)
+			fmt.Printf("HomePage (GetPosts) data error: %+v\n", err)
 			return
 		}
 		err = tpl.ExecuteTemplate(writer, "home.html", postAndSession)
@@ -453,9 +440,9 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 
 func (data *Forum) GuestView(writer http.ResponseWriter, r *http.Request) {
 	tpl := template.Must(template.ParseGlob("templates/*"))
-	items, err := data.GetPost()
+	items, err := data.GetPosts()
 	if err != nil {
-		fmt.Printf("GuestView (GetPost) items error: %+v\n", err)
+		fmt.Printf("GuestView (GetPosts) items error: %+v\n", err)
 		return
 	}
 	err = tpl.ExecuteTemplate(writer, "guest.html", items)
@@ -506,9 +493,9 @@ func (data *Forum) CategoryDump(w http.ResponseWriter, r *http.Request) {
 		cat = strings.Replace(category, "/category/", "", -1) // we use replace instead of trim as we are working with strings-- and useful characters were being removed
 	}
 
-	posts, err := data.GetPost()
+	posts, err := data.GetPosts()
 	if err != nil {
-		fmt.Printf("CategoryDump (GetPost) posts error: %+v\n", err)
+		fmt.Printf("CategoryDump (GetPosts) posts error: %+v\n", err)
 		return
 	} // get all posts
 	// fmt.Println(posts)
@@ -604,9 +591,9 @@ func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {
 	postCreated := time.Format("01-02-2006 15:04")
 	var postWithComments Databases
 
-	post, err := data.GetPost() // get all posts
+	post, err := data.GetPosts() // get all posts
 	if err != nil {
-		fmt.Printf("Threads (GetPost) posts error: %+v\n", err)
+		fmt.Printf("Threads (GetPosts) posts error: %+v\n", err)
 		return
 	}
 	// TODO: ERROR HANDLING
@@ -614,8 +601,10 @@ func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {
 	currentSession := sess[len(sess)-1]
 	// data.GetSession()[len(data.GetSession())-1]
 	cmnt, _ := data.GetComments()
-	lastComment := cmnt[len(cmnt)-1]
-	// data.GetComments()[len(data.GetComments())-1]
+	var lastComment Comment
+	if len(cmnt) > 0 {
+		lastComment = cmnt[len(cmnt)-1]
+	}
 
 	// if last comment != current submitted values then create a comment, otherwise show comments
 	if lastComment.Content != comment {
@@ -675,9 +664,9 @@ func (data *Forum) ThreadGuest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var postWithComments Databases
-	post, err := data.GetPost() // get all posts
+	post, err := data.GetPosts() // get all posts
 	if err != nil {
-		fmt.Printf("ThreadGuest (GetPost) posts error: %+v\n\n", err)
+		fmt.Printf("ThreadGuest (GetPosts) posts error: %+v\n\n", err)
 		return
 	}
 	if id > len(post) { // checks so that a post that is not higher than total post amount and returns an error
@@ -761,7 +750,7 @@ func (data *Forum) UserPosts(writer http.ResponseWriter, request *http.Request) 
 	currentUser := user[len(user)-1]
 	// if user.session == user in post --- send this post
 
-	posts, _ := data.GetPost()
+	posts, _ := data.GetPosts()
 
 	type UserPosts struct {
 		Post []PostFeed
@@ -836,13 +825,13 @@ func (data *Forum) Customization(writer http.ResponseWriter, request *http.Reque
 	}
 }
 
-func (data *Forum) HandleLikeDislike(writer http.ResponseWriter, request *http.Request, isLike bool) {
+func (data *Forum) HandleLikeDislikeForPost(writer http.ResponseWriter, request *http.Request, isLike bool) {
 	loggedIn := data.CheckCookie(writer, request)
 	if !loggedIn {
 		fmt.Printf("Guests are unable to like/dislike\n")
 		return
 	}
-	items, err := data.GetPost()
+	items, err := data.GetPosts()
 	if err != nil {
 		fmt.Printf("HandleLikeDislike (GetPost) posts error: %+v\n", err)
 		return
@@ -939,6 +928,109 @@ func (data *Forum) HandleLikeDislike(writer http.ResponseWriter, request *http.R
 	}
 }
 
+// func (data *Forum) HandleLikeDislikeForComment(writer http.ResponseWriter, request *http.Request, isLike bool) {
+// 	loggedIn := data.CheckCookie(writer, request)
+// 	if !loggedIn {
+// 		fmt.Printf("Guests are unable to like/dislike\n")
+// 		return
+// 	}
+// 	items, err := data.GetComments()
+// 	if err != nil {
+// 		fmt.Printf("HandleLikeDislike (GetComments) comments error: %+v\n", err)
+// 		return
+// 	}
+// 	reqItemIDraw := request.URL.Query().Get("commentid")
+// 	reqItemID, err := strconv.Atoi(reqItemIDraw)
+// 	if err != nil {
+// 		fmt.Printf("unable to parse comment id: %v\n", err)
+// 		writer.WriteHeader(http.StatusInternalServerError)
+// 		writer.Header().Set("Content-Type", "application/json")
+// 		_, err := writer.Write([]byte("{\"500\": \"Error parsing comment id\"}"))
+// 		if err != nil {
+// 			fmt.Printf("unable to send json response for comments %d\n", reqItemID)
+// 			return
+// 		}
+// 		return
+// 	}
+// 	requestedItem := Comment{}
+
+// 	for _, item := range items {
+// 		if item.CommentID == reqItemID {
+// 			requestedItem = item
+// 		}
+// 	}
+
+// 	if requestedItem.CreatedAt == "" {
+// 		fmt.Printf("unable to find comment %d in db: %v\n", reqItemID, err)
+// 		writer.WriteHeader(http.StatusNotFound)
+// 		writer.Header().Set("Content-Type", "application/json")
+// 		_, err := writer.Write([]byte("{\"404\": \"Error finding comment\"}"))
+// 		if err != nil {
+// 			fmt.Printf("unable to send json response for comment %d\n", reqItemID)
+// 			return
+// 		}
+// 		return
+// 	}
+
+// 	j, err := requestedItem.MarshallJSON()
+// 	if err != nil {
+// 		fmt.Printf("unable to marshal json for comment %d: %v\n", reqItemID, err)
+// 		writer.WriteHeader(http.StatusInternalServerError)
+// 		writer.Header().Set("Content-Type", "application/json")
+// 		_, err := writer.Write([]byte("{\"500\": \"Error marshalling json for comment\"}"))
+// 		if err != nil {
+// 			fmt.Printf("unable to send json response for comment %d\n", reqItemID)
+// 			return
+// 		}
+// 		return
+// 	}
+
+// 	switch request.Method {
+// 	case http.MethodGet:
+// 		writer.Header().Set("Content-Type", "application/json")
+// 		_, err := writer.Write(j)
+// 		if err != nil {
+// 			fmt.Printf("unable to send json response for comment %d\n", reqItemID)
+// 		}
+// 	case http.MethodPost:
+// 		username := data.GetUsernameFromSessionID(writer, request)
+// 		reaction, error := data.GetReactionByPostID(strconv.Itoa(requestedItem.CommentID), username)
+// 		if error != nil {
+// 			fmt.Printf("HandleLikeDislike (GetReactionByCommentID) error: %v\n", error)
+// 		}
+// 		if reaction == nil {
+// 			err := data.CreateReaction(Reaction{
+// 				CommentID: requestedItem.CommentID,
+// 				Username:  username,
+// 				Liked:     isLike,
+// 				Disliked:  !isLike,
+// 			})
+// 			if err != nil {
+// 				fmt.Printf("HandleLikeDislike (CreateReaction) comment error: %v\n", err)
+// 			}
+// 		}
+// 		if reaction != nil {
+// 			err := data.UpdateReaction(Reaction{
+// 				CommentID: requestedItem.CommentID,
+// 				Username:  username,
+// 				Liked:     isLike,
+// 				Disliked:  !isLike,
+// 			})
+// 			if err != nil {
+// 				fmt.Printf("HandleLikeDislike (UpdateReaction) comment error: %v\n", err)
+// 			}
+// 		}
+
+// 		writer.Header().Set("Content-Type", "application/json")
+// 		_, err = writer.Write([]byte("{\"success\":true}"))
+// 		if err != nil {
+// 			fmt.Printf("unable to send json response for comment %d\n", reqItemID)
+// 			return
+// 		}
+// 		fmt.Printf("modified dis/likes on comment %d\n", reqItemID)
+// 	}
+// }
+
 func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
 	// data.CheckCookie(w, r)
 
@@ -1015,9 +1107,13 @@ func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./images/question.jpg")
 
 		// api handlers
-	case "/like":
-		data.HandleLikeDislike(w, r, true)
-	case "/dislike":
-		data.HandleLikeDislike(w, r, false)
+	case "/likePost":
+		data.HandleLikeDislikeForPost(w, r, true)
+	case "/dislikePost":
+		data.HandleLikeDislikeForPost(w, r, false)
+		// case "/likeComment":
+		// 	data.HandleLikeDislikeForComment(w, r, true)
+		// case "/dislikeComment":
+		// 	data.HandleLikeDislikeForComment(w, r, false)
 	}
 }
