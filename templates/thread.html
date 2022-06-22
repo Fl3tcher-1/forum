@@ -73,8 +73,7 @@
         <ol>
             {{range .Comment}}
             <li class="row">
-                <!-- <div class = "comments"> -->
-                <!-- <div class = "top-comment"> -->
+
                 <p2 class="user">
                     Comment by: {{.UserId}}
                 </p2> <br>
@@ -85,11 +84,18 @@
                 <p2 class="timestamp">
                     {{.CreatedAt}} <br>
                 </p2>
-                <!-- </div> -->
+                <p1>
+                    <a onclick="likeComment(this.id);" data-comment-id="{{.CommentID}}" id="comment-likes-{{ .CommentID }}"
+                        href="#">{{.Likes}} Likes</a>
+                </p1>
+                <p1>
+                    <a onclick="dislikeComment(this.id);" data-comment-id="{{.CommentID}}"
+                        id="comment-dislikes-{{ .CommentID }}" href="#">{{.Likes}} Dislikes</a>
+                </p1>
+ 
                 {{end}}
             </li>
         </ol>
-        <!-- </div> -->
 
         <form action="/home">
             <input type="submit" value=" Back" />
@@ -128,6 +134,37 @@
         });
         const postResult = await response.json();
         if (postResult.success && !postResult.noop) {
+            const dislikesElementNum = dislikesElement.split(" ")[0] + 1;
+            dislikesElement.innerHTML = dislikesElementNum + " Dislikes";
+        }
+    }
+
+    const likeComment = async (elementID) => {
+        // get the likes element <a> tag
+        const likesElement = document.getElementById(elementID);
+        console.log(JSON.stringify(elementID));
+        // run a POST request to the webserver, this sends the postID and matches MethodPost
+        const response = await fetch(appURL + '/likeComment?id=' + likesElement.getAttribute("data-comment-id"), {
+            method: 'POST',
+        });
+        // transform the webserver's response into json
+        const commentResult = await response.json();
+        // if the post wasn't successful
+        if (commentResult.success && !commentResult.noop) {
+            // get the number of likes that are currently being displayed to the user and decrement it by one
+            const likesElementNum = likesElement.split(" ")[0] + 1;
+            // update the number of likes that the user can see
+            likesElement.innerHTML = likesElementNum + " Likes";
+        }
+    }
+
+    const dislikeComment = async (elementID) => {
+        const dislikesElement = document.getElementById(elementID);
+        const response = await fetch(appURL + '/dislikeComment?id=' + dislikesElement.getAttribute("data-comment-id"), {
+            method: 'POST',
+        });
+        const commentResult = await response.json();
+        if (commentResult.success && !commentResult.noop) {
             const dislikesElementNum = dislikesElement.split(" ")[0] + 1;
             dislikesElement.innerHTML = dislikesElementNum + " Dislikes";
         }

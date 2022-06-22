@@ -918,8 +918,29 @@ func (data *Forum) HandleLikeDislikeForPost(writer http.ResponseWriter, request 
 			}
 		}
 
+		// we need to know if anything actually happened
+		// we check to see if the reaction will have changed based on what it was already compared with isLike
+		success := false
+		// if wasLikedBefore != clientAskedForLike OR wasDislikedBefore != clientAskedForDislike THEN success=true
+		if reaction == nil {
+			success = true
+		} else if reaction.Liked != isLike || reaction.Disliked != !isLike {
+			success = true
+		}
+
+		
+		updatedLikes, err := getLikesForPost(data.DB, requestedItem.PostID)
+		if err != nil {
+			fmt.Printf("HandleLikeDislike (getLikesForPost) error: %v\n", err)
+		}
+
+		updatedDislikes, err := getDislikesForPost(data.DB, requestedItem.PostID)
+		if err != nil {
+			fmt.Printf("HandleLikeDislike (getLikesForPost) error: %v\n", err)
+		}
+
 		writer.Header().Set("Content-Type", "application/json")
-		_, err = writer.Write([]byte("{\"success\":true}"))
+		_, err = writer.Write([]byte(fmt.Sprintf("{\"success\":%t,\"likes\":%d,\"dislikes\":%d}", success, updatedLikes, updatedDislikes)))
 		if err != nil {
 			fmt.Printf("unable to send json response for post %d\n", reqItemID)
 			return
@@ -928,108 +949,108 @@ func (data *Forum) HandleLikeDislikeForPost(writer http.ResponseWriter, request 
 	}
 }
 
-// func (data *Forum) HandleLikeDislikeForComment(writer http.ResponseWriter, request *http.Request, isLike bool) {
-// 	loggedIn := data.CheckCookie(writer, request)
-// 	if !loggedIn {
-// 		fmt.Printf("Guests are unable to like/dislike\n")
-// 		return
-// 	}
-// 	items, err := data.GetComments()
-// 	if err != nil {
-// 		fmt.Printf("HandleLikeDislike (GetComments) comments error: %+v\n", err)
-// 		return
-// 	}
-// 	reqItemIDraw := request.URL.Query().Get("commentid")
-// 	reqItemID, err := strconv.Atoi(reqItemIDraw)
-// 	if err != nil {
-// 		fmt.Printf("unable to parse comment id: %v\n", err)
-// 		writer.WriteHeader(http.StatusInternalServerError)
-// 		writer.Header().Set("Content-Type", "application/json")
-// 		_, err := writer.Write([]byte("{\"500\": \"Error parsing comment id\"}"))
-// 		if err != nil {
-// 			fmt.Printf("unable to send json response for comments %d\n", reqItemID)
-// 			return
-// 		}
-// 		return
-// 	}
-// 	requestedItem := Comment{}
+func (data *Forum) HandleLikeDislikeForComment(writer http.ResponseWriter, request *http.Request, isLike bool) {
+	loggedIn := data.CheckCookie(writer, request)
+	if !loggedIn {
+		fmt.Printf("Guests are unable to like/dislike\n")
+		return
+	}
+	items, err := data.GetComments()
+	if err != nil {
+		fmt.Printf("HandleLikeDislike (GetComments) comments error: %+v\n", err)
+		return
+	}
+	reqItemIDraw := request.URL.Query().Get("id")
+	reqItemID, err := strconv.Atoi(reqItemIDraw)
+	if err != nil {
+		fmt.Printf("unable to parse comment id: %v\n", err)
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Header().Set("Content-Type", "application/json")
+		_, err := writer.Write([]byte("{\"500\": \"Error parsing comment id\"}"))
+		if err != nil {
+			fmt.Printf("unable to send json response for comments %d\n", reqItemID)
+			return
+		}
+		return
+	}
+	requestedItem := Comment{}
 
-// 	for _, item := range items {
-// 		if item.CommentID == reqItemID {
-// 			requestedItem = item
-// 		}
-// 	}
+	for _, item := range items {
+		if item.CommentID == reqItemID {
+			requestedItem = item
+		}
+	}
 
-// 	if requestedItem.CreatedAt == "" {
-// 		fmt.Printf("unable to find comment %d in db: %v\n", reqItemID, err)
-// 		writer.WriteHeader(http.StatusNotFound)
-// 		writer.Header().Set("Content-Type", "application/json")
-// 		_, err := writer.Write([]byte("{\"404\": \"Error finding comment\"}"))
-// 		if err != nil {
-// 			fmt.Printf("unable to send json response for comment %d\n", reqItemID)
-// 			return
-// 		}
-// 		return
-// 	}
+	if requestedItem.CreatedAt == "" {
+		fmt.Printf("unable to find comment %d in db: %v\n", reqItemID, err)
+		writer.WriteHeader(http.StatusNotFound)
+		writer.Header().Set("Content-Type", "application/json")
+		_, err := writer.Write([]byte("{\"404\": \"Error finding comment\"}"))
+		if err != nil {
+			fmt.Printf("unable to send json response for comment %d\n", reqItemID)
+			return
+		}
+		return
+	}
 
-// 	j, err := requestedItem.MarshallJSON()
-// 	if err != nil {
-// 		fmt.Printf("unable to marshal json for comment %d: %v\n", reqItemID, err)
-// 		writer.WriteHeader(http.StatusInternalServerError)
-// 		writer.Header().Set("Content-Type", "application/json")
-// 		_, err := writer.Write([]byte("{\"500\": \"Error marshalling json for comment\"}"))
-// 		if err != nil {
-// 			fmt.Printf("unable to send json response for comment %d\n", reqItemID)
-// 			return
-// 		}
-// 		return
-// 	}
+	j, err := requestedItem.MarshallJSON()
+	if err != nil {
+		fmt.Printf("unable to marshal json for comment %d: %v\n", reqItemID, err)
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Header().Set("Content-Type", "application/json")
+		_, err := writer.Write([]byte("{\"500\": \"Error marshalling json for comment\"}"))
+		if err != nil {
+			fmt.Printf("unable to send json response for comment %d\n", reqItemID)
+			return
+		}
+		return
+	}
 
-// 	switch request.Method {
-// 	case http.MethodGet:
-// 		writer.Header().Set("Content-Type", "application/json")
-// 		_, err := writer.Write(j)
-// 		if err != nil {
-// 			fmt.Printf("unable to send json response for comment %d\n", reqItemID)
-// 		}
-// 	case http.MethodPost:
-// 		username := data.GetUsernameFromSessionID(writer, request)
-// 		reaction, error := data.GetReactionByPostID(strconv.Itoa(requestedItem.CommentID), username)
-// 		if error != nil {
-// 			fmt.Printf("HandleLikeDislike (GetReactionByCommentID) error: %v\n", error)
-// 		}
-// 		if reaction == nil {
-// 			err := data.CreateReaction(Reaction{
-// 				CommentID: requestedItem.CommentID,
-// 				Username:  username,
-// 				Liked:     isLike,
-// 				Disliked:  !isLike,
-// 			})
-// 			if err != nil {
-// 				fmt.Printf("HandleLikeDislike (CreateReaction) comment error: %v\n", err)
-// 			}
-// 		}
-// 		if reaction != nil {
-// 			err := data.UpdateReaction(Reaction{
-// 				CommentID: requestedItem.CommentID,
-// 				Username:  username,
-// 				Liked:     isLike,
-// 				Disliked:  !isLike,
-// 			})
-// 			if err != nil {
-// 				fmt.Printf("HandleLikeDislike (UpdateReaction) comment error: %v\n", err)
-// 			}
-// 		}
+	switch request.Method {
+	case http.MethodGet:
+		writer.Header().Set("Content-Type", "application/json")
+		_, err := writer.Write(j)
+		if err != nil {
+			fmt.Printf("unable to send json response for comment %d\n", reqItemID)
+		}
+	case http.MethodPost:
+		username := data.GetUsernameFromSessionID(writer, request)
+		reaction, error := data.GetReactionByPostID(strconv.Itoa(requestedItem.CommentID), username)
+		if error != nil {
+			fmt.Printf("HandleLikeDislike (GetReactionByCommentID) error: %v\n", error)
+		}
+		if reaction == nil {
+			err := data.CreateReaction(Reaction{
+				CommentID: requestedItem.CommentID,
+				Username:  username,
+				Liked:     isLike,
+				Disliked:  !isLike,
+			})
+			if err != nil {
+				fmt.Printf("HandleLikeDislike (CreateReaction) comment error: %v\n", err)
+			}
+		}
+		if reaction != nil {
+			err := data.UpdateReaction(Reaction{
+				CommentID: requestedItem.CommentID,
+				Username:  username,
+				Liked:     isLike,
+				Disliked:  !isLike,
+			})
+			if err != nil {
+				fmt.Printf("HandleLikeDislike (UpdateReaction) comment error: %v\n", err)
+			}
+		}
 
-// 		writer.Header().Set("Content-Type", "application/json")
-// 		_, err = writer.Write([]byte("{\"success\":true}"))
-// 		if err != nil {
-// 			fmt.Printf("unable to send json response for comment %d\n", reqItemID)
-// 			return
-// 		}
-// 		fmt.Printf("modified dis/likes on comment %d\n", reqItemID)
-// 	}
-// }
+		writer.Header().Set("Content-Type", "application/json")
+		_, err = writer.Write([]byte("{\"success\":true}"))
+		if err != nil {
+			fmt.Printf("unable to send json response for comment %d\n", reqItemID)
+			return
+		}
+		fmt.Printf("modified dis/likes on comment %d\n", reqItemID)
+	}
+}
 
 func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
 	// data.CheckCookie(w, r)
@@ -1111,9 +1132,9 @@ func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
 		data.HandleLikeDislikeForPost(w, r, true)
 	case "/dislikePost":
 		data.HandleLikeDislikeForPost(w, r, false)
-		// case "/likeComment":
-		// 	data.HandleLikeDislikeForComment(w, r, true)
-		// case "/dislikeComment":
-		// 	data.HandleLikeDislikeForComment(w, r, false)
+	case "/likeComment":
+		data.HandleLikeDislikeForComment(w, r, true)
+	case "/dislikeComment":
+		data.HandleLikeDislikeForComment(w, r, false)
 	}
 }

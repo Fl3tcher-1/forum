@@ -109,11 +109,11 @@
                                 </a>
                             </p1>
                             <p1>
-                                <a onclick="likePost(this.id);" data-post-id="{{.PostID}}" id="likes-{{ $i }}"
+                                <a onclick="likePost('{{ $i }}');" data-post-id="{{.PostID}}" id="likes-{{ $i }}"
                                     href="#">{{.Likes}} Likes</a>
                             </p1>
                             <p1>
-                                <a onclick="dislikePost(this.id);" data-post-id="{{.PostID}}" id="dislikes-{{ $i }}"
+                                <a onclick="dislikePost('{{ $i }}');" data-post-id="{{.PostID}}" id="dislikes-{{ $i }}"
                                     href="#">{{.Dislikes}}
                                     Dislikes</a>
                             </p1>
@@ -147,7 +147,8 @@
     const appURL = location.protocol + '//' + location.host;
     const likePost = async (elementID) => {
         // get the likes element <a> tag
-        const likesElement = document.getElementById(elementID);
+        const likesElement = document.getElementById("likes-" + elementID);
+        const dislikesElement = document.getElementById("dislikes-" + elementID);
         // run a POST request to the webserver, this sends the postID and matches MethodPost
         const response = await fetch(appURL + '/likePost?id=' + likesElement.getAttribute("data-post-id"), {
             method: 'POST',
@@ -157,21 +158,24 @@
         // if the post wasn't successful
         if (postResult.success == true) {
             // get the number of likes that are currently being displayed to the user and decrement it by one
-            const likesElementNum = likesElement.split(" ")[0] + 1;
+            // const likesElementNum = parseInt(likesElement.innerHTML.split(" ")[0]) + 1;
             // update the number of likes that the user can see
-            likesElement.innerHTML = likesElementNum + " Likes";
+            likesElement.innerHTML = postResult.likes + " Likes";
+            dislikesElement.innerHTML = postResult.dislikes + " Dislikes";
         }
     }
 
     const dislikePost = async (elementID) => {
-        const dislikesElement = document.getElementById(elementID);
+        const likesElement = document.getElementById("likes-" + elementID);
+        const dislikesElement = document.getElementById("dislikes-" + elementID);
         const response = await fetch(appURL + '/dislikePost?id=' + dislikesElement.getAttribute("data-post-id"), {
             method: 'POST',
         });
         const postResult = await response.json();
         if (postResult.success == true) {
-            const dislikesElementNum = dislikesElement.split(" ")[0] + 1;
-            dislikesElement.innerHTML = dislikesElementNum + " Dislikes";
+            // const dislikesElementNum = parseInt(dislikesElement.innerHTML.split(" ")[0]) + 1;
+            likesElement.innerHTML = postResult.likes + " Likes";
+            dislikesElement.innerHTML = postResult.dislikes + " Dislikes";
         }
     }
 </script>

@@ -52,75 +52,75 @@
         </div>
     </div>
 
-        <div class="homeLayout">
+    <div class="homeLayout">
 
 
-            <div class="featured">
-                <h3> featured/trending posts</h3>
+        <div class="featured">
+            <h3> featured/trending posts</h3>
 
-                <ol>
-                    {{range $i, $e := . }}
-                    <li class="row">
-                        <h3 class="title2">
-                            <a href="threadg/{{.PostID}}">
-                                <!-- {{.PostID}} -->
-                                {{.Title}}
-                                <br>
-                                Posted by: {{.Username}}
-                            </a>
-                        </h3>
-                        <div class="content">
-                            <a href="threadg/{{.PostID}}">
-                                <p1>{{.Content}} </p1>
-                            </a>
+            <ol>
+                {{range $i, $e := . }}
+                <li class="row">
+                    <h3 class="title2">
+                        <a href="threadg/{{.PostID}}">
+                            <!-- {{.PostID}} -->
+                            {{.Title}}
                             <br>
-                            <p1>Category: {{.Category}}</p1>
-                        </div>
-                        <div class="bottom">
+                            Posted by: {{.Username}}
+                        </a>
+                    </h3>
+                    <div class="content">
+                        <a href="threadg/{{.PostID}}">
+                            <p1>{{.Content}} </p1>
+                        </a>
+                        <br>
+                        <p1>Category: {{.Category}}</p1>
+                    </div>
+                    <div class="bottom">
 
-                            <p1 class="timestamp">
-                                <a href="threadg/{{.PostID}}">
-                                    <p1 class="timestamp">posted: {{.CreatedAt}}</p1>
-                                </a>
-                            </p1>
-                            <p1>
-                                <a onclick="like(this.id);" data-post-id="{{.PostID}}" id="likes-{{ $i }}"
-                                    href="#">{{.Likes}} Likes</a>
-                            </p1>
-                            <p1>
-                                <a onclick="dislike(this.id);" data-post-id="{{.PostID}}" id="dislikes-{{ $i }}"
-                                    href="#">{{.Dislikes}}
-                                    Dislikes</a>
-                            </p1>
-                        </div>
-                    </li> <br>
-                    {{end}}
-                </ol>
-            </div>
+                        <p1 class="timestamp">
+                            <a href="threadg/{{.PostID}}">
+                                <p1 class="timestamp">posted: {{.CreatedAt}}</p1>
+                            </a>
+                        </p1>
+                        <p1>
+                            <a onclick="likePost(this.id);" data-post-id="{{.PostID}}" id="likes-{{ $i }}"
+                                href="#">{{.Likes}} Likes</a>
+                        </p1>
+                        <p1>
+                            <a onclick="dislikePost(this.id);" data-post-id="{{.PostID}}" id="dislikes-{{ $i }}"
+                                href="#">{{.Dislikes}}
+                                Dislikes</a>
+                        </p1>
+                    </div>
+                </li> <br>
+                {{end}}
+            </ol>
         </div>
+    </div>
 
-        <br>
-        <br>
-        <br>
-        <br>
+    <br>
+    <br>
+    <br>
+    <br>
 
-        <div class="rights">
-            <br>
-            <h6>Content Policy||Privacy Policy||User Agreement</h6>
-            <h7>© DogeCo, inc, All rights reserved </h7>
-        </div>
+    <div class="rights">
+        <br>
+        <h6>Content Policy||Privacy Policy||User Agreement</h6>
+        <h7>© DogeCo, inc, All rights reserved </h7>
+    </div>
 </body>
 <script>
     const appURL = location.protocol + '//' + location.host;
-    const like = async (elementID) => {
+    const likePost = async (elementID) => {
         const currLikes = document.getElementById(elementID);
 
-        const likes = await fetch(appURL + '/like?id=' + currLikes.getAttribute("data-post-id"));
+        const likes = await fetch(appURL + '/likePost?id=' + currLikes.getAttribute("data-post-id"));
         const likesJson = await likes.json();
         newLikesCount = likesJson.likes + 1;
         currLikes.innerHTML = newLikesCount + " Likes";
 
-        const response = await fetch(appURL + '/like?id=' + currLikes.getAttribute("data-post-id"), {
+        const response = await fetch(appURL + '/likePost?id=' + currLikes.getAttribute("data-post-id"), {
             method: 'POST',
         });
         const postResult = await response.json();
@@ -130,15 +130,15 @@
         }
     }
 
-    const dislike = async (elementID) => {
+    const dislikePost = async (elementID) => {
         const currDislikes = document.getElementById(elementID);
 
-        const dislikes = await fetch(appURL + '/dislike?id=' + currDislikes.getAttribute("data-post-id"));
+        const dislikes = await fetch(appURL + '/dislikePost?id=' + currDislikes.getAttribute("data-post-id"));
         const dislikesJson = await dislikes.json();
         newDislikesCount = dislikesJson.dislikes + 1;
         currDislikes.innerHTML = newDislikesCount + " Dislikes";
 
-        const response = await fetch(appURL + '/dislike?id=' + currDislikes.getAttribute("data-post-id"), {
+        const response = await fetch(appURL + '/dislikePost?id=' + currDislikes.getAttribute("data-post-id"), {
             method: 'POST',
         });
         const postResult = await response.json();
