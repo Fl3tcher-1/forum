@@ -909,7 +909,7 @@ func (data *Forum) HandleLikeDislike(writer http.ResponseWriter, request *http.R
 	}
 }
 
-func (data *Forum) ImgUpload(w http.ResponseWriter, r *http.Request) string {
+func (data *Forum) ImgUpload(w http.ResponseWriter, r *http.Request) {
 	r.ParseMultipartForm(20 << 20)
 	// ParseMultipartForm parses a request body as multipart/form-data
 	file, handler, err := r.FormFile("nf") // retrieve the file from form data
@@ -921,7 +921,7 @@ func (data *Forum) ImgUpload(w http.ResponseWriter, r *http.Request) string {
 	// this is path which  we want to store the file
 	var forum *Forum
 	// <img src="/pics/%7b1%20xscenex%20%20qww%20qq%200%200%20Fitness%2006-20-2022%2015:10%20%3cnil%3e%7d" width="400px">
-	var fn string = "/pics/" + handler.Filename
+	fn := "/pics/" + handler.Filename
 	stmt, err := forum.DB.Prepare("INSERT INTO post (image) value(?)")
 	_, err = stmt.Exec(fn)
 	if err != nil {
@@ -938,7 +938,6 @@ func (data *Forum) ImgUpload(w http.ResponseWriter, r *http.Request) string {
 	// here we save our file to our path
 	var t *template.Template
 	t.Execute(w, "upload.html")
-	return fn
 }
 
 func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
