@@ -909,7 +909,7 @@ func (data *Forum) HandleLikeDislike(writer http.ResponseWriter, request *http.R
 }
 
 func (data *Forum) ImgUpload(w http.ResponseWriter, r *http.Request) {
-	r.ParseMultipartForm(10 << 20)
+	r.ParseMultipartForm(20 << 20)
 	// ParseMultipartForm parses a request body as multipart/form-data
 	file, handler, err := r.FormFile("nf") // retrieve the file from form data
 	// replace file with the key your sent your image with

@@ -115,16 +115,17 @@ func sessionTable(db *sql.DB) error {
 }
 
 func postTable(db *sql.DB) error {
-	stmt, err := db.Prepare(`CREATE TABLE IF NOT EXISTS post (
- postID INTEGER PRIMARY KEY AUTOINCREMENT,
- username TEXT REFERENCES session(userName),
- title TEXT,
- content TEXT, 
- likes INTEGER,
- dislikes INTEGER,
- category TEXT,
- dateCreated TEXT);
- image TEXT;
+	stmt, err := db.Prepare(`CREATE TABLE IF NOT EXISTS "post" (
+ "postID" INTEGER PRIMARY KEY AUTOINCREMENT,
+ "username" TEXT REFERENCES session(userName),
+ "title" TEXT,
+ "content" TEXT, 
+ "likes" INTEGER,
+ "dislikes" INTEGER,
+ "category" TEXT,
+ "dateCreated" TEXT,
+ "image" TEXT
+	);
  `)
 	if err != nil {
 		return fmt.Errorf("postTable DB Prepare error: %+v\n", err)
