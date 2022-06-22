@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"io/ioutil"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -355,6 +355,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 		postDislikes := 0
 		time := time.Now()
 		postCreated := time.Format("01-02-2006 15:04")
+		postImg := data.ImgUpload
 
 		// checks session and selects the last one (the latest one)
 		sess, _ := data.GetSession()
@@ -392,7 +393,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 					Dislikes:  postDislikes,
 					Category:  postCategory,
 					CreatedAt: postCreated,
-					Image:     data.ImgUpload,
+					Image:     postImg,
 				})
 				if err != nil {
 					fmt.Printf("HomePage (CreatePost) items error: %+v\n", err)
@@ -908,7 +909,7 @@ func (data *Forum) HandleLikeDislike(writer http.ResponseWriter, request *http.R
 	}
 }
 
-func (data *Forum) ImgUpload(w http.ResponseWriter, r *http.Request) {
+func (data *Forum) ImgUpload(w http.ResponseWriter, r *http.Request) string {
 	r.ParseMultipartForm(20 << 20)
 	// ParseMultipartForm parses a request body as multipart/form-data
 	file, handler, err := r.FormFile("nf") // retrieve the file from form data
@@ -928,15 +929,16 @@ func (data *Forum) ImgUpload(w http.ResponseWriter, r *http.Request) {
 	}
 	defer stmt.Close()
 
-	f, err := os.OpenFile("/pics/"+handler.Filename, os.O_WRONLY|os.O_CREATE, 0o666)
+	pics, err := ioutil.TempFile("pics", "upload-*.png")
 	if err != nil {
 		fmt.Printf("open file for image upload error: %+v", err)
 	}
-	defer f.Close()
-	io.Copy(f, file)
+	defer pics.Close()
+	io.Copy(pics, file)
 	// here we save our file to our path
 	var t *template.Template
 	t.Execute(w, "upload.html")
+	return fn
 }
 
 func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
