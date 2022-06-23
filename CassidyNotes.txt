@@ -1,14 +1,14 @@
 kMW3x8QEPqy4wny
 
-Requirements:
-- when viewing posts through categories, user/guest cannot like/dislike the posts - needs to be changed for just user, also comments needs to have like/dislike feature
-- anywhere in the html files where likes are displayed needs to have the code in it
+Add to html pages likes for posts and comments:
+- guestcategoryposts (only add the like/dislike numbers, not func)
+- categoryposts
+- likes
+- posts
+- profile?
 
+Requirements:
 - on a user's profile they need to be able to see the a list of their liked posts/comments (think, reddit)
-  - needs to be based on reactions
-  - likes.html needs some templating with range
-  - links to likes.html need checking
-  - needs a handler?
 
 optional extras:
   - guests should get an error when they try to like/dislike
