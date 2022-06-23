@@ -1,30 +1,15 @@
+kMW3x8QEPqy4wny
+
+Add to html pages likes for posts and comments:
+- guestcategoryposts (only add the like/dislike numbers, not func)
+- categoryposts
+- likes
+- posts
+- profile?
+
 Requirements:
-- guests should be prevented from liking or disliking
-  - guests should get an error when they try to like/dislike
-  - currently there are two versions of the homepage code, this may not continue to be the case. Ideally all of the guest/not-guest logic should be in the backend handler functions (checking sessions): HandleLikeDislike
-  - there are/should be examples of checking user session validity elsewhere, copy/paste? look for checkCookie
-  - the javascript in the html pages (home and guest) may need updating to pass cookies for session verification
-    - google: javascript fetch send cookie
-
-- users can only like || dislike
-  - question:
-      - if a post is already disliked, do users have to press dislike before pressing like? - no
-      - are the like/dislike buttons similar to a toggle? (pressing one automatically negates the other) - yes
-    answer:
-      - if post is liked then by pressing like the post is set to 0 likes and by pressing dislike the post is set to 0 likes & 1 dislike
-  - there needs to be a way of tracking if a specific user has liked/disliked a specific post
-    - reactions:
-      - A new struct type
-      - New getter and setter (creator)
-      - Remove likes and dislikes from comments and posts (replace them with reactions)
-        - remove from struct types and fix problems
-
-- the buttons for like/dislike need updating to use the pngs from the cassidy branch and update the html
-
 - on a user's profile they need to be able to see the a list of their liked posts/comments (think, reddit)
-  - needs to be based on reactions
-  - likes.html needs some templating with range
-  - links to likes.html need checking
-  - needs a handler?
 
-- when viewing posts individually or through categories, user/guest cannot like/dislike the posts - needs to be changed for just user
+optional extras:
+  - guests should get an error when they try to like/dislike
+  - the buttons for like/dislike need updating to use the pngs from the cassidy branch and update the html

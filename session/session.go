@@ -23,7 +23,6 @@ type session struct {
 }
 
 var (
-	tpl               *template.Template
 	dbUsers           = map[string]User{}    // user ID, user
 	dbSessions        = map[string]session{} // session ID, session
 	dbSessionsCleaned time.Time
@@ -32,7 +31,11 @@ var (
 const sessionLength int = 30
 
 func init() {
-	tpl, _ = template.ParseGlob("templates/*.html")
+	_, err := template.ParseGlob("templates/*.html")
+	if err != nil {
+		fmt.Printf("init (ParseGlob) error: %+v\n", err)
+		return
+	}
 	dbSessionsCleaned = time.Now()
 	http.HandleFunc("/", index)
 	http.HandleFunc("/signup", signup)
@@ -50,7 +53,7 @@ func getUser(w http.ResponseWriter, req *http.Request) User {
 			Name:  "session",
 			Value: sID.String(),
 		}
-
+		fmt.Printf("getUser (Cookie) error: %+v\n", err)
 	}
 	c.MaxAge = sessionLength
 	http.SetCookie(w, c)
@@ -68,6 +71,7 @@ func getUser(w http.ResponseWriter, req *http.Request) User {
 func alreadyLoggedIn(w http.ResponseWriter, r *http.Request) bool {
 	c, err := r.Cookie("session")
 	if err != nil {
+		fmt.Printf("alreadyLoggedIn (Cookie) error: %+v\n", err)
 		return false
 	}
 	s, ok := dbSessions[c.Value]
@@ -119,7 +123,7 @@ func index(w http.ResponseWriter, req *http.Request) {
 			Name:  "session",
 			Value: sID.String(),
 		}
-
+		fmt.Printf("index (Cookie) error: %+v\n", err)
 	}
 	c.MaxAge = sessionLength
 	http.SetCookie(w, c)
@@ -237,7 +241,10 @@ func logout(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
-	c, _ := r.Cookie("session")
+	c, err := r.Cookie("session")
+	if err != nil {
+		fmt.Printf("logout (Cookie) error: %+v\n", err)
+	}
 	// delete the session
 	delete(dbSessions, c.Value)
 	// remove the cookie
