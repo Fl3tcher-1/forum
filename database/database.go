@@ -50,12 +50,12 @@ func (forum *Forum) CreatePost(post PostFeed) error {
 }
 
 func (forum *Forum) CreateReaction(reaction Reaction) error {
-	stmt, err := forum.DB.Prepare("INSERT INTO reaction (postid, username, reactionid, commentid, liked, disliked) VALUES (?, ?, ?, ?, ?, ?);")
+	stmt, err := forum.DB.Prepare("INSERT INTO reaction (postid, username, commentid, liked, disliked) VALUES (?, ?, ?, ?, ?);")
 	defer stmt.Close()
 	if err != nil {
 		return fmt.Errorf("CreateReaction DB Prepare error: %+v\n", err)
 	}
-	_, err = stmt.Exec(reaction.PostID, reaction.Username, reaction.ReactionID, reaction.CommentID, reaction.Liked, reaction.Disliked)
+	_, err = stmt.Exec(reaction.PostID, reaction.Username, reaction.CommentID, reaction.Liked, reaction.Disliked)
 	if err != nil {
 		return fmt.Errorf("CreateReactions Exec error: %+v\n", err)
 	}
@@ -91,12 +91,12 @@ func (feed *Forum) UpdatePost(item PostFeed) error {
 }
 
 func (feed *Forum) UpdateReaction(item Reaction) error {
-	stmt, err := feed.DB.Prepare("UPDATE reaction SET liked = ?, disliked = ?WHERE postid = ? AND username = ?;")
+	stmt, err := feed.DB.Prepare("UPDATE reaction SET liked = ?, disliked = ? WHERE postid = ? AND username = ? AND reactionID = ?;")
 	defer stmt.Close()
 	if err != nil {
 		return fmt.Errorf("UpdateReaction DB Prepare error: %+v", err)
 	}
-	_, err = stmt.Exec(item.Liked, item.Disliked, item.PostID, item.Username)
+	_, err = stmt.Exec(item.Liked, item.Disliked, item.PostID, item.Username, item.ReactionID)
 	if err != nil {
 		return fmt.Errorf("unable to update reaction: %w", err)
 	}
@@ -359,7 +359,7 @@ func (data *Forum) GetReactions() ([]Reaction, error) {
 			Disliked:   disliked,
 		})
 	}
-	fmt.Println(reactions)
+	// fmt.Println(reactions)
 	return reactions, nil
 }
 

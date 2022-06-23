@@ -83,15 +83,8 @@
                                 <p1 class="timestamp">posted: {{.CreatedAt}}</p1>
                             </a>
                         </p1>
-                        <p1>
-                            <a onclick="likePost(this.id);" data-post-id="{{.PostID}}" id="likes-{{ $i }}"
-                                href="#">{{.Likes}} Likes</a>
-                        </p1>
-                        <p1>
-                            <a onclick="dislikePost(this.id);" data-post-id="{{.PostID}}" id="dislikes-{{ $i }}"
-                                href="#">{{.Dislikes}}
-                                Dislikes</a>
-                        </p1>
+                        <p1 class="likes">Likes: {{.Likes}}</p1>
+                        <p1 class="dislikes">Dislikes: {{.Dislikes}}</p1>
                     </div>
                 </li> <br>
                 {{end}}
@@ -110,43 +103,5 @@
         <h7>© DogeCo, inc, All rights reserved </h7>
     </div>
 </body>
-<script>
-    const appURL = location.protocol + '//' + location.host;
-    const likePost = async (elementID) => {
-        const currLikes = document.getElementById(elementID);
-
-        const likes = await fetch(appURL + '/likePost?id=' + currLikes.getAttribute("data-post-id"));
-        const likesJson = await likes.json();
-        newLikesCount = likesJson.likes + 1;
-        currLikes.innerHTML = newLikesCount + " Likes";
-
-        const response = await fetch(appURL + '/likePost?id=' + currLikes.getAttribute("data-post-id"), {
-            method: 'POST',
-        });
-        const postResult = await response.json();
-        if (postResult.success != true) {
-            const currLikesNum = currLikes.split(" ")[0] - 1;
-            currLikes.value = currLikesNum + " Likes";
-        }
-    }
-
-    const dislikePost = async (elementID) => {
-        const currDislikes = document.getElementById(elementID);
-
-        const dislikes = await fetch(appURL + '/dislikePost?id=' + currDislikes.getAttribute("data-post-id"));
-        const dislikesJson = await dislikes.json();
-        newDislikesCount = dislikesJson.dislikes + 1;
-        currDislikes.innerHTML = newDislikesCount + " Dislikes";
-
-        const response = await fetch(appURL + '/dislikePost?id=' + currDislikes.getAttribute("data-post-id"), {
-            method: 'POST',
-        });
-        const postResult = await response.json();
-        if (postResult.success != true) {
-            const currDislikesNum = currDislikes.split(" ")[0] - 1;
-            currDislikes.value = currDislikesNum + " Dislikes";
-        }
-    }
-</script>
 
 </html>

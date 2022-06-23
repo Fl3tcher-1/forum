@@ -89,7 +89,7 @@ func CheckSession(w http.ResponseWriter, r *http.Request, db *sql.DB) bool {
 		count := 0
 		for session.Next() {
 			session.Scan(&id, &sessionUuid, &authUuid)
-			fmt.Fprintln(w, "session: ", id, sessionUuid, authUuid)
+			// fmt.Fprintln(w, "session: ", id, sessionUuid, authUuid)
 			count++
 		}
 		if count == 1 {

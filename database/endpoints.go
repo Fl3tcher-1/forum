@@ -90,7 +90,7 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 			Expires: expiresAt,
 			// MaxAge:  2 * int(time.Hour),
 		})
-		fmt.Println(data.GetSession())
+		// fmt.Println(data.GetSession())
 		// w.WriteHeader(200)
 		http.Redirect(w, r, "/home", http.StatusFound)
 		// data.HomePage(w, r)
@@ -145,12 +145,12 @@ func (data *Forum) SignUpUser(w http.ResponseWriter, r *http.Request) {
 	// checks if name length meets criteria
 	nameLength := (5 <= len(user.Username) && len(user.Username) <= 50)
 
-	fmt.Println(nameLength)
+	// fmt.Println(nameLength)
 
 	// check pw criteria
 	user.Password = r.FormValue("password")
 
-	fmt.Println(user)
+	// fmt.Println(user)
 	var pwLower, pwUpper, pwNumber, pwSpace, pwLength bool
 	pwSpace = false
 
@@ -271,33 +271,17 @@ func (data *Forum) CheckCookie(writer http.ResponseWriter, request *http.Request
 	}
 
 	sessionToken := c.Value
-	// var currentSession Session
 	a, err := data.GetSession()
 	if err != nil {
 		fmt.Printf("CheckCookie (GetSession) error: %+v\n", err)
 	}
 
-	// fmt.Println(sessionToken == a[0].SessionID)
-	// sessFound := false
-
 	for _, sess := range a {
-		// fmt.Println(sessionToken, " : ", sess.SessionID)
 		if sessionToken == sess.SessionID {
-			// fmt.Println(sessionToken, " : ", sess.SessionID)
-			// currentSession = sess
-			// sessFound = true
+			return true
 		}
-
-		// if !sessFound {
-		// writer.WriteHeader(http.StatusUnauthorized)
-		// 	return
-		//  }
-
-		// if currentSession.isExpired() {
-		// 	data.DB.Exec("DELETE FROM session where sessionID ='" + currentSession.SessionID + "'")
-		// }
 	}
-	return true
+	return false
 }
 
 func (data *Forum) Logout(w http.ResponseWriter, r *http.Request) {
@@ -353,7 +337,10 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 		return
 
 	} else {
-		post, _ := data.GetPosts()
+		post, err := data.GetPosts()
+		if err != nil {
+			fmt.Printf("HomePage GetPosts (post) error: %+v\n", err)
+		}
 		var lastPost PostFeed
 		if len(post) > 0 {
 			lastPost = post[len(post)-1]
@@ -369,7 +356,10 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 		postCreated := time.Format("01-02-2006 15:04")
 
 		// checks session and selects the last one (the latest one)
-		sess, _ := data.GetSession()
+		sess, err := data.GetSession()
+		if err != nil {
+			fmt.Printf("HomePage GetSession error: %+v\n", err)
+		}
 		currentSession := sess[len(sess)-1]
 
 		user := currentSession.Username // fetches username from session
@@ -384,11 +374,15 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 		postAndSession.UserSession = currentSession
 
 		// checks if last post == current submit values to prevent duplicate posts
+		// fmt.Println("******************************", lastPost.Content)
 		if lastPost.Content == postContent {
 			fmt.Println("duplicate")
-			postAndSession.Post, _ = data.GetPosts()
+			postAndSession.Post, err = data.GetPosts()
+			if err != nil {
+				fmt.Printf("HomePage GetPosts (lastPost.Content) error: %+v\n", err)
+			}
 			tpl.ExecuteTemplate(writer, "./home", postAndSession)
-
+			return
 		} else {
 			// postAndSession.UserSession = data.GetSession()[0]
 
@@ -421,7 +415,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 					fmt.Printf("HomePage ExecuteTemplate user homepage error: %+v\n", err)
 					return
 				}
-
+				return
 			}
 		}
 		data, err := data.GetPosts()
@@ -435,6 +429,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 			fmt.Printf("HomePage ExecuteTemplate (home.html) error: %+v\n", err)
 			return
 		}
+		return
 	}
 }
 
@@ -503,7 +498,7 @@ func (data *Forum) CategoryDump(w http.ResponseWriter, r *http.Request) {
 	categoryFound := false // used to check if a valid category was entered
 	for _, post := range posts {
 		// fmt.Println(cat, post.Category)
-		fmt.Println(post.Category)
+		// fmt.Println(post.Category)
 		if cat == post.Category {
 			// fmt.Println(post)
 			categoryFound = true
@@ -828,10 +823,11 @@ func (data *Forum) Customization(writer http.ResponseWriter, request *http.Reque
 func (data *Forum) HandleLikeDislikeForPost(writer http.ResponseWriter, request *http.Request, isLike bool) {
 	loggedIn := data.CheckCookie(writer, request)
 	if !loggedIn {
-		fmt.Printf("Guests are unable to like/dislike\n")
+		fmt.Printf("Guests are unable to like/dislike posts\n")
 		return
 	}
 	items, err := data.GetPosts()
+	// fmt.Printf("Items: %+v\n", items)
 	if err != nil {
 		fmt.Printf("HandleLikeDislike (GetPost) posts error: %+v\n", err)
 		return
@@ -908,10 +904,11 @@ func (data *Forum) HandleLikeDislikeForPost(writer http.ResponseWriter, request 
 		}
 		if reaction != nil {
 			err := data.UpdateReaction(Reaction{
-				PostID:   requestedItem.PostID,
-				Username: username,
-				Liked:    isLike,
-				Disliked: !isLike,
+				ReactionID: reaction.ReactionID,
+				PostID:     requestedItem.PostID,
+				Username:   username,
+				Liked:      isLike,
+				Disliked:   !isLike,
 			})
 			if err != nil {
 				fmt.Printf("HandleLikeDislike (UpdateReaction) error: %v\n", err)
@@ -928,7 +925,6 @@ func (data *Forum) HandleLikeDislikeForPost(writer http.ResponseWriter, request 
 			success = true
 		}
 
-		
 		updatedLikes, err := getLikesForPost(data.DB, requestedItem.PostID)
 		if err != nil {
 			fmt.Printf("HandleLikeDislike (getLikesForPost) error: %v\n", err)
@@ -952,14 +948,16 @@ func (data *Forum) HandleLikeDislikeForPost(writer http.ResponseWriter, request 
 func (data *Forum) HandleLikeDislikeForComment(writer http.ResponseWriter, request *http.Request, isLike bool) {
 	loggedIn := data.CheckCookie(writer, request)
 	if !loggedIn {
-		fmt.Printf("Guests are unable to like/dislike\n")
+		fmt.Printf("Guests are unable to like/dislike comments\n")
 		return
 	}
 	items, err := data.GetComments()
+	// fmt.Printf("Items: %+v\n", items)
 	if err != nil {
 		fmt.Printf("HandleLikeDislike (GetComments) comments error: %+v\n", err)
 		return
 	}
+
 	reqItemIDraw := request.URL.Query().Get("id")
 	reqItemID, err := strconv.Atoi(reqItemIDraw)
 	if err != nil {
@@ -1015,10 +1013,11 @@ func (data *Forum) HandleLikeDislikeForComment(writer http.ResponseWriter, reque
 		}
 	case http.MethodPost:
 		username := data.GetUsernameFromSessionID(writer, request)
-		reaction, error := data.GetReactionByPostID(strconv.Itoa(requestedItem.CommentID), username)
+		reaction, error := data.GetReactionByCommentID(strconv.Itoa(requestedItem.CommentID), username)
 		if error != nil {
 			fmt.Printf("HandleLikeDislike (GetReactionByCommentID) error: %v\n", error)
 		}
+		fmt.Printf("reaction: %+v\n", reaction)
 		if reaction == nil {
 			err := data.CreateReaction(Reaction{
 				CommentID: requestedItem.CommentID,
@@ -1032,18 +1031,35 @@ func (data *Forum) HandleLikeDislikeForComment(writer http.ResponseWriter, reque
 		}
 		if reaction != nil {
 			err := data.UpdateReaction(Reaction{
-				CommentID: requestedItem.CommentID,
-				Username:  username,
-				Liked:     isLike,
-				Disliked:  !isLike,
+				ReactionID: reaction.ReactionID,
+				CommentID:  requestedItem.CommentID,
+				Username:   username,
+				Liked:      isLike,
+				Disliked:   !isLike,
 			})
 			if err != nil {
 				fmt.Printf("HandleLikeDislike (UpdateReaction) comment error: %v\n", err)
 			}
 		}
+		success := false
+		// if wasLikedBefore != clientAskedForLike OR wasDislikedBefore != clientAskedForDislike THEN success=true
+		if reaction == nil {
+			success = true
+		} else if reaction.Liked != isLike || reaction.Disliked != !isLike {
+			success = true
+		}
 
+		updatedLikes, err := getLikesForComment(data.DB, requestedItem.CommentID)
+		if err != nil {
+			fmt.Printf("HandleLikeDislike (getLikesForComment) error: %v\n", err)
+		}
+
+		updatedDislikes, err := getDislikesForComment(data.DB, requestedItem.CommentID)
+		if err != nil {
+			fmt.Printf("HandleLikeDislike (getLikesForComment) error: %v\n", err)
+		}
 		writer.Header().Set("Content-Type", "application/json")
-		_, err = writer.Write([]byte("{\"success\":true}"))
+		_, err = writer.Write([]byte(fmt.Sprintf("{\"success\":%t,\"likes\":%d,\"dislikes\":%d}", success, updatedLikes, updatedDislikes)))
 		if err != nil {
 			fmt.Printf("unable to send json response for comment %d\n", reqItemID)
 			return
