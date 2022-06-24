@@ -91,12 +91,12 @@ func (feed *Forum) UpdatePost(item PostFeed) error {
 }
 
 func (feed *Forum) UpdateReaction(item Reaction) error {
-	stmt, err := feed.DB.Prepare("UPDATE reaction SET liked = ?, disliked = ? WHERE postid = ? AND username = ? AND reactionID = ?;")
+	stmt, err := feed.DB.Prepare("UPDATE reaction SET liked = ?, disliked = ? WHERE (postid = ? AND username = ? AND reactionID = ?) OR (commentid = ? AND username = ? AND reactionID = ?);")
 	defer stmt.Close()
 	if err != nil {
 		return fmt.Errorf("UpdateReaction DB Prepare error: %+v", err)
 	}
-	_, err = stmt.Exec(item.Liked, item.Disliked, item.PostID, item.Username, item.ReactionID)
+	_, err = stmt.Exec(item.Liked, item.Disliked, item.PostID, item.Username, item.ReactionID, item.CommentID, item.Username, item.ReactionID)
 	if err != nil {
 		return fmt.Errorf("unable to update reaction: %w", err)
 	}
@@ -432,6 +432,8 @@ func (data *Forum) GetReactionByCommentID(targetCommentID, targetUsername string
 	}
 	return nil, nil
 }
+
+
 
 // @TODO: add likes/dislikes(reactions) to comments.
 func (data *Forum) GetComments() ([]Comment, error) {
