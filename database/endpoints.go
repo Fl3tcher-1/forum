@@ -741,11 +741,19 @@ func (data *Forum) UserPosts(writer http.ResponseWriter, request *http.Request) 
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 
-	user, _ := data.GetSession()
+	user, err := data.GetSession()
+	if err != nil {
+		fmt.Printf("UserPosts GetSession error: %+v\n", err)
+	}
+
 	currentUser := user[len(user)-1]
 	// if user.session == user in post --- send this post
 
-	posts, _ := data.GetPosts()
+	posts, err := data.GetPosts()
+	if err != nil {
+		fmt.Printf("UserPosts GetPosts error: %+v\n", err)
+		return
+	}
 
 	type UserPosts struct {
 		Post []PostFeed
@@ -758,43 +766,70 @@ func (data *Forum) UserPosts(writer http.ResponseWriter, request *http.Request) 
 			// fmt.Println(currentUser.Username, post.Username)
 		}
 	}
-	err := tpl.ExecuteTemplate(writer, "posts.html", usrPosts)
+	err = tpl.ExecuteTemplate(writer, "posts.html", usrPosts)
 	if err != nil {
 		fmt.Printf("UserPosts ExecuteTemplate (posts.html) error: %+v\n", err)
 		return
 	}
 }
 
-func (data *Forum) UserComments(writer http.ResponseWriter, request *http.Request) {
-	tpl := template.Must(template.ParseGlob("templates/*"))
-	writer.WriteHeader(http.StatusOK)
-	writer.Header().Set("Content-Type", "text/html")
-	err := tpl.ExecuteTemplate(writer, "comments.html", nil)
-	if err != nil {
-		fmt.Printf("UserComments ExecuteTemplate (comments.html) error: %+v\n", err)
-		return
-	}
-}
-
-// TODO: implement the all liked posts/comments per user here
 func (data *Forum) UserLikes(writer http.ResponseWriter, request *http.Request) {
 	tpl := template.Must(template.ParseGlob("templates/*"))
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
-	err := tpl.ExecuteTemplate(writer, "likes.html", nil)
+	user, err := data.GetSession()
+	if err != nil {
+		fmt.Printf("UserLikes GetSession error: %+v\n", err)
+	}
+
+	currentUser := user[len(user)-1]
+
+	allReactions, err := data.GetReactions()
+	if err != nil {
+		fmt.Printf("UserLikes (GetReactions) error: %+v\n", err)
+		return
+	}
+
+	posts, err := data.GetPosts()
+	if err != nil {
+		fmt.Printf("UserLikes GetPosts error: %+v\n", err)
+		return
+	}
+
+	comments, err := data.GetComments()
+	if err != nil {
+		fmt.Printf("UserLikes GetComments error: %+v\n", err)
+		return
+	}
+
+	type UserLikes struct {
+		Posts    []PostFeed
+		Comments []Comment
+	}
+	var likesByUser UserLikes
+
+	for _, post := range posts {
+		if post.Username == currentUser.Username {
+			for _, reaction := range allReactions {
+				if reaction.Liked && post.Username == reaction.Username && post.PostID == reaction.PostID {
+					likesByUser.Posts = append(likesByUser.Posts, post)
+				}
+			}
+		}
+	}
+
+	for _, comment := range comments {
+		if comment.UserId == currentUser.Username {
+			for _, reaction := range allReactions {
+				if reaction.Liked && comment.UserId == reaction.Username && comment.CommentID == reaction.CommentID {
+					likesByUser.Comments = append(likesByUser.Comments, comment)
+				}
+			}
+		}
+	}
+	err = tpl.ExecuteTemplate(writer, "likes.html", likesByUser)
 	if err != nil {
 		fmt.Printf("UserLikes ExecuteTemplate (likes.html) error: %+v\n", err)
-	}
-}
-
-func (data *Forum) UserShares(writer http.ResponseWriter, request *http.Request) {
-	tpl := template.Must(template.ParseGlob("templates/*"))
-	writer.WriteHeader(http.StatusOK)
-	writer.Header().Set("Content-Type", "text/html")
-	err := tpl.ExecuteTemplate(writer, "shares.html", nil)
-	if err != nil {
-		fmt.Printf("UserShares ExecuteTemplate (shares.html) error: %+v\n", err)
-		return
 	}
 }
 
@@ -1017,7 +1052,6 @@ func (data *Forum) HandleLikeDislikeForComment(writer http.ResponseWriter, reque
 		if error != nil {
 			fmt.Printf("HandleLikeDislike (GetReactionByCommentID) error: %v\n", error)
 		}
-		fmt.Printf("reaction: %+v\n", reaction)
 		if reaction == nil {
 			err := data.CreateReaction(Reaction{
 				CommentID: requestedItem.CommentID,
@@ -1097,9 +1131,6 @@ func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
 		data.UserProfile(w, r)
 	case "/thread":
 		data.Threads(w, r)
-		// data.UserProfile(w, r)
-	// case "/thread/*":
-	// 	data.Threads(w, r)
 	case "/about":
 		data.AboutFunc(w, r)
 	case "/contact-us":
@@ -1112,12 +1143,12 @@ func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
 		data.UserPhoto(w, r)
 	case "/posts":
 		data.UserPosts(w, r)
-	case "/comments":
-		data.UserComments(w, r)
+	// case "/comments":
+	// data.UserComments(w, r)
 	case "/likes":
 		data.UserLikes(w, r)
-	case "/shares":
-		data.UserShares(w, r)
+	// case "/shares":
+	// data.UserShares(w, r)
 	case "/info":
 		data.UserInfo(w, r)
 	case "/custom":

@@ -1,12 +1,5 @@
 kMW3x8QEPqy4wny
 
-Add to html pages likes for posts and comments:
-- guestcategoryposts (only add the like/dislike numbers, not func)
-- categoryposts
-- likes
-- posts
-- profile?
-
 Requirements:
 - on a user's profile they need to be able to see the a list of their liked posts/comments (think, reddit)
 
