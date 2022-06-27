@@ -125,9 +125,9 @@ func (data *Forum) SignUpUser(w http.ResponseWriter, r *http.Request) {
 		isValidEmail = false
 	}
 
-	// if !isValidEmail {
-	// 	fmt.Println("Email invalid")
-	// }
+	if !isValidEmail {
+		fmt.Println("Email invalid")
+	}
 
 	user.Username = r.FormValue("username")
 	// check if only alphanumerical numbers

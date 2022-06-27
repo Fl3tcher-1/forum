@@ -32,8 +32,14 @@ func CreateSession(db *sql.DB, user user, w http.ResponseWriter, r *http.Request
 	sesCookie := CreateSessionCookie()
 	http.SetCookie(w, &sesCookie)
 	w.WriteHeader(200)
-	db.Exec("DELETE FROM Session where auth_uuid='" + user.LoginUuid + "'")
-	db.Exec("INSERT INTO Session (uuid,auth_uuid)", sesCookie.Value, user.LoginUuid)
+	_, err := db.Exec("DELETE FROM Session where auth_uuid='" + user.LoginUuid + "'")
+	if err != nil {
+		fmt.Printf("CreateSession DB Exec error: %+v\n", err)
+	}
+	_, err2 := db.Exec("INSERT INTO Session (uuid,auth_uuid)", sesCookie.Value, user.LoginUuid)
+	if err != nil {
+		fmt.Printf("CreateSession DB Exec error2: %+v\n", err2)
+	}
 	return sesCookie.Value
 }
 
@@ -88,8 +94,10 @@ func CheckSession(w http.ResponseWriter, r *http.Request, db *sql.DB) bool {
 		var authUuid string
 		count := 0
 		for session.Next() {
-			session.Scan(&id, &sessionUuid, &authUuid)
-			// fmt.Fprintln(w, "session: ", id, sessionUuid, authUuid)
+			err := session.Scan(&id, &sessionUuid, &authUuid)
+			if err != nil {
+				fmt.Printf("CheckSession Scan error: %+v\n", err)
+			}
 			count++
 		}
 		if count == 1 {
@@ -101,5 +109,8 @@ func CheckSession(w http.ResponseWriter, r *http.Request, db *sql.DB) bool {
 }
 
 func DeleteSession(sesid string, db *sql.DB) {
-	db.Exec("DELETE FROM Session where uuid='" + sesid + "'")
+	_, err := db.Exec("DELETE FROM Session where uuid='" + sesid + "'")
+	if err != nil {
+		fmt.Printf("DeleteSession DB Exec error: %+v\n", err)
+	}
 }
