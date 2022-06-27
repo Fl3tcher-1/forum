@@ -41,7 +41,10 @@ func init() {
 	http.HandleFunc("/signup", signup)
 	http.HandleFunc("/login", login)
 	http.HandleFunc("/logout", logout)
-	http.ListenAndServe(":8080", nil)
+	err2 := http.ListenAndServe(":8080", nil)
+	if err != nil {
+		fmt.Printf("init ListenAndServe error: %+v\n", err2)
+	}
 }
 
 func getUser(w http.ResponseWriter, req *http.Request) User {
@@ -148,7 +151,10 @@ func signup(w http.ResponseWriter, req *http.Request) {
 		p := req.FormValue("password")
 		f := req.FormValue("email")
 
-		req.ParseForm()
+		err := req.ParseForm()
+		if err != nil {
+			fmt.Printf("signup ParseForm error: %+v\n", err)
+		}
 		// username taken?
 		if _, ok := dbUsers[un]; ok {
 			http.Error(w, "Username already taken", http.StatusForbidden)
@@ -198,7 +204,10 @@ func login(w http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodPost {
 		un := req.FormValue("username")
 		p := req.FormValue("password")
-		req.ParseForm()
+		err := req.ParseForm()
+		if err != nil {
+			fmt.Printf("login ParseForm error: %+v\n", err)
+		}
 		// is there a username?
 		u, ok := dbUsers[un]
 		if !ok {
@@ -206,8 +215,8 @@ func login(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 		// does the entered password match the stored password?
-		err := bcrypt.CompareHashAndPassword(u.Password, []byte(p))
-		if err != nil {
+		err2 := bcrypt.CompareHashAndPassword(u.Password, []byte(p))
+		if err2 != nil {
 			http.Error(w, "Username and/or password do not match", http.StatusForbidden)
 			return
 		}
