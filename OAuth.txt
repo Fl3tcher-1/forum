@@ -5,3 +5,11 @@ client id
 client secret
 
 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
+
+
+github client id
+7289d775948c07de6530
+
+github client secret
+
+828abe0c266abce760b26de1e6e747b2ed465cfc

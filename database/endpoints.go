@@ -19,25 +19,8 @@ func (p PostFeed) MarshallJSON() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-// creates all needed templates
-// will need to be reduced as there is too many at the moment.
-// var tpl *template.Template
 
-// parses files for all templates allowing them to be called.
-// func init() {
-// 	tpl = template.Must(template.ParseGlob("templates/*"))
-// }
 
-// sessions
-// var sessions = map[string]Session{}
-
-// func (s Session) isExpired() bool {
-// 	return s.Expiry.Before(time.Now())
-
-// }
-
-// @TODO: error handling.
-// login page.
 func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("*****loginUser is running********")
 
@@ -45,9 +28,7 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "404 not found.", http.StatusNotFound)
 		return
 	}
-		
 	loggedIn := data.CheckCookie(w, r)
-	fmt.Println(data.CheckCookie(w,r))
 	// 🐈
 	if loggedIn {
 		http.Redirect(w, r, "/home", http.StatusFound)
@@ -62,18 +43,7 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var user User
-	// sessionToken := uuid.NewV4()
-	// expiresAt := time.Now().Add(120 * time.Second)
-
-	// user.Username = r.FormValue("username")
-	// user.Password = r.FormValue("password")
-
-	// data.CreateSession(Session{
-	// 	SessionID: sessionToken.String(),
-	// 	Username:  user.Username,
-	// 	Expiry:    expiresAt,
-	// })
-
+	
 	sessionToken := uuid.NewV4()
 	expiresAt := time.Now().Add(720 * time.Second)
 
@@ -123,7 +93,6 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// @TODO: error handling.
 func (data *Forum) GetSignupPage(w http.ResponseWriter, r *http.Request) {
 	tpl := template.Must(template.ParseGlob("templates/*"))
 	tpl.ExecuteTemplate(w, "signup.html", nil)
@@ -272,6 +241,7 @@ func (data *Forum) CheckCookie(writer http.ResponseWriter, request *http.Request
 		fmt.Printf("CheckCookie (GetSession) error: %+v\n", err)
 	}
 
+
 	//fmt.Println(sessionToken == a[0].SessionID)
 	//sessFound := false
 
@@ -292,7 +262,12 @@ func (data *Forum) CheckCookie(writer http.ResponseWriter, request *http.Request
 		// 	data.DB.Exec("DELETE FROM session where sessionID ='" + currentSession.SessionID + "'")
 		// }
 	}
+	sess,_:= data.GetSession()
+	if len(sess) <1{
+		return false
+	} else{
 	return true
+	}
 }
 
 func (data *Forum) Logout(w http.ResponseWriter, r *http.Request) {
@@ -351,7 +326,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 	} else {
 		post, _ := data.GetPost()
 		var lastPost PostFeed
-		if len(post) >0{
+		if len(post) > 0 {
 
 			lastPost = post[len(post)-1]
 		}
@@ -599,7 +574,14 @@ func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {
 	currentSession := sess[len(sess)-1]
 	// data.GetSession()[len(data.GetSession())-1]
 	cmnt, _ := data.GetComments()
-	lastComment := cmnt[len(cmnt)-1]
+	var lastComment Comment
+
+		if len(cmnt) > 0 {
+
+			lastComment = cmnt[len(cmnt)-1]
+		}
+
+
 	// data.GetComments()[len(data.GetComments())-1]
 
 	//if last comment != current submitted values then create a comment, otherwise show comments
