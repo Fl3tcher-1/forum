@@ -26,7 +26,6 @@ func (c Comment) MarshallJSON() ([]byte, error) {
 // @TODO: error handling.
 // login page.
 func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("*****loginUser is running********")
 	if r.URL.Path != "/login" {
 		http.Error(w, "404 not found.", http.StatusNotFound)
 		return
@@ -40,17 +39,6 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var user User
-	// sessionToken := uuid.NewV4()
-	// expiresAt := time.Now().Add(120 * time.Second)
-
-	// user.Username = r.FormValue("username")
-	// user.Password = r.FormValue("password")
-
-	// data.CreateSession(Session{
-	// 	SessionID: sessionToken.String(),
-	// 	Username:  user.Username,
-	// 	Expiry:    expiresAt,
-	// })
 
 	sessionToken := uuid.NewV4()
 	expiresAt := time.Now().Add(120 * time.Second)
@@ -107,7 +95,10 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 // @TODO: error handling.
 func (data *Forum) GetSignupPage(w http.ResponseWriter, r *http.Request) {
 	tpl := template.Must(template.ParseGlob("templates/*"))
-	tpl.ExecuteTemplate(w, "signup.html", nil)
+	err := tpl.ExecuteTemplate(w, "signup.html", nil)
+	if err != nil {
+		fmt.Printf("GetSignupPage Execute (signup.html) error: %+v\n", err)
+	}
 }
 
 /*  1. check e-mail criteria
@@ -119,9 +110,10 @@ func (data *Forum) GetSignupPage(w http.ResponseWriter, r *http.Request) {
 */
 func (data *Forum) SignUpUser(w http.ResponseWriter, r *http.Request) {
 	tpl := template.Must(template.ParseGlob("templates/*"))
-	r.ParseForm() // parses sign up form to fetch needed information
-
-	fmt.Println("****Sign-up new user is running ")
+	err := r.ParseForm() // parses sign up form to fetch needed information
+	if err != nil {
+		fmt.Printf("SignUpUser ParseForm error: %+v\n", err)
+	}
 
 	var user User
 
@@ -132,6 +124,10 @@ func (data *Forum) SignUpUser(w http.ResponseWriter, r *http.Request) {
 	if isValidEmail != strings.Contains(user.Email, "@") || isValidEmail != strings.Contains(user.Email, ".") { // checks if e-mail is valid by checking if it contains "@"
 		isValidEmail = false
 	}
+
+	// if !isValidEmail {
+	// 	fmt.Println("Email invalid")
+	// }
 
 	user.Username = r.FormValue("username")
 	// check if only alphanumerical numbers
@@ -186,12 +182,12 @@ func (data *Forum) SignUpUser(w http.ResponseWriter, r *http.Request) {
 
 	row := data.DB.QueryRow("SELECT uuid FROM people where username =?", user.Username)
 	var username string
-	err := row.Scan(&username)
-	if err != sql.ErrNoRows {
-		fmt.Printf("sql scan row user error: %+v\n", err)
-		err1 := tpl.ExecuteTemplate(w, "signup.html", "username taken")
-		if err1 != nil {
-			fmt.Printf("SignUpUser ExecuteTemplate (username) error1: %+v\n", err1)
+	err2 := row.Scan(&username)
+	if err2 != sql.ErrNoRows {
+		fmt.Printf("sql scan row user error: %+v\n", err2)
+		err3 := tpl.ExecuteTemplate(w, "signup.html", "username taken")
+		if err3 != nil {
+			fmt.Printf("SignUpUser ExecuteTemplate (username) error1: %+v\n", err3)
 			return
 		}
 	}
@@ -209,10 +205,9 @@ func (data *Forum) SignUpUser(w http.ResponseWriter, r *http.Request) {
 
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		err3 := tpl.ExecuteTemplate(w, "signup.html", "there was an error registering account")
-		if err3 != nil {
-			fmt.Printf("SignUpUser ExecuteTemplate (password) error:  %+v\n", err3)
-			return
+		err2 := tpl.ExecuteTemplate(w, "signup.html", "there was an error registering account")
+		if err2 != nil {
+			fmt.Printf("SignUpUser ExecuteTemplate (password) error:  %+v\n", err2)
 		}
 		return
 	}
@@ -300,7 +295,10 @@ func (data *Forum) Logout(w http.ResponseWriter, r *http.Request) {
 	for _, sess := range a {
 		if sessionToken == sess.SessionID {
 			currentSession = sess
-			data.DB.Exec("DELETE FROM session where sessionID ='" + currentSession.SessionID + "'")
+			_, err := data.DB.Exec("DELETE FROM session where sessionID ='" + currentSession.SessionID + "'")
+			if err != nil {
+				fmt.Printf("Logout Exec error: %+v\n", err)
+			}
 		}
 	}
 
@@ -335,7 +333,6 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 			fmt.Printf("HomePage ExecuteTemplate (guest.html) error: %+v\n", err)
 		}
 		return
-
 	} else {
 		post, err := data.GetPosts()
 		if err != nil {
@@ -361,36 +358,31 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 			fmt.Printf("HomePage GetSession error: %+v\n", err)
 		}
 		currentSession := sess[len(sess)-1]
-
 		user := currentSession.Username // fetches username from session
 
 		type postSessionStruct struct {
 			Post        []PostFeed
 			UserSession Session
 		}
-
 		var postAndSession postSessionStruct
 
 		postAndSession.UserSession = currentSession
-
 		// checks if last post == current submit values to prevent duplicate posts
-		// fmt.Println("******************************", lastPost.Content)
 		if lastPost.Content == postContent {
 			fmt.Println("duplicate")
 			postAndSession.Post, err = data.GetPosts()
 			if err != nil {
 				fmt.Printf("HomePage GetPosts (lastPost.Content) error: %+v\n", err)
 			}
-			tpl.ExecuteTemplate(writer, "./home", postAndSession)
+			err := tpl.ExecuteTemplate(writer, "./home", postAndSession)
+			if err != nil {
+				fmt.Printf("HomePage Execute (./home) error: %+v\n", err)
+			}
 			return
 		} else {
 			// postAndSession.UserSession = data.GetSession()[0]
-
 			if postTitle != "" || postContent != "" || postCategory != "" {
-
 				err := data.CreatePost(PostFeed{
-					// User:      sessionID.String(),
-
 					Username:  user,
 					Title:     postTitle,
 					Content:   postContent,
@@ -529,7 +521,10 @@ func (data *Forum) PwReset(writer http.ResponseWriter, request *http.Request) {
 	tpl := template.Must(template.ParseGlob("templates/*"))
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
-	tpl.ExecuteTemplate(writer, "passwordReset.html", nil)
+	err := tpl.ExecuteTemplate(writer, "passwordReset.html", nil)
+	if err != nil {
+		fmt.Printf("PwReset Execute (passwordReset.html) error: %+v\n", err)
+	}
 }
 
 func (data *Forum) UserProfile(writer http.ResponseWriter, request *http.Request) {
