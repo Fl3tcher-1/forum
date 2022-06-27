@@ -3,7 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"forum/database"
+	"forum/lib-database"
 	"log"
 	"net/http"
 	"os"
