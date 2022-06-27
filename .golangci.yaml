@@ -1,7 +1,7 @@
 linters:
   enable:
-    # - errcheck
-    # - errchkjson
+    - errcheck
+    - errchkjson
   # https://golangci-lint.run/usage/linters
   presets:
     # - bugs

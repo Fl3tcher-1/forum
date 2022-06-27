@@ -202,11 +202,26 @@ func reactionsTable(db *sql.DB) error {
 }
 
 func Connect(db *sql.DB) (*Forum, error) {
-	userTable(db)
-	sessionTable(db)
-	postTable(db)
-	commentTable(db)
-	reactionsTable(db)
+	err := userTable(db)
+	if err != nil {
+		return nil, fmt.Errorf("Connect userTable error: %+v\n", err)
+	}
+	err2 := sessionTable(db)
+	if err != nil {
+		return nil, fmt.Errorf("Connect sessionTable error: %+v\n", err2)
+	}
+	err3 := postTable(db)
+	if err != nil {
+		return nil, fmt.Errorf("Connect postTable error: %+v\n", err3)
+	}
+	err4 := commentTable(db)
+	if err != nil {
+		return nil, fmt.Errorf("Connect commentTable error: %+v\n", err4)
+	}
+	err5 := reactionsTable(db)
+	if err != nil {
+		return nil, fmt.Errorf("Connect reactionsTable error: %+v\n", err5)
+	}
 
 	return &Forum{
 		DB: db,
@@ -432,8 +447,6 @@ func (data *Forum) GetReactionByCommentID(targetCommentID, targetUsername string
 	}
 	return nil, nil
 }
-
-
 
 // @TODO: add likes/dislikes(reactions) to comments.
 func (data *Forum) GetComments() ([]Comment, error) {

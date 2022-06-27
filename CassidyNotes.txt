@@ -1,7 +1,5 @@
 kMW3x8QEPqy4wny
 
-Requirements:
-- on a user's profile they need to be able to see the a list of their liked posts/comments (think, reddit)
 
 optional extras:
   - guests should get an error when they try to like/dislike

@@ -81,7 +81,7 @@ type CategoryPost struct { // create a []post in order to store multiple posts
 	Post []PostFeed
 }
 
-// Databases holds our post and comment databases
+// Databases holds our post and comment databases.
 type Databases struct {
 	Post    PostFeed
 	Comment []Comment
