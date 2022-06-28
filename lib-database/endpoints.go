@@ -175,8 +175,8 @@ func (data *Forum) SignUpUser(w http.ResponseWriter, r *http.Request) {
 		pwLength = true
 	}
 
-	if !pwLower || !pwUpper || !pwNumber || !pwLength || pwSpace || !isAlphaNumeric || !nameLength {
-		err := tpl.ExecuteTemplate(w, "signup.html", "please check username and/or password criteria")
+	if !pwLower || !pwUpper || !pwNumber || !pwLength || pwSpace || !isAlphaNumeric || !nameLength || !isValidEmail {
+		err := tpl.ExecuteTemplate(w, "signup.html", "please check username, password and e-mail are valid")
 		if err != nil {
 			fmt.Printf("SignUpUser ExecuteTemplate signup.html error: %+v\n", err)
 			return
