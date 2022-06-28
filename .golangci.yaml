@@ -1,19 +1,19 @@
-linters:
-  enable:
-    - errcheck
-    - errchkjson
-  # https://golangci-lint.run/usage/linters
-  presets:
-    # - bugs
-    # - comment
-    # - complexity
-    # - error
-    # - format
-    # - import
-    # - metalinter
-    # - module
-    # - performance
-    # - sql
-    # - style
-    # - test
-    # - unused
+# linters:
+#   enable:
+#     # - errcheck
+#     # - errchkjson
+#   # https://golangci-lint.run/usage/linters
+#   presets:
+#     # - bugs
+#     # - comment
+#     # - complexity
+#     # - error
+#     # - format
+#     # - import
+#     # - metalinter
+#     # - module
+#     # - performance
+#     # - sql
+#     # - style
+#     # - test
+#     # - unused
