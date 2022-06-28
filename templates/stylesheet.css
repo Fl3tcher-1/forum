@@ -219,6 +219,8 @@ button:hover {
   padding-right: 125px;
   margin: 0;
   padding: 0;
+  max-height: 800px;
+  overflow:scroll
 }
 
 .content {
@@ -263,6 +265,9 @@ button:hover {
 h4 {
   margin: 0;
   color: var(--heading-color);
+}
+select#category{
+  width: 200px;
 }
 
 /* p{

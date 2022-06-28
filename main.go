@@ -19,6 +19,8 @@ func cssHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+
+	// key:= "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http://127.0.0.1:3000"
 	db, err := sql.Open("sqlite3", "./database/userdata.db")
 	if err != nil {
 		fmt.Printf("main (sql.Open) error: %+v\n", err)

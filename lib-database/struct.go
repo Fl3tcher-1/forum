@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"time"
+	"github.com/dgrijalva/jwt-go"
 )
 
 type User struct {
@@ -86,3 +87,12 @@ type Databases struct {
 	Post    PostFeed
 	Comment []Comment
 }
+
+type GoogleClaims struct {
+	Email         string `json:"email"`
+	EmailVerified bool   `json:"email_verified"`
+	FirstName     string `json:"given_name`
+	LastName      string `json:"family_name`
+	jwt.StandardClaims
+}
+

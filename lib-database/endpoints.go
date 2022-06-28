@@ -30,6 +30,12 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "404 not found.", http.StatusNotFound)
 		return
 	}
+	loggedIn := data.CheckCookie(w, r)
+	// 🐈
+	if loggedIn {
+		http.Redirect(w, r, "/home", http.StatusFound)
+	}
+
 	// switch r.Method {
 	// case "POST":
 	err := r.ParseForm()
@@ -39,9 +45,8 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var user User
-
 	sessionToken := uuid.NewV4()
-	expiresAt := time.Now().Add(120 * time.Second)
+	expiresAt := time.Now().Add(720 * time.Second)
 
 	user.Username = r.FormValue("username")
 	user.Password = r.FormValue("password")
@@ -92,7 +97,6 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// @TODO: error handling.
 func (data *Forum) GetSignupPage(w http.ResponseWriter, r *http.Request) {
 	tpl := template.Must(template.ParseGlob("templates/*"))
 	err := tpl.ExecuteTemplate(w, "signup.html", nil)
@@ -171,8 +175,8 @@ func (data *Forum) SignUpUser(w http.ResponseWriter, r *http.Request) {
 		pwLength = true
 	}
 
-	if !pwLower || !pwUpper || !pwNumber || !pwLength || pwSpace || !isAlphaNumeric || !nameLength {
-		err := tpl.ExecuteTemplate(w, "signup.html", "please check username and/or password criteria")
+	if !pwLower || !pwUpper || !pwNumber || !pwLength || pwSpace || !isAlphaNumeric || !nameLength || !isValidEmail {
+		err := tpl.ExecuteTemplate(w, "signup.html", "please check username, password and e-mail are valid")
 		if err != nil {
 			fmt.Printf("SignUpUser ExecuteTemplate signup.html error: %+v\n", err)
 			return
@@ -276,7 +280,13 @@ func (data *Forum) CheckCookie(writer http.ResponseWriter, request *http.Request
 			return true
 		}
 	}
-	return false
+	sess,_:= data.GetSession()
+	if len(sess) <1{
+		return false
+	} else{
+	return true
+	}
+	// return false
 }
 
 func (data *Forum) Logout(w http.ResponseWriter, r *http.Request) {
@@ -344,6 +354,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 		}
 
 		postCategory := request.FormValue("category")
+		// fmt.Println(postCategory)
 		postTitle := request.FormValue("title")
 		postContent := request.FormValue("content")
 
@@ -374,9 +385,9 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 			if err != nil {
 				fmt.Printf("HomePage GetPosts (lastPost.Content) error: %+v\n", err)
 			}
-			err := tpl.ExecuteTemplate(writer, "./home", postAndSession)
+			err := tpl.ExecuteTemplate(writer, "home.html", postAndSession)
 			if err != nil {
-				fmt.Printf("HomePage Execute (./home) error: %+v\n", err)
+				fmt.Printf("HomePage Execute (home.html) error: %+v\n", err)
 			}
 			return
 		} else {
@@ -408,6 +419,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 					return
 				}
 				return
+
 			}
 		}
 		data, err := data.GetPosts()
@@ -1168,6 +1180,17 @@ func (data *Forum) Handler(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./images/doge.jpg")
 	case "/question":
 		http.ServeFile(w, r, "./images/question.jpg")
+
+	case "/finance":
+		http.ServeFile(w, r, "./images/finance.jpg")
+	case "/fitness":
+		http.ServeFile(w, r, "./images/fitness.jpg")
+	case "/health":
+		http.ServeFile(w, r, "./images/health.jpg")
+	case "/tech":
+		http.ServeFile(w, r, "./images/tech.jpg")
+	case "/travel":
+		http.ServeFile(w, r, "./images/travel.jpg")
 
 		// api handlers
 	case "/likePost":
