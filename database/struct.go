@@ -28,7 +28,7 @@ type PostFeed struct {
 	Dislikes  int `json:"dislikes"`
 	Category  string
 	CreatedAt string
-	Image     interface{}
+	Image     string
 }
 
 type Session struct {

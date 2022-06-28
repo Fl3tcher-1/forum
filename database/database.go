@@ -180,7 +180,7 @@ func (data *Forum) GetPost() ([]PostFeed, error) {
 	var dislikes int
 	var created string
 	var category string
-	var image interface{}
+	var image string
 
 	for rows.Next() {
 		err := rows.Scan(&id, &uiD, &title, &content, &likes, &dislikes, &category, &created, &image)

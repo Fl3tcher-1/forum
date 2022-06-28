@@ -1,110 +1,155 @@
 package sesman
 
 import (
-	"crypto/sha1"
+	"database/sql"
 	"fmt"
 	"html/template"
-	"io"
+	"io/ioutil"
+	"log"
 	"net/http"
-	"os"
-	"path/filepath"
-	"strings"
 
-	uuid "github.com/satori/go.uuid"
+	_ "github.com/mattn/go-sqlite3"
 )
 
-var t *template.Template
-
-func init() {
-	t = template.Must(template.ParseGlob("templates/*"))
-	http.HandleFunc("/", ind)
-	// add route to serve pictures
-	http.Handle("/public/", http.StripPrefix("/public", http.FileServer(http.Dir("./public"))))
-	http.Handle("/favicon.ico", http.NotFoundHandler())
-	http.ListenAndServe(":8080", nil)
-}
-
-func ind(w http.ResponseWriter, req *http.Request) {
-	c := getCookie(w, req)
-	if req.Method == http.MethodPost {
-		mf, fh, err := req.FormFile("nf")
-		if err != nil {
-			fmt.Println(err)
-		}
-		defer mf.Close()
-		// create sha for file name
-		ext := strings.Split(fh.Filename, ".")[1]
-		h := sha1.New()
-		io.Copy(h, mf)
-		fname := fmt.Sprintf("%x", h.Sum(nil)) + "." + ext
-		// create new file
-		wd, err := os.Getwd()
-		if err != nil {
-			fmt.Println(err)
-		}
-		path := filepath.Join(wd, "public", "pics", fname)
-		nf, err := os.Create(path)
-		if err != nil {
-			fmt.Println(err)
-		}
-		defer nf.Close()
-		// copy
-		mf.Seek(0, 0)
-		io.Copy(nf, mf)
-		// add filename to this user's cookie
-		c = appendValue(w, c, fname)
-	}
-	xs := strings.Split(c.Value, "|")
-	// sliced cookie values to only send over images
-	tpl.ExecuteTemplate(w, "index.gohtml", xs[1:])
-}
-
-func getCookie(w http.ResponseWriter, r *http.Request) *http.Cookie {
-	c, err := r.Cookie("session")
+func dbConn() (db *sql.DB) {
+	db, err := sql.Open("sqlite3", "./database/userdata.db")
 	if err != nil {
-		sID := uuid.NewV4()
-		c = &http.Cookie{
-			Name:  "session",
-			Value: sID.String(),
+		panic(err.Error())
+	}
+	return db
+}
+
+type upfile struct {
+	ID    int
+	Fname string
+	Fsize string
+	Ftype string
+	Path  string
+	Count int
+}
+
+var tmpl = template.Must(template.ParseGlob("templates/*"))
+
+func upload(w http.ResponseWriter, r *http.Request) {
+	db := dbConn()
+	selDB, err := db.Query("SELECT * FROM upload ORDER BY id DESC")
+	if err != nil {
+		panic(err.Error())
+	}
+	upld := upfile{}
+	res := []upfile{}
+	for selDB.Next() {
+		var id int
+		var fname, fsize, ftype, path string
+		err = selDB.Scan(&id, &fname, &fsize, &ftype, &path)
+		if err != nil {
+			panic(err.Error())
 		}
-		http.SetCookie(w, c)
+		upld.ID = id
+		upld.Fname = fname
+		upld.Fsize = fsize
+		upld.Ftype = ftype
+		upld.Path = path
+		res = append(res, upld)
+
 	}
-	return c
+
+	upld.Count = len(res)
+
+	if upld.Count > 0 {
+		tmpl.ExecuteTemplate(w, "uploadfile.html", res)
+	} else {
+		tmpl.ExecuteTemplate(w, "uploadfile.html", nil)
+	}
+
+	db.Close()
 }
 
-func appendValue(w http.ResponseWriter, c *http.Cookie, fname string) *http.Cookie {
-	s := c.Value
-	if !strings.Contains(s, fname) {
-		s += "|" + fname
+func uploadFiles(w http.ResponseWriter, r *http.Request) {
+	// tmpl.ExecuteTemplate(w, "uploadfile.html", r)
+	db := dbConn()
+	// Maximum upload of 10 MB files
+	r.ParseMultipartForm(200000)
+	if r == nil {
+		fmt.Fprintf(w, "No files can be selected\n")
 	}
-	c.Value = s
-	http.SetCookie(w, c)
-	return c
+	// ok, no problem so far, read the Form data
+	formdata := r.MultipartForm
+
+	// get the *fileheaders
+	fil := formdata.File["files"] // grab the filenames
+
+	for i := range fil { // loop through the files one by one
+
+		// file save to open
+		file, err := fil[i].Open()
+		if err != nil {
+			fmt.Fprintln(w, err)
+			return
+		}
+		defer file.Close()
+
+		fname := fil[i].Filename
+		fsize := fil[i].Size
+		kilobytes := fsize / 1024
+		// megabytes := (float64)(kilobytes / 1024) // cast to type float64
+
+		ftype := fil[i].Header.Get("Content-type")
+
+		// Create file
+
+		tempFile, err := ioutil.TempFile("assets/uploadimage", "upload-*.jpg")
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer tempFile.Close()
+		filepath := tempFile.Name()
+
+		// read all of the contents of our uploaded file into a
+		// byte array
+		fileBytes, err := ioutil.ReadAll(file)
+		if err != nil {
+			fmt.Println(err)
+		}
+		// write this byte array to our temporary file
+		tempFile.Write(fileBytes)
+
+		// return that we have successfully uploaded our file!
+
+		insForm, err := db.Prepare("INSERT INTO upload(fname, fsize, ftype, path) VALUES(?,?,?,?)")
+		if err != nil {
+			panic(err.Error())
+		} else {
+			log.Println("data insert successfully . . .")
+		}
+		insForm.Exec(fname, kilobytes, ftype, filepath)
+
+		log.Printf("Successfully Uploaded File\n")
+		defer db.Close()
+
+		http.Redirect(w, r, "/", http.StatusMovedPermanently)
+	}
 }
 
-// if request.Method == "GET" {
-// 	crutime := time.Now().Unix()
-// 	h := md5.New()
-// 	io.WriteString(h, strconv.FormatInt(crutime, 10))
-// 	token := fmt.Sprintf("%x", h.Sum(nil))
+func delete(w http.ResponseWriter, r *http.Request) {
+	db := dbConn()
+	emp := r.URL.Query().Get("id")
+	delForm, err := db.Prepare("DELETE FROM upload WHERE id=?")
+	if err != nil {
+		panic(err.Error())
+	}
+	delForm.Exec(emp)
+	log.Println("deleted successfully")
+	defer db.Close()
+	http.Redirect(w, r, "/", 301)
+}
 
-// 	t, _ := template.ParseFiles("upload.html")
-// 	t.Execute(writer, token)
-// } else {
-// 	file, handler, err := request.FormFile("uploadfile")
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return
-// 	}
-// 	defer file.Close()
-// 	fmt.Fprintf(writer, "%v", handler.Header)
-// 	f, err := os.OpenFile("./test/"+handler.Filename, os.O_WRONLY|os.O_CREATE, 0666)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return
-// 	}
-// 	defer f.Close()
-// 	io.Copy(f, file)
-// }
+func main() {
+	log.Println("Server started on: http://localhost:9000")
+	http.HandleFunc("/dele", delete)
+	http.Handle("/assets/", http.StripPrefix("/assets", http.FileServer(http.Dir("assets"))))
+	http.HandleFunc("/", upload)
+	http.HandleFunc("/uploadfiles", uploadFiles)
 
-// https://astaxie.gitbooks.io/build-web-application-with-golang/content/en/04.5.html
+	http.ListenAndServe(":9000", nil)
+}
