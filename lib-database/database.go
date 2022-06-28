@@ -103,6 +103,19 @@ func (feed *Forum) UpdateReaction(item Reaction) error {
 	return nil
 }
 
+func (feed *Forum) AssertUniqueSessionForUser(session Session) error {
+	stmt, err := feed.DB.Prepare("DELETE FROM session WHERE userName == ? AND sessionID != ?;")
+	defer stmt.Close()
+	if err != nil {
+		return fmt.Errorf("UpdateReaction DB Prepare error: %w", err)
+	}
+	_, err = stmt.Exec(session.Username, session.SessionID)
+	if err != nil {
+		return fmt.Errorf("unable to update reaction: %w", err)
+	}
+	return nil
+}
+
 // ---------------------------------------------- TABLES ------------------------------- --//
 
 func userTable(db *sql.DB) error {
@@ -489,7 +502,7 @@ func (data *Forum) GetComments() ([]Comment, error) {
 	return comments, nil
 }
 
-func (data *Forum) GetSession() ([]Session, error) {
+func (data *Forum) GetSessions() ([]Session, error) {
 	session := []Session{}
 	rows, err := data.DB.Query(`SELECT * FROM session`)
 	if err != nil {
