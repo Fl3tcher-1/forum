@@ -83,7 +83,7 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 			Expires: expiresAt,
 			// MaxAge:  2 * int(time.Hour),
 		})
-		// fmt.Println(data.GetSession())
+		// fmt.Println(data.GetSessions())
 		// w.WriteHeader(200)
 		http.Redirect(w, r, "/home", http.StatusFound)
 		// data.HomePage(w, r)
@@ -244,9 +244,9 @@ func (data *Forum) GetUsernameFromSessionID(writer http.ResponseWriter, request 
 	}
 
 	sessionToken := c.Value
-	a, err := data.GetSession()
+	a, err := data.GetSessions()
 	if err != nil {
-		fmt.Printf("GetUsernameFromSessionID (GetSession) error: %+v\n", err)
+		fmt.Printf("GetUsernameFromSessionID (GetSessions) error: %+v\n", err)
 		return ""
 	}
 
@@ -270,13 +270,18 @@ func (data *Forum) CheckCookie(writer http.ResponseWriter, request *http.Request
 	}
 
 	sessionToken := c.Value
-	a, err := data.GetSession()
+	sessions, err := data.GetSessions()
 	if err != nil {
-		fmt.Printf("CheckCookie (GetSession) error: %+v\n", err)
+		fmt.Printf("CheckCookie (GetSessions) error: %+v\n", err)
 	}
 
-	for _, sess := range a {
+	for _, sess := range sessions {
 		if sessionToken == sess.SessionID {
+			err := data.AssertUniqueSessionForUser(sess)
+			if err != nil {
+				fmt.Printf("could not determine unique session for user %+v; %+v", sess, err)
+				return false
+			}
 			return true
 		}
 	}
@@ -297,9 +302,9 @@ func (data *Forum) Logout(w http.ResponseWriter, r *http.Request) {
 
 	sessionToken := c.Value
 	var currentSession Session
-	a, err := data.GetSession()
+	a, err := data.GetSessions()
 	if err != nil {
-		fmt.Printf("Logout GetSession error: %+v\n", err)
+		fmt.Printf("Logout GetSessions error: %+v\n", err)
 	}
 
 	for _, sess := range a {
@@ -364,9 +369,9 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 		postCreated := time.Format("01-02-2006 15:04")
 
 		// checks session and selects the last one (the latest one)
-		sess, err := data.GetSession()
+		sess, err := data.GetSessions()
 		if err != nil {
-			fmt.Printf("HomePage GetSession error: %+v\n", err)
+			fmt.Printf("HomePage GetSessions error: %+v\n", err)
 		}
 		currentSession := sess[len(sess)-1]
 		user := currentSession.Username // fetches username from session
@@ -391,7 +396,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 			}
 			return
 		} else {
-			// postAndSession.UserSession = data.GetSession()[0]
+			// postAndSession.UserSession = data.GetSessions()[0]
 			if postTitle != "" || postContent != "" || postCategory != "" {
 				err := data.CreatePost(PostFeed{
 					Username:  user,
@@ -548,9 +553,9 @@ func (data *Forum) UserProfile(writer http.ResponseWriter, request *http.Request
 		Profile UsrProfile
 		// UserSession Session
 	}
-	sess, _ := data.GetSession()
+	sess, _ := data.GetSessions()
 	currentSession := sess[len(sess)-1]
-	// data.GetSession()[len(data.GetSession())-1]
+	// data.GetSessions()[len(data.GetSessions())-1]
 
 	var User profile
 
@@ -599,9 +604,9 @@ func (data *Forum) Threads(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// TODO: ERROR HANDLING
-	sess, _ := data.GetSession()
+	sess, _ := data.GetSessions()
 	currentSession := sess[len(sess)-1]
-	// data.GetSession()[len(data.GetSession())-1]
+	// data.GetSessions()[len(data.GetSessions())-1]
 	cmnt, _ := data.GetComments()
 	var lastComment Comment
 	if len(cmnt) > 0 {
@@ -748,9 +753,9 @@ func (data *Forum) UserPosts(writer http.ResponseWriter, request *http.Request) 
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
 
-	user, err := data.GetSession()
+	user, err := data.GetSessions()
 	if err != nil {
-		fmt.Printf("UserPosts GetSession error: %+v\n", err)
+		fmt.Printf("UserPosts GetSessions error: %+v\n", err)
 	}
 
 	currentUser := user[len(user)-1]
@@ -784,9 +789,9 @@ func (data *Forum) UserLikes(writer http.ResponseWriter, request *http.Request) 
 	tpl := template.Must(template.ParseGlob("templates/*"))
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
-	user, err := data.GetSession()
+	user, err := data.GetSessions()
 	if err != nil {
-		fmt.Printf("UserLikes GetSession error: %+v\n", err)
+		fmt.Printf("UserLikes GetSessions error: %+v\n", err)
 	}
 
 	currentUser := user[len(user)-1]
