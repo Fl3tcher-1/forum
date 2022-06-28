@@ -44,10 +44,11 @@
     </div>
     <!-- </div> -->
     <!-- <div class="guest"> -->
-        <div class="welcome"><h2> 
+    <div class="welcome">
+        <h2>
             Welcome {{.UserSession.Username}}, hope you enjoy your stay :)
-        </h2> 
-         </div>
+        </h2>
+    </div>
     <form>
 
         <div class="homeLayout">
@@ -76,43 +77,39 @@
                 </form>
 
             </div>
-            
-    <div class="featured"><h3> featured/trending posts</h3>
-        
-        <ol> 
-            {{range $i, $e := .Post}}
-            <li class ="row">
-                <h3 class="title2">
-                    <a href ="thread/{{.PostID}}">
-                        <!-- {{.PostID}} -->
-                        {{.Title}} 
-                        <br>
-                        Posted by: {{.Username}}  
-                    </a>
-                </h3>
-                <div class="content">
-                    <a href ="thread/{{.PostID}}">
-                    <p1>{{.Content}} </p1> 
-                    <!-- <br> <br>
-                    <p1> likes: {{.Likes}} </p1>
-                    <p1> dislikes: {{.Dislikes}}</p1>  -->
+
+            <div class="featured">
+                <h3> featured/trending posts</h3>
+
+                <ol>
+                    {{range $i, $e := .Post}}
+                    <li class="row">
+                        <h3 class="title2">
+                            <a href="thread/{{.PostID}}">
+                                {{.Title}}
+                                <br>
+                                Posted by: {{.Username}}
+                            </a>
+                        </h3>
+                        <div class="content">
+                            <a href="thread/{{.PostID}}">
+                                <p1>{{.Content}} </p1>
                             </a>
                             <br>
                             <p1>Category: {{.Category}}</p1>
                         </div>
                         <div class="bottom">
-
                             <p1 class="timestamp">
                                 <a href="thread/{{.PostID}}">
                                     <p1 class="timestamp">posted: {{.CreatedAt}}</p1>
                                 </a>
                             </p1>
                             <p1>
-                                <a onclick="like(this.id);" data-post-id="{{.PostID}}" id="likes-{{ $i }}"
+                                <a onclick="likePost('{{ $i }}');" data-post-id="{{.PostID}}" id="likes-{{ $i }}"
                                     href="#">{{.Likes}} Likes</a>
                             </p1>
                             <p1>
-                                <a onclick="dislike(this.id);" data-post-id="{{.PostID}}" id="dislikes-{{ $i }}"
+                                <a onclick="dislikePost('{{ $i }}');" data-post-id="{{.PostID}}" id="dislikes-{{ $i }}"
                                     href="#">{{.Dislikes}}
                                     Dislikes</a>
                             </p1>
@@ -123,7 +120,7 @@
             </div>
         </div>
         <div class="activity"><a href="profile">
-                <h3>your recent activity, likes, posts, comments etc</h3>
+                <!-- <h3>your recent activity, likes, posts, comments etc</h3> -->
             </a>
         </div>
 
@@ -142,40 +139,37 @@
         </div>
 </body>
 <script>
+    // get the url of the webserver
     const appURL = location.protocol + '//' + location.host;
-    const like = async (elementID) => {
-        const currLikes = document.getElementById(elementID);
-
-        const likes = await fetch(appURL + '/like?id=' + currLikes.getAttribute("data-post-id"));
-        const likesJson = await likes.json();
-        newLikesCount = likesJson.likes + 1;
-        currLikes.innerHTML = newLikesCount + " Likes";
-
-        const response = await fetch(appURL + '/like?id=' + currLikes.getAttribute("data-post-id"), {
+    const likePost = async (elementID) => {
+        console.log("clicked like-" + elementID);
+        // get the likes element <a> tag
+        const likesElement = document.getElementById("likes-" + elementID);
+        const dislikesElement = document.getElementById("dislikes-" + elementID);
+        // run a POST request to the webserver, this sends the postID and matches MethodPost
+        const response = await fetch(appURL + '/likePost?id=' + likesElement.getAttribute("data-post-id"), {
             method: 'POST',
         });
+        // transform the webserver's response into json
         const postResult = await response.json();
-        if (postResult.success != true) {
-            const currLikesNum = currLikes.split(" ")[0] - 1;
-            currLikes.value = currLikesNum + " Likes";
+        // if the post successful
+        if (postResult.success == true) {
+            // update the number of likes that the user can see
+            likesElement.innerHTML = postResult.likes + " Likes";
+            dislikesElement.innerHTML = postResult.dislikes + " Dislikes";
         }
     }
 
-    const dislike = async (elementID) => {
-        const currDislikes = document.getElementById(elementID);
-
-        const dislikes = await fetch(appURL + '/dislike?id=' + currDislikes.getAttribute("data-post-id"));
-        const dislikesJson = await dislikes.json();
-        newDislikesCount = dislikesJson.dislikes + 1;
-        currDislikes.innerHTML = newDislikesCount + " Dislikes";
-
-        const response = await fetch(appURL + '/dislike?id=' + currDislikes.getAttribute("data-post-id"), {
+    const dislikePost = async (elementID) => {
+        const likesElement = document.getElementById("likes-" + elementID);
+        const dislikesElement = document.getElementById("dislikes-" + elementID);
+        const response = await fetch(appURL + '/dislikePost?id=' + dislikesElement.getAttribute("data-post-id"), {
             method: 'POST',
         });
         const postResult = await response.json();
-        if (postResult.success != true) {
-            const currDislikesNum = currDislikes.split(" ")[0] - 1;
-            currDislikes.value = currDislikesNum + " Dislikes";
+        if (postResult.success == true) {
+            likesElement.innerHTML = postResult.likes + " Likes";
+            dislikesElement.innerHTML = postResult.dislikes + " Dislikes";
         }
     }
 </script>

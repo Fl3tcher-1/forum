@@ -1,91 +1,175 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-        <link rel="stylesheet" href ="stylesheet" type ="text/css">
+    <link rel="stylesheet" href="stylesheet" type="text/css">
 
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>thread</title>
 </head>
+
 <body>
-                     <div class="head">
-              <h4>
-                  <form action= "/home">
-                <input type ="submit" value="Home"/>
-             </form>
-            </h4>
-              <h4><form action = "/categories">
-                <input type="submit" value=" Categories"/>
-            </form> 
-          </h4>
-               <h4> 
-                   <form action = "/about">
-             <input type="submit" value=" About"/>
-          </form> 
-         </h4>
-             <h4> <form action = "/profile">
-              <input type="submit" value=" Profile"/>
-           </form>
-          </h4>
-             <h4> <form action = "/logout">
-                 <input type="submit" value=" Logout"/>
-            </form> 
-         </h4>
-            <h4>  <form action = "/contact-us">
-                <input type="submit" value=" Contact Us"/>
+    <div class="head">
+        <h4>
+            <form action="/home">
+                <input type="submit" value="Home" />
             </form>
         </h4>
-        </div> <br> <br>
+        <h4>
+            <form action="/categories">
+                <input type="submit" value=" Categories" />
+            </form>
+        </h4>
+        <h4>
+            <form action="/about">
+                <input type="submit" value=" About" />
+            </form>
+        </h4>
+        <h4>
+            <form action="/profile">
+                <input type="submit" value=" Profile" />
+            </form>
+        </h4>
+        <h4>
+            <form action="/logout">
+                <input type="submit" value=" Logout" />
+            </form>
+        </h4>
+        <h4>
+            <form action="/contact-us">
+                <input type="submit" value=" Contact Us" />
+            </form>
+        </h4>
+    </div> <br> <br>
 
- <div class="thread-layout">
-    <h4 class="title2">
-        {{.Post.Title}} Posted by: {{.Post.Username}}
-    </h4> <br>
-    <div class="content">
-        <p1> {{.Post.Content}}</p1>
-        <br>
-        <p1> {{.Post.Category}}</p1>
-    </div><br>
-    <bottom>
-        <p1 class ="timestamp">posted: {{.Post.CreatedAt}}</p1>
-        <p1 class="likes">likes: {{.Post.Likes}}</p1>
-        <p1 class="dislikes">dislikes: {{.Post.Dislikes}}</p1>
-    </bottom> <br>
-                    <form method = "POST" action="/thread/{{.Post.PostID}}" id="usrcomment">
-                        <br>
-                        <textarea name="comment" id="postcomment" placeholder="enter comment" required></textarea>
-                        <input type="submit" value="add comment" a href="/thread/{{.Post.PostID}}">
-                    </form> <br>
-                    <h4 >Comments: </h4> <br><br>
-                    <ol>
-                        {{range .Comment}}
-                        <li class ="row">
-                            <!-- <div class = "comments"> -->
-                                <!-- <div class = "top-comment"> -->
-                                    <p2 class = "user">
-                                        Comment by: {{.UserId}}
-                                    </p2> <br>
-                                    <div class = "comment-content">
-                                     {{.Content}}
-                                    </div> 
-                                    <br>
-                                <p2 class="timestamp">
-                                    {{.CreatedAt}} <br>
-                                </p2>
-                            <!-- </div> -->
-                            {{end}}
+    <div class="thread-layout">
+        <h4 class="title2">
+            {{.Post.Title}} Posted by: {{.Post.Username}}
+        </h4> <br>
+        <div class="content">
+            <p1> {{.Post.Content}}</p1>
+            <br>
+            <p1> {{.Post.Category}}</p1>
+        </div><br>
+        <bottom>
+            <p1 class="timestamp">posted: {{.Post.CreatedAt}}</p1>
+            <p1>
+                <a onclick="likePost('{{ .Post.PostID }}');" data-post-id="{{.Post.PostID}}"
+                    id="likes-{{ .Post.PostID }}" href="#">{{.Post.Likes}} Likes</a>
+            </p1>
+            <p1>
+                <a onclick="dislikePost('{{ .Post.PostID }}');" data-post-id="{{.Post.PostID}}"
+                    id="dislikes-{{ .Post.PostID }}" href="#">{{.Post.Dislikes}} Dislikes</a>
+            </p1>
+        </bottom> <br>
+        <form method="POST" action="/thread/{{.Post.PostID}}" id="usrcomment">
+            <br>
+            <textarea name="comment" id="postcomment" placeholder="enter comment" required></textarea>
+            <input type="submit" value="add comment" a href="/thread/{{.Post.PostID}}">
+        </form> <br>
+        <h4>Comments: </h4> <br><br>
+        <ol>
+            {{range $i, $e := .Comment}}
+            <li class="row">
+
+                <p2 class="user">
+                    Comment by: {{.UserId}}
+                </p2> <br>
+                <div class="comment-content">
+                    {{.Content}}
+                </div>
+                <br>
+                <p2 class="timestamp">
+                    {{.CreatedAt}} <br>
+                </p2>
+                <p1>
+                    <a onclick="likeComment('{{ $i }}');" data-comment-id="{{.CommentID}}" id="comment-likes-{{ $i }}"
+                        href="#">{{.Likes}} Likes</a>
+                </p1>
+                <p1>
+                    <a onclick="dislikeComment('{{ $i }}');" data-comment-id="{{.CommentID}}"
+                        id="comment-dislikes-{{ $i }}" href="#">{{.Dislikes}} Dislikes</a>
+                </p1>
+
+                {{end}}
             </li>
         </ol>
-<!-- </div> -->
 
-          <form action = "/home">
-        <input type="submit" value=" Back"/>
-    </form> 
-     <div class="rights">
+        <form action="/home">
+            <input type="submit" value=" Back" />
+        </form>
+        <div class="rights">
             <br>
             <h6>Content Policy||Privacy Policy||User Agreement</h6>
             <h7>© DogeCo, inc, All rights reserved </h7>
         </div>
 </body>
+<script>
+    // get the url of the webserver
+    const appURL = location.protocol + '//' + location.host;
+    const likePost = async (elementID) => {
+        // get the likes element <a> tag
+        const likesElement = document.getElementById("likes-" + elementID);
+        const dislikesElement = document.getElementById("dislikes-" + elementID);
+        // run a POST request to the webserver, this sends the postID and matches MethodPost
+        const response = await fetch(appURL + '/likePost?id=' + likesElement.getAttribute("data-post-id"), {
+            method: 'POST',
+        });
+        // transform the webserver's response into json
+        const postResult = await response.json();
+        // if the post successful
+        if (postResult.success == true) {
+            // update the number of likes that the user can see
+            likesElement.innerHTML = postResult.likes + " Likes";
+            dislikesElement.innerHTML = postResult.dislikes + " Dislikes";
+        }
+    }
+
+    const dislikePost = async (elementID) => {
+        const likesElement = document.getElementById("likes-" + elementID);
+        const dislikesElement = document.getElementById("dislikes-" + elementID);
+        const response = await fetch(appURL + '/dislikePost?id=' + dislikesElement.getAttribute("data-post-id"), {
+            method: 'POST',
+        });
+        const postResult = await response.json();
+        if (postResult.success == true) {
+            likesElement.innerHTML = postResult.likes + " Likes";
+            dislikesElement.innerHTML = postResult.dislikes + " Dislikes";
+        }
+    }
+
+    const likeComment = async (elementID) => {
+        // get the likes element <a> tag
+        const likesElement = document.getElementById("comment-likes-" + elementID);
+        const dislikesElement = document.getElementById("comment-dislikes-" + elementID);
+        // run a POST request to the webserver, this sends the postID and matches MethodPost
+        const response = await fetch(appURL + '/likeComment?id=' + likesElement.getAttribute("data-comment-id"), {
+            method: 'POST',
+        });
+        // transform the webserver's response into json
+        const commentResult = await response.json();
+        // if the post was successful
+        if (commentResult.success == true) {
+            // update the number of likes that the user can see
+            likesElement.innerHTML = commentResult.likes + " Likes";
+            dislikesElement.innerHTML = commentResult.dislikes + " Dislikes";
+        }
+    }
+
+    const dislikeComment = async (elementID) => {
+        const likesElement = document.getElementById("comment-likes-" + elementID);
+        const dislikesElement = document.getElementById("comment-dislikes-" + elementID);
+        const response = await fetch(appURL + '/dislikeComment?id=' + dislikesElement.getAttribute("data-comment-id"), {
+            method: 'POST',
+        });
+        const commentResult = await response.json();
+        if (commentResult.success == true) {
+            likesElement.innerHTML = commentResult.likes + " Likes";
+            dislikesElement.innerHTML = commentResult.dislikes + " Dislikes";
+        }
+    }
+</script>
+
 </html>

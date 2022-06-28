@@ -1,72 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-            <link rel="stylesheet" href ="stylesheet" type ="text/css">
+    <link rel="stylesheet" href="stylesheet" type="text/css">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Categories</title>
 </head>
+
 <body>
-         <div class="head">
-              <h4>
-                  <form action= "/home">
-                <input type ="submit" value="Home"/>
-             </form>
-            </h4>
-              <h4><form action = "/categories">
-                <input type="submit" value=" Categories"/>
-            </form> 
-          </h4>
-               <h4> 
-                   <form action = "/about">
-             <input type="submit" value=" About"/>
-          </form> 
-         </h4>
-             <h4> <form action = "/login">
-              <input type="submit" value="Members area"/>
-           </form>
-          </h4>
-               <h4> <form action = "/login">
-                 <input type="submit" value="Login"/>
-            </form> 
-         </h4>
-            <h4>  <form action = "/contact-us">
-                <input type="submit" value=" Contact Us"/>
+    <div class="head">
+        <h4>
+            <form action="/home">
+                <input type="submit" value="Home" />
             </form>
         </h4>
-         </div> <br><br>
-         
- <div class="thread-layout">
-     {{range .Post}}
+        <h4>
+            <form action="/categories">
+                <input type="submit" value=" Categories" />
+            </form>
+        </h4>
+        <h4>
+            <form action="/about">
+                <input type="submit" value=" About" />
+            </form>
+        </h4>
+        <h4>
+            <form action="/login">
+                <input type="submit" value="Members area" />
+            </form>
+        </h4>
+        <h4>
+            <form action="/login">
+                <input type="submit" value="Login" />
+            </form>
+        </h4>
+        <h4>
+            <form action="/contact-us">
+                <input type="submit" value=" Contact Us" />
+            </form>
+        </h4>
+    </div> <br><br>
 
-    <h3 class="title2">
-        {{.Title}} Posted by: {{.Username}}
-    </h3> <br>
-    <div class="content">
-         <a href ="/thread/{{.PostID}}">
-        <p1> {{.Content}}</p1>
-         </a>
-    </div><br>
-    <bottom>
-                <a href ="/thread/{{.PostID}}">
-                    <p1 class ="timestamp">posted: {{.CreatedAt}}</p1>
-                    <p1 class="likes">likes: {{.Likes}}</p1>
-                    <p1 class="dislikes">dislikes: {{.Dislikes}}</p1> 
-                </a>
-        
-    </bottom> <br> 
-    {{end}}
- </div>
- 
-    <form action = "/categories">
-        <input type="submit" value=" Back"/>
+    <div class="thread-layout">
+        {{range .Post}}
+
+        <h3 class="title2">
+            {{.Title}} Posted by: {{.Username}}
+        </h3> <br>
+        <div class="content">
+            <a href="/thread/{{.PostID}}">
+                <p1> {{.Content}}</p1>
+            </a>
+        </div><br>
+        <bottom>
+            <a href="/thread/{{.PostID}}">
+                <p1 class="timestamp">Posted: {{.CreatedAt}}</p1>
+                <p1 class="likes">Likes: {{.Likes}}</p1>
+                <p1 class="dislikes">Dislikes: {{.Dislikes}}</p1>
+            </a>
+
+        </bottom> <br>
+        {{end}}
+    </div>
+
+    <form action="/categories">
+        <input type="submit" value=" Back" />
     </form>
-     <div class="rights">
-            <br>
-            <h6>Content Policy||Privacy Policy||User Agreement</h6>
-            <h7>© DogeCo, inc, All rights reserved </h7>
-        </div>
+    <div class="rights">
+        <br>
+        <h6>Content Policy||Privacy Policy||User Agreement</h6>
+        <h7>© DogeCo, inc, All rights reserved </h7>
+    </div>
 </body>
+
 </html>

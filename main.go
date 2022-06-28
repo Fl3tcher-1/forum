@@ -3,10 +3,11 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"forum/database"
+	"forum/lib-database"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	// "forum/database"
 
@@ -25,7 +26,23 @@ func main() {
 		fmt.Printf("main (sql.Open) error: %+v\n", err)
 		os.Exit(1)
 	}
-	data := database.Connect(db)
+	db.Exec("PRAGMA journal_mode=WAL;")
+	go func(db *sql.DB) {
+		for {
+			time.Sleep(time.Second * 10)
+			// fmt.Println("Checkpointing WAL")
+			_, err := db.Exec("PRAGMA wal_checkpoint(FULL);")
+			if err != nil {
+				fmt.Println(err)
+			}
+			// fmt.Println("Checkpointed WAL")
+		}
+	}(db)
+	defer db.Exec("VACCUM;")
+	data, err := database.Connect(db)
+	if err != nil {
+		fmt.Printf("main func ConnectTables error: %+v\n", err)
+	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", data.Handler)
@@ -40,7 +57,7 @@ func main() {
 
 	fmt.Println("Starting server at port 8080:\n http://localhost:8080/login")
 
-	if err := http.ListenAndServe(":8080", mux); err != nil {
+	if err := http.ListenAndServe(":8088", mux); err != nil {
 		log.Fatal(500, "500 Internal server error:", err)
 		fmt.Printf("main ListenAndServe error: %+v\n", err)
 	}

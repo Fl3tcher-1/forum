@@ -1,11 +1,14 @@
 # Forum Features
-
 communication between users:
     posting
     liking
     commenting
     putting posts into categories
     post filters
+
+## Docker
+* Install Docker
+* Run `./build.sh`
 
 ## SQLite database
 stores web content
