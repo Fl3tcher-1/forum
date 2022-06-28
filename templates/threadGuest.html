@@ -1,93 +1,99 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-        <link rel="stylesheet" href ="stylesheet" type ="text/css">
+    <link rel="stylesheet" href="stylesheet" type="text/css">
 
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>thread</title>
 </head>
+
 <body>
-                     <div class="head">
-              <h4>
-                  <form action= "/guest">
-                <input type ="submit" value="Home"/>
-             </form>
-            </h4>
-              <h4><form action = "/guestcategories">
-                <input type="submit" value=" Categories"/>
-            </form> 
-          </h4>
-               <h4> 
-                   <form action = "/about">
-             <input type="submit" value=" About"/>
-          </form> 
-         </h4>
-              <h4> <form action = "/login">
-              <input type="submit" value="Members area"/>
-           </form>
-          </h4>
-             <h4> <form action = "/login">
-                 <input type="submit" value="Login"/>
-            </form> 
-         </h4>
-            <h4>  <form action = "/contact-us">
-                <input type="submit" value=" Contact Us"/>
+    <div class="head">
+        <h4>
+            <form action="/guest">
+                <input type="submit" value="Home" />
             </form>
         </h4>
-        </div>
-        
-     <div class="banner"><h2> YOU ARE NOT LOGGED IN, PLEASE LOG IN TO ACCESS ALL FEATURES</h2> 
-        <form action = "/login">
-            <input type="submit" value=" Click here to login"/>
+        <h4>
+            <form action="/guestcategories">
+                <input type="submit" value=" Categories" />
+            </form>
+        </h4>
+        <h4>
+            <form action="/about">
+                <input type="submit" value=" About" />
+            </form>
+        </h4>
+        <h4>
+            <form action="/login">
+                <input type="submit" value="Members area" />
+            </form>
+        </h4>
+        <h4>
+            <form action="/login">
+                <input type="submit" value="Login" />
+            </form>
+        </h4>
+        <h4>
+            <form action="/contact-us">
+                <input type="submit" value=" Contact Us" />
+            </form>
+        </h4>
+    </div>
+
+    <div class="banner">
+        <h2> YOU ARE NOT LOGGED IN, PLEASE LOG IN TO ACCESS ALL FEATURES</h2>
+        <form action="/login">
+            <input type="submit" value=" Click here to login" />
         </form>
     </div>
 
- <div class="thread-layout">
-    <h4 class="title2">
-        {{.Post.Title}} Posted by:
-    </h4> <br>
-    <div class="content">
-        <p1> {{.Post.Content}}</p1>
-        <br>
-        <p1> {{.Post.Category}}</p1>
-    </div><br>
-    <bottom>
-        <p1 class ="timestamp">posted: {{.Post.CreatedAt}}</p1>
-        <p1 class="likes">likes: {{.Post.Likes}}</p1>
-        <p1 class="dislikes">dislikes: {{.Post.Dislikes}}</p1>
-    </bottom> <br>
-                    
-                    <h4 >Comments: </h4> <br><br>
-                    <ol>
-                        {{range .Comment}}
-                        <li class ="row">
-                            <!-- <div class = "comments"> -->
-                                <!-- <div class = "top-comment"> -->
-                                    <p2 class = "user">
-                                        Comment by: {{.UserId}}
-                                    </p2> <br>
-                                    <div class = "comment-content">
-                                        Comment: {{.Content}}
-                                    </div> 
-                                    <br>
-                                <p2 class="timestamp">
-                                    {{.CreatedAt}} <br>
-                                </p2>
-                            <!-- </div> -->
-                            {{end}}
+    <div class="thread-layout">
+        <h4 class="title2">
+            {{.Post.Title}} Posted by:
+        </h4> <br>
+        <div class="content">
+            <p1> {{.Post.Content}}</p1>
+            <br>
+            <p1> {{.Post.Category}}</p1>
+        </div><br>
+        <bottom>
+            <p1 class="timestamp">Posted: {{.Post.CreatedAt}}</p1>
+            <p1 class="likes">Likes: {{.Post.Likes}}</p1>
+            <p1 class="dislikes">Dislikes: {{.Post.Dislikes}}</p1>
+        </bottom> <br>
+
+        <h4>Comments: </h4> <br><br>
+        <ol>
+            {{range .Comment}}
+            <li class="row">
+                <p2 class="user">
+                    Comment by: {{.UserId}}
+                </p2> <br>
+                <div class="comment-content">
+                    Comment: {{.Content}}
+                </div>
+                <br>
+                <p2 class="timestamp">
+                    {{.CreatedAt}} <br>
+                </p2>
+                <p1 class="likes">Likes: {{.Likes}}</p1>
+                <p1 class="dislikes">Dislikes: {{.Dislikes}}</p1>
+                {{end}}
             </li>
         </ol>
-<!-- </div> -->
 
-          <form action = "/home">
-        <input type="submit" value=" Back"/>
-    </form> 
-     <div class="rights">
+        <form action="/home">
+            <input type="submit" value=" Back" />
+        </form>
+        <div class="rights">
             <br>
             <h6>Content Policy||Privacy Policy||User Agreement</h6>
             <h7>© DogeCo, inc, All rights reserved </h7>
         </div>
 </body>
+
 </html>

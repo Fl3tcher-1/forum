@@ -1,94 +1,136 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-     <link rel="stylesheet" href ="stylesheet" type ="text/css">
+    <link rel="stylesheet" href="stylesheet" type="text/css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
 </head>
+
 <body>
     <title>posts</title>
     <div class="head">
         <h4>
-            <form action= "/home">
-                <input type ="submit" value="Home"/>
-             </form>
-            </h4>
-              <h4><form action = "categories">
-                <input type="submit" value=" Categories"/>
-            </form> 
-          </h4>
-          <h4> 
-                   <form action = "about">
-             <input type="submit" value=" About"/>
-          </form> 
-         </h4>
-             <h4> <form action = "profile">
-              <input type="submit" value=" Profile"/>
-           </form>
-          </h4>
-             <h4> <form action = "/logout">
-                 <input type="submit" value=" Logout"/>
-            </form> 
-         </h4>
-            <h4>  <form action = "contact-us">
-                <input type="submit" value=" Contact Us"/>
+            <form action="/home">
+                <input type="submit" value="Home" />
+            </form>
+        </h4>
+        <h4>
+            <form action="categories">
+                <input type="submit" value=" Categories" />
+            </form>
+        </h4>
+        <h4>
+            <form action="about">
+                <input type="submit" value=" About" />
+            </form>
+        </h4>
+        <h4>
+            <form action="profile">
+                <input type="submit" value=" Profile" />
+            </form>
+        </h4>
+        <h4>
+            <form action="/logout">
+                <input type="submit" value=" Logout" />
+            </form>
+        </h4>
+        <h4>
+            <form action="contact-us">
+                <input type="submit" value=" Contact Us" />
             </form>
         </h4>
     </div>
-    <!-- </div> -->
-    <!-- <div class="guest"> -->
-        <h2> your recent posting activity</h2>        
-        <ol> 
-            {{range .Post}}
-            <li class ="row">
-                <h3 class="title2">
-                    <a href ="thread/{{.PostID}}">
-                        <!-- {{.PostID}} -->
-                        {{.Title}} 
-                        <br>
-                        Posted by: {{.Username}}                       
-                    </a>
-                </h3>
-                <div class="content">
-                    <a href ="thread/{{.PostID}}">
-                    <p1>{{.Content}} </p1> 
-                    <!-- <br> <br>
-                    <p1> likes: {{.Likes}} </p1>
-                    <p1> dislikes: {{.Dislikes}}</p1>  -->
-                     </a>
+    <h2> Your recent posting activity</h2>
+    <ol>
+        {{range $i, $e := .Post}}
+        <li class="row">
+            <h3 class="title2">
+                <a href="thread/{{.PostID}}">
+                    {{.Title}}
                     <br>
-                    <p1>Category: {{.Category}}</p1>
-                </div>
-                <div class ="bottom">
-                    
-                    <p1 class="timestamp">
-                        <a href ="thread/{{.PostID}}">
-        <p1 class ="timestamp">posted: {{.CreatedAt}}</p1>
-        <p1 class="likes">likes: {{.Likes}}</p1>
-        <p1 class="dislikes">dislikes: {{.Dislikes}}</p1>
-                          </a>
-                    </p1>
-                    </div>
-                </li> <br>
-                    {{end}}
-                </ol>
-      <br>
-      <br>
-      <br>
-      <br>
-                
-      
-      <form action = "profile">
-          <input type="submit" value=" Back"/>
-      </form>
-  </body>
-  </html>
-    <div class="rights">
-            <br>
-            <h6>Content Policy||Privacy Policy||User Agreement</h6>
-            <h7>© DogeCo, inc, All rights reserved </h7>
-            <br>
-            <br>
-        </div>
+                    Posted by: {{.Username}}
+                </a>
+            </h3>
+            <div class="content">
+                <a href="thread/{{.PostID}}">
+                    <p1>{{.Content}} </p1>
+
+                </a>
+                <br>
+                <p1>Category: {{.Category}}</p1>
+            </div>
+            <div class="bottom">
+                <p1 class="timestamp">
+                    <a href="thread/{{.PostID}}">
+                        <p1 class="timestamp">posted: {{.CreatedAt}}</p1>
+                    </a>
+                </p1>
+                <p1>
+                    <a onclick="likePost('{{ $i }}');" data-post-id="{{.PostID}}" id="likes-{{ $i }}"
+                        href="#">{{.Likes}} Likes</a>
+                </p1>
+                <p1>
+                    <a onclick="dislikePost('{{ $i }}');" data-post-id="{{.PostID}}" id="dislikes-{{ $i }}"
+                        href="#">{{.Dislikes}}
+                        Dislikes</a>
+                </p1>
+            </div>
+        </li> <br>
+        {{end}}
+    </ol>
+    <br>
+    <br>
+    <br>
+    <br>
+
+
+    <form action="profile">
+        <input type="submit" value=" Back" />
+    </form>
+</body>
+<script>
+    // get the url of the webserver
+    const appURL = location.protocol + '//' + location.host;
+    const likePost = async (elementID) => {
+        // get the likes element <a> tag
+        const likesElement = document.getElementById("likes-" + elementID);
+        const dislikesElement = document.getElementById("dislikes-" + elementID);
+        // run a POST request to the webserver, this sends the postID and matches MethodPost
+        const response = await fetch(appURL + '/likePost?id=' + likesElement.getAttribute("data-post-id"), {
+            method: 'POST',
+        });
+        // transform the webserver's response into json
+        const postResult = await response.json();
+        // if the post successful
+        if (postResult.success == true) {
+            // update the number of likes that the user can see
+            likesElement.innerHTML = postResult.likes + " Likes";
+            dislikesElement.innerHTML = postResult.dislikes + " Dislikes";
+        }
+    }
+
+    const dislikePost = async (elementID) => {
+        const likesElement = document.getElementById("likes-" + elementID);
+        const dislikesElement = document.getElementById("dislikes-" + elementID);
+        const response = await fetch(appURL + '/dislikePost?id=' + dislikesElement.getAttribute("data-post-id"), {
+            method: 'POST',
+        });
+        const postResult = await response.json();
+        if (postResult.success == true) {
+            likesElement.innerHTML = postResult.likes + " Likes";
+            dislikesElement.innerHTML = postResult.dislikes + " Dislikes";
+        }
+    }
+</script>
+
+</html>
+<div class="rights">
+    <br>
+    <h6>Content Policy||Privacy Policy||User Agreement</h6>
+    <h7>© DogeCo, inc, All rights reserved </h7>
+    <br>
+    <br>
+</div>

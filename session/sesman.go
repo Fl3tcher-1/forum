@@ -13,6 +13,7 @@ import (
 type user struct {
 	LoginUuid string
 	userName  string
+	userID    string
 	Email     string
 	Password  string
 }
@@ -36,11 +37,14 @@ func CreateSession(db *sql.DB, user user, w http.ResponseWriter, r *http.Request
 	return sesCookie.Value
 }
 
-func Getuser(session_uuid string, db *sql.DB) (user, bool) {
+func GetUser(session_uuid string, db *sql.DB) (user, bool) {
 	var err error
 	var user user
 	if session_uuid != "" {
 		err = db.QueryRow("SELECT auth_uuid FROM Session WHERE uuid = ?", session_uuid).Scan(&user.LoginUuid)
+		if err != nil {
+			fmt.Printf("GetUser DB Query error: %+v\n", err)
+		}
 		if err == sql.ErrNoRows {
 			return user, false
 		} else {
@@ -66,14 +70,18 @@ func CreateSessionCookie() http.Cookie {
 	}
 }
 
-func CheckSession(w http.ResponseWriter, r *http.Request, db *sql.DB, cookie *http.Cookie) bool {
-	var err error
-	cookie, err = r.Cookie("sessionCookie")
+func CheckSession(w http.ResponseWriter, r *http.Request, db *sql.DB) bool {
+	// var err error
+	cookie, err := r.Cookie("sessionCookie")
 	if err != nil {
+		fmt.Printf("CheckSession Cookie error: %+v\n", err)
 		return false
 	} else {
 		// cookie = sessionCookie
-		session, _ := db.Query("SELECT * FROM Session WHERE uuid = '" + cookie.Value + "'")
+		session, err := db.Query("SELECT * FROM Session WHERE uuid = '" + cookie.Value + "'")
+		if err != nil {
+			fmt.Printf("CheckSession DB Query error: %+v\n", err)
+		}
 		defer session.Close()
 		var id int
 		var sessionUuid string
@@ -81,7 +89,7 @@ func CheckSession(w http.ResponseWriter, r *http.Request, db *sql.DB, cookie *ht
 		count := 0
 		for session.Next() {
 			session.Scan(&id, &sessionUuid, &authUuid)
-			fmt.Fprintln(w, "session: ", id, sessionUuid, authUuid)
+			// fmt.Fprintln(w, "session: ", id, sessionUuid, authUuid)
 			count++
 		}
 		if count == 1 {

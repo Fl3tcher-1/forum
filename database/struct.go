@@ -35,7 +35,7 @@ type Session struct {
 	SessionID string
 	Username  string
 	Expiry    time.Time
-	//	UserID    int
+	// UserID    int
 	LoggedIn bool
 }
 
@@ -45,6 +45,8 @@ type Comment struct {
 	UserId    string
 	Content   string
 	CreatedAt string
+	Likes     int `json:"likes"`
+	Dislikes  int `json:"dislikes"`
 }
 
 type UsrProfile struct {
@@ -57,29 +59,30 @@ type UsrProfile struct {
 	Location string
 	Posts    []string
 	Comments []string
-	Likes    []string
+	Likes    []Reaction
 	Shares   []string
 	Userinfo map[string]string
 	// custom   string
+}
+
+type Reaction struct {
+	ReactionID int
+	PostID     int
+	Username   string
+	CommentID  int
+	Liked      bool
+	Disliked   bool
 }
 
 type Forum struct {
 	*sql.DB
 }
 
-// holds details of user session-- used for cookies.
-type Post struct {
-	Title    string
-	Content  string
-	Date     string
-	Comments int
-}
-
 type CategoryPost struct { // create a []post in order to store multiple posts
 	Post []PostFeed
 }
 
-//Databases holds our post and comment databases
+// Databases holds our post and comment databases
 type Databases struct {
 	Post    PostFeed
 	Comment []Comment
