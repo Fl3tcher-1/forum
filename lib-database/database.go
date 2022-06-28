@@ -107,11 +107,15 @@ func (feed *Forum) AssertUniqueSessionForUser(session Session) error {
 	stmt, err := feed.DB.Prepare("DELETE FROM session WHERE userName == ? AND sessionID != ?;")
 	defer stmt.Close()
 	if err != nil {
-		return fmt.Errorf("UpdateReaction DB Prepare error: %w", err)
+		return fmt.Errorf("AssertUniqueSessionForUser DB Prepare error: %w", err)
 	}
 	_, err = stmt.Exec(session.Username, session.SessionID)
 	if err != nil {
-		return fmt.Errorf("unable to update reaction: %w", err)
+		return fmt.Errorf("unable to assert unique session: %w", err)
+	}
+	_, err = feed.Exec("PRAGMA wal_checkpoint(FULL);")
+	if err != nil {
+		return fmt.Errorf("unable to confirm full write of unique session to db: %w", err)
 	}
 	return nil
 }

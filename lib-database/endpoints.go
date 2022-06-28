@@ -88,7 +88,7 @@ func (data *Forum) LoginWeb(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/home", http.StatusFound)
 		// data.HomePage(w, r)
 	} else {
-		fmt.Println("incorrect password")
+		fmt.Println("invalid credentials")
 		err := tpl.ExecuteTemplate(w, "login.html", "check username and password")
 		if err != nil {
 			fmt.Printf("LoginWeb ExecuteTemplate error: %+v\n", err)
@@ -285,19 +285,18 @@ func (data *Forum) CheckCookie(writer http.ResponseWriter, request *http.Request
 			return true
 		}
 	}
-	sess,_:= data.GetSession()
-	if len(sess) <1{
-		return false
-	} else{
-	return true
-	}
-	// return false
+	
+	return false
 }
 
 func (data *Forum) Logout(w http.ResponseWriter, r *http.Request) {
 	c, err := r.Cookie("session_token")
 	if err != nil {
 		fmt.Printf("Logout Cookie error: %+v\n", err)
+		return
+	} else if c.Value == "" {
+		fmt.Printf("Cookie not found: %+v\n", err)
+		return
 	}
 
 	sessionToken := c.Value
