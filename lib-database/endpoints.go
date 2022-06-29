@@ -358,6 +358,14 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 		}
 
 		postCategory := request.FormValue("category")
+		postCategory2 := request.FormValue("category2")
+		// fmt.Println( postCategory2)
+
+		if postCategory2 !=""{
+			postCategory+= " "
+			postCategory += postCategory2
+		}
+		// fmt.Println(postCategory)
 		// fmt.Println(postCategory)
 		postTitle := request.FormValue("title")
 		postContent := request.FormValue("content")
@@ -396,7 +404,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 			return
 		} else {
 			// postAndSession.UserSession = data.GetSessions()[0]
-			if postTitle != "" || postContent != "" || postCategory != "" {
+			if postTitle != "" || postContent != ""  {
 				err := data.CreatePost(PostFeed{
 					Username:  user,
 					Title:     postTitle,
@@ -505,9 +513,13 @@ func (data *Forum) CategoryDump(w http.ResponseWriter, r *http.Request) {
 	// check every post to find ones whose category matches our url path
 	categoryFound := false // used to check if a valid category was entered
 	for _, post := range posts {
+		var multiCat []string
+		if strings.Contains(post.Category, " "){
+			multiCat = append(multiCat, strings.Split(post.Category, " ")...)
+		}
 		// fmt.Println(cat, post.Category)
 		// fmt.Println(post.Category)
-		if cat == post.Category {
+		if cat == post.Category  || len(multiCat)>1 && cat== multiCat[0] || len(multiCat)>1 &&cat == multiCat[1]{
 			// fmt.Println(post)
 			categoryFound = true
 			postByCategory.Post = append(postByCategory.Post, post) // add the matching post to our post[] in struct
