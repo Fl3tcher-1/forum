@@ -285,7 +285,7 @@ func (data *Forum) CheckCookie(writer http.ResponseWriter, request *http.Request
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -361,8 +361,8 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 		postCategory2 := request.FormValue("category2")
 		// fmt.Println( postCategory2)
 
-		if postCategory2 !=""{
-			postCategory+= " "
+		if postCategory2 != "" {
+			postCategory += " "
 			postCategory += postCategory2
 		}
 		// fmt.Println(postCategory)
@@ -404,7 +404,7 @@ func (data *Forum) HomePage(writer http.ResponseWriter, request *http.Request) {
 			return
 		} else {
 			// postAndSession.UserSession = data.GetSessions()[0]
-			if postTitle != "" || postContent != ""  {
+			if postTitle != "" || postContent != "" {
 				err := data.CreatePost(PostFeed{
 					Username:  user,
 					Title:     postTitle,
@@ -514,12 +514,12 @@ func (data *Forum) CategoryDump(w http.ResponseWriter, r *http.Request) {
 	categoryFound := false // used to check if a valid category was entered
 	for _, post := range posts {
 		var multiCat []string
-		if strings.Contains(post.Category, " "){
+		if strings.Contains(post.Category, " ") {
 			multiCat = append(multiCat, strings.Split(post.Category, " ")...)
 		}
 		// fmt.Println(cat, post.Category)
 		// fmt.Println(post.Category)
-		if cat == post.Category  || len(multiCat)>1 && cat== multiCat[0] || len(multiCat)>1 &&cat == multiCat[1]{
+		if cat == post.Category || len(multiCat) > 1 && cat == multiCat[0] || len(multiCat) > 1 && cat == multiCat[1] {
 			// fmt.Println(post)
 			categoryFound = true
 			postByCategory.Post = append(postByCategory.Post, post) // add the matching post to our post[] in struct
@@ -800,12 +800,12 @@ func (data *Forum) UserLikes(writer http.ResponseWriter, request *http.Request) 
 	tpl := template.Must(template.ParseGlob("templates/*"))
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "text/html")
-	user, err := data.GetSessions()
-	if err != nil {
-		fmt.Printf("UserLikes GetSessions error: %+v\n", err)
-	}
+	// user, err := data.GetSessions()
+	// if err != nil {
+	// 	fmt.Printf("UserLikes GetSessions error: %+v\n", err)
+	// }
 
-	currentUser := user[len(user)-1]
+	// currentUser := user[len(user)-1]
 
 	allReactions, err := data.GetReactions()
 	if err != nil {
@@ -832,24 +832,23 @@ func (data *Forum) UserLikes(writer http.ResponseWriter, request *http.Request) 
 	var likesByUser UserLikes
 
 	for _, post := range posts {
-		if post.Username == currentUser.Username {
-			for _, reaction := range allReactions {
-				if reaction.Liked && post.Username == reaction.Username && post.PostID == reaction.PostID {
-					likesByUser.Posts = append(likesByUser.Posts, post)
-				}
+		// if post.Username == currentUser.Username {
+		for _, reaction := range allReactions {
+			if reaction.Liked && post.Username == reaction.Username && post.PostID == reaction.PostID {
+				likesByUser.Posts = append(likesByUser.Posts, post)
 			}
 		}
 	}
 
 	for _, comment := range comments {
-		if comment.UserId == currentUser.Username {
-			for _, reaction := range allReactions {
-				if reaction.Liked && comment.UserId == reaction.Username && comment.CommentID == reaction.CommentID {
-					likesByUser.Comments = append(likesByUser.Comments, comment)
-				}
+		// if comment.UserId == currentUser.Username {
+		for _, reaction := range allReactions {
+			if reaction.Liked && comment.UserId == reaction.Username && comment.CommentID == reaction.CommentID {
+				likesByUser.Comments = append(likesByUser.Comments, comment)
 			}
 		}
 	}
+
 	err = tpl.ExecuteTemplate(writer, "likes.html", likesByUser)
 	if err != nil {
 		fmt.Printf("UserLikes ExecuteTemplate (likes.html) error: %+v\n", err)
