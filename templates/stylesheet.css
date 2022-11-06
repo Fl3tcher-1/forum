@@ -30,6 +30,7 @@
 
 body {
   box-sizing: border-box;
+  max-width: 100%;
   width: 100%;
   margin-top: 100px;
   background-color: var(--body-color);
@@ -81,6 +82,12 @@ li {
   gap: 10px;
 }
 
+li.b{
+  border: none;
+  margin: 0 auto;
+  gap: 10px;
+}
+
 .grid>div {
   background-color: var(--background-color);
   padding: 1em;
@@ -124,6 +131,7 @@ li {
 
 .head {
   border: var(--border-color) 5px solid;
+  max-width: 95%;
   display: flex;
 
   background-color: var(--border-color-lighter);
@@ -132,16 +140,25 @@ li {
   gap: 50px;
   position: sticky;
   top: 0;
-  width: 100%;
+  width: 95%;
   z-index: 1000;
 }
 
 
 .head > h4{
+  flex-wrap: wrap;
+
+  /* width: 14%; */
+  gap: 10px;
+
   border: var(--border-color);
   color: var(--text-color);
-    flex-shrink: 2;
+    flex-shrink: 10;
   flex-basis: auto;
+}
+
+h4.form{
+  
 }
 
 .header {
@@ -284,6 +301,8 @@ p1{
   width: 350px;
   margin: 10;
 }
+
+
 
 .category-grid {
   display: grid;

@@ -116,26 +116,12 @@ here all the the ideas and or features we likeda bout different websites not all
     Cassidy
 
 
-
-
-
-
-ouststanding
-
-user log out
-forgot password
-database
-responsive web 
-
-
-
-
 advanced features
 
 notifications--- likes and dislikes, comments
 edit/delete posts and comments
 
-authenitction
+authentication
 
 login in with google and github
 
